@@ -17,33 +17,34 @@
 <body>
     <div class="box">
         <h2 id="title">Sign In</h2>
-        <input type="email" id="email" placeholder="Email (e.g. name@mail.com)">
+        <input type="email" id="email" placeholder="Email (e.g. test@app.com)">
         <input type="password" id="password" placeholder="Password">
         <button id="authBtn">Enter App</button>
         <div class="toggle" id="toggleLink">Need an account? Sign Up</div>
     </div>
 
     <script>
-        // 2. These match your project: funcvigewkhauenqxrbf
+        // These are your EXACT keys from your dashboard
         const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
         const S_KEY = 'sb_publishable_lviXZq083JXjjZu6q9BPVA_AAIRSRE6i6GfQ2e0n7M8lDMTtKIsK1YwZ0Yp5fDqfK0uT';
 
         const _supabase = supabase.createClient(S_URL, S_KEY);
         let isLoginMode = true;
 
-        // Toggle UI
         document.getElementById('toggleLink').onclick = () => {
             isLoginMode = !isLoginMode;
             document.getElementById('title').innerText = isLoginMode ? "Sign In" : "Sign Up";
             document.getElementById('toggleLink').innerText = isLoginMode ? "Need an account? Sign Up" : "Have an account? Sign In";
         };
 
-        // Handle Auth
         document.getElementById('authBtn').onclick = async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            if (!email.includes('@')) return alert("Please use a valid email format.");
+            if (!email.includes('@')) {
+                alert("Please enter a valid email address (e.g. 9480609436@app.com). Supabase requires an email format.");
+                return;
+            }
 
             if (isLoginMode) {
                 const { error } = await _supabase.auth.signInWithPassword({ email, password });
@@ -52,7 +53,7 @@
             } else {
                 const { error } = await _supabase.auth.signUp({ email, password });
                 if (error) alert(error.message);
-                else alert("Success! Check your email for a confirmation link.");
+                else alert("Check your email to confirm!");
             }
         };
     </script>

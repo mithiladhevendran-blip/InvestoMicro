@@ -2,24 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Input Payment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Payment - InvestoMicro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 40px; max-width: 500px; margin: auto; background: #0f172a; color: #f8fafc; }
-        textarea { width: 100%; height: 150px; padding: 15px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; box-sizing: border-box; background: #1e293b; color: white; font-size: 1rem; }
-        button { padding: 15px 30px; background: #10b981; color: white; border: none; border-radius: 12px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: bold; }
+        body { font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: #f8fafc; }
+        .box { background: #1e293b; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 400px; text-align: center; border: 1px solid #334155; }
+        h2 { margin-bottom: 0.5rem; color: #3b82f6; letter-spacing: -1px; }
+        p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+        textarea { width: 100%; height: 150px; padding: 15px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; box-sizing: border-box; background: #0f172a; color: white; font-size: 1rem; outline: none; resize: none; }
+        textarea:focus { border-color: #3b82f6; }
+        button { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #059669; transform: translateY(-2px); }
+        .logout-btn { background: none; color: #ef4444; border: none; margin-top: 20px; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
     </style>
 </head>
 <body>
-    <h2>Analyze Payment</h2>
-    <p style="color: #94a3b8;">Paste your SMS or type your spending below.</p>
-    <textarea id="sms" placeholder="e.g., Spent 500 on dog food and pens..."></textarea>
-    <button onclick="analyze()">Run AI Classification</button>
+    <div class="box">
+        <h2>Analyze Payment</h2>
+        <p>Paste your SMS or type your spending below.</p>
+        
+        <textarea id="sms" placeholder="e.g., Spent 500 on dog food and pens..."></textarea>
+        
+        <button onclick="analyze()">Run AI Classification</button>
+        
+        <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+    </div>
+
     <script>
+        // Use the same keys as your index.html
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        // SECURE: Kick user out if they aren't logged in
+        async function checkSession() {
+            const { data } = await _supabase.auth.getSession();
+            if (!data.session) {
+                window.location.href = 'index.html';
+            }
+        }
+        checkSession();
+
         function analyze() {
             const text = document.getElementById('sms').value;
             if(!text) return alert("Please enter some text!");
             localStorage.setItem('lastSMS', text);
             window.location.href = 'ai.html';
+        }
+
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
         }
     </script>
 </body>

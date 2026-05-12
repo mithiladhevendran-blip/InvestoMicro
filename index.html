@@ -6,96 +6,52 @@
     <title>MicroInvest Login</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: #f8fafc; }
-        .box { background: #1e293b; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 350px; text-align: center; border: 1px solid #334155; }
-        h2 { margin-bottom: 0.5rem; color: #3b82f6; letter-spacing: -1px; }
-        p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #334155; border-radius: 12px; box-sizing: border-box; background: #0f172a; color: white; outline: none; }
-        input:focus { border-color: #3b82f6; }
-        button { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 1.5rem; transition: 0.3s; }
-        button:hover { background: #2563eb; transform: translateY(-2px); }
-        .toggle-text { margin-top: 1.5rem; font-size: 0.85rem; color: #94a3b8; }
-        .toggle-text span { color: #3b82f6; cursor: pointer; font-weight: 600; text-decoration: underline; }
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; color: white; margin: 0; }
+        .box { background: #1e293b; padding: 30px; border-radius: 20px; width: 300px; text-align: center; border: 1px solid #334155; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .toggle { margin-top: 15px; font-size: 0.8rem; color: #94a3b8; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2 id="title">Welcome Back</h2>
-        <p id="subtitle">Enter your details to sign in</p>
-        
-        <input type="email" id="email" placeholder="Email Address">
+        <h2 id="title">Sign In</h2>
+        <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
-        
-        <button onclick="handleAuth()" id="mainBtn">Sign In</button>
-        
-        <div class="toggle-text" id="toggleArea">
-            Don't have an account? <span onclick="toggleAuth()">Sign Up</span>
-        </div>
+        <button id="authBtn">Go</button>
+        <div class="toggle" id="toggleLink">Need an account? Sign Up</div>
     </div>
 
     <script>
-        // Initialize Supabase Client using your project details
-        const SUPABASE_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
-        const SUPABASE_ANON_KEY = 'YOUR_PUBLISHABLE_ANON_KEY_HERE'; // Replace with the key from image_fd2356.png
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 2. FILL THESE TWO LINES FROM YOUR DASHBOARD
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co'; 
+        const S_KEY = 'PASTE_YOUR_ANON_PUBLISHABLE_KEY_HERE'; 
 
-        let isLogin = true;
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+        let isLoginMode = true;
 
-        function toggleAuth() {
-            isLogin = !isLogin;
-            const title = document.getElementById('title');
-            const subtitle = document.getElementById('subtitle');
-            const mainBtn = document.getElementById('mainBtn');
-            const toggleArea = document.getElementById('toggleArea');
+        // Toggle UI between Login and Sign Up
+        document.getElementById('toggleLink').onclick = () => {
+            isLoginMode = !isLoginMode;
+            document.getElementById('title').innerText = isLoginMode ? "Sign In" : "Sign Up";
+            document.getElementById('toggleLink').innerText = isLoginMode ? "Need an account? Sign Up" : "Have an account? Sign In";
+        };
 
-            if (isLogin) {
-                title.innerText = "Welcome Back";
-                subtitle.innerText = "Enter your details to sign in";
-                mainBtn.innerText = "Sign In";
-                toggleArea.innerHTML = `Don't have an account? <span onclick="toggleAuth()">Sign Up</span>`;
-            } else {
-                title.innerText = "Create Account";
-                subtitle.innerText = "Join MicroInvest to track spending";
-                mainBtn.innerText = "Sign Up";
-                toggleArea.innerHTML = `Already have an account? <span onclick="toggleAuth()">Sign In</span>`;
-            }
-        }
-
-        async function handleAuth() {
+        // Main Action
+        document.getElementById('authBtn').onclick = async () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            if (!email || !password) {
-                return alert("Please enter both email and password.");
-            }
-
-            if (isLogin) {
-                // Perform Sign In logic
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password,
-                });
-
-                if (error) {
-                    alert("Login Error: " + error.message);
-                } else {
-                    window.location.href = 'input.html'; // Redirect on success
-                }
+            if (isLoginMode) {
+                const { error } = await _supabase.auth.signInWithPassword({ email, password });
+                if (error) alert(error.message);
+                else window.location.href = 'input.html'; // Goes to your analysis page
             } else {
-                // Perform Sign Up logic
-                const { data, error } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                });
-
-                if (error) {
-                    alert("Sign Up Error: " + error.message);
-                } else {
-                    alert("Check your email for the confirmation link!");
-                    toggleAuth(); // Switch back to login view
-                }
+                const { error } = await _supabase.auth.signUp({ email, password });
+                if (error) alert(error.message);
+                else alert("Check your email to confirm!");
             }
-        }
+        };
     </script>
 </body>
 </html>

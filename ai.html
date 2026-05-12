@@ -23,71 +23,77 @@
         <button id="saveBtn" onclick="saveToCloud()">Confirm & Save to Cloud</button>
         <p id="saveStatus" class="status"></p>
     </div>
+<script type="module">
+    // 1. Import the AI library
+    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0';
 
-   <script>
     const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
     const _supabase = supabase.createClient(S_URL, S_KEY);
 
-    const sms = (localStorage.getItem('lastSMS') || "").toLowerCase();
-    
-    // Set a "Smart Default"
-    let cat = "Short Term / Not Necessary"; 
-    let desc = "Discretionary purchase or non-essential item.";
+    const sms = localStorage.getItem('lastSMS') || "";
+    const catElement = document.getElementById('cat');
+    const descElement = document.getElementById('desc');
+    const saveBtn = document.getElementById('saveBtn');
 
-    // 1. Check for LONG TERM / NECESSARY (Rent, Bills, Learning)
-    if (sms.includes('arduino') || sms.includes('med') || sms.includes('book') || sms.includes('rent') || sms.includes('course')) {
-        cat = "Long Term / Necessary";
-        desc = "Investment in learning, health, or durable utility.";
-    } 
-    // 2. Check for SHORT TERM / IMPORTANT (Basic groceries, transport, emergencies)
-    else if (sms.includes('grocery') || sms.includes('milk') || sms.includes('vegetable') || sms.includes('bus') || sms.includes('fuel') || sms.includes('emergency')) {
-        cat = "Short Term / Important";
-        desc = "Urgent necessities, basic food, or travel.";
+    let finalCategory = "";
+    let finalAmount = 0;
+
+    async function runAI() {
+        catElement.innerText = "AI is thinking...";
+        saveBtn.disabled = true;
+
+        // Extract amount from text (e.g., "Fence 500" -> 500)
+        const amountMatch = sms.match(/\d+/);
+        finalAmount = amountMatch ? parseFloat(amountMatch[0]) : 0;
+
+        try {
+            // 2. Load the Zero-Shot Classification Model
+            // This happens in the browser!
+            const classifier = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli-all');
+            
+            const labels = [
+                'Long Term / Necessary', 
+                'Short Term / Important', 
+                'Short Term / Not Necessary', 
+                'Long Term / Not Necessary'
+            ];
+
+            // 3. Let the AI decide
+            const output = await classifier(sms, labels);
+            finalCategory = output.labels[0]; // The top prediction
+
+            // UI Update
+            catElement.innerText = finalCategory;
+            descElement.innerText = `AI Analysis: This appears to be a ${finalCategory} expense of $${finalAmount}.`;
+            saveBtn.disabled = false;
+            saveBtn.innerText = "Confirm & Save to Cloud";
+
+        } catch (err) {
+            console.error(err);
+            catElement.innerText = "AI Error";
+            descElement.innerText = "Could not load the AI model.";
+        }
     }
-    // 3. Check for SHORT TERM / NOT NECESSARY (Dining out, junk food)
-    else if (sms.includes('movie') || sms.includes('snack') || sms.includes('chips') || sms.includes('burger') || sms.includes('zomato') || sms.includes('starbucks') || sms.includes('pizza')) {
-        cat = "Short Term / Not Necessary";
-        desc = "Instant cravings, entertainment, or luxury dining.";
-    }
-    // 4. Check for LONG TERM / NOT NECESSARY (Subscriptions, games)
-    else if (sms.includes('netflix') || sms.includes('game') || sms.includes('skin') || sms.includes('iphone')) {
-        cat = "Long Term / Not Necessary";
-        desc = "Luxury items or ongoing entertainment subscriptions.";
-    }
 
-    document.getElementById('cat').innerText = cat;
-    document.getElementById('desc').innerText = desc;
-
-    async function saveToCloud() {
-        const btn = document.getElementById('saveBtn');
-        const status = document.getElementById('saveStatus');
-        btn.innerText = "Saving...";
-        btn.disabled = true;
-
+    // This makes the Save function available to the button
+    window.saveToCloud = async () => {
+        saveBtn.innerText = "Saving...";
         const { data: { user } } = await _supabase.auth.getUser();
 
         if (user) {
-            const { error } = await _supabase
-                .from('spends')
-                .insert([{ 
-                    user_id: user.id, 
-                    category: cat, 
-                    description: sms,
-                    created_at: new Date()
-                }]);
+            const { error } = await _supabase.from('spends').insert([{ 
+                user_id: user.id, 
+                category: finalCategory, 
+                description: sms,
+                amount: finalAmount
+            }]);
 
-            if (error) {
-                alert("Database Error: " + error.message);
-                btn.disabled = false;
-                btn.innerText = "Try Again";
-            } else {
-                window.location.href = 'patterns.html';
-            }
-        } else {
-            alert("Please log in first!");
-            window.location.href = 'index.html';
+            if (!error) window.location.href = 'patterns.html';
+            else alert("Error: " + error.message);
         }
-    }
+    };
+
+    runAI();
 </script></body>
 </html>

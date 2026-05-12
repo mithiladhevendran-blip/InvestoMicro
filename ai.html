@@ -79,15 +79,12 @@
     // This makes the Save function available to the button
     window.saveToCloud = async () => {
         saveBtn.innerText = "Saving...";
-        const { data: { user } } = await _supabase.auth.getUser();
-
-        if (user) {
-            const { error } = await _supabase.from('spends').insert([{ 
-                user_id: user.id, 
-                category: finalCategory, 
-                description: sms,
-                amount: finalAmount
-            }]);
+        const { error } = await _supabase.from('spends').insert([{ 
+    user_id: user.id, 
+    category: finalCategory, 
+    description: sms,
+    amount: finalAmount  // <--- This line is the "secret sauce" for your chart!
+}]);
 
             if (!error) window.location.href = 'patterns.html';
             else alert("Error: " + error.message);

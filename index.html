@@ -7,9 +7,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: white; }
-        .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; }
-        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
+        input:focus { border-color: #3b82f6; }
+        
+        .btn-login { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        .btn-signup { width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 12px; cursor: pointer; font-weight: normal; margin-top: 10px; font-size: 0.9rem; }
+        
+        .btn-login:hover { background: #2563eb; }
+        .btn-signup:hover { color: white; border-color: #475569; }
         .version { font-size: 10px; color: #475569; margin-top: 20px; }
     </style>
 </head>
@@ -18,32 +24,52 @@
         <h2 id="title">InvestoMicro</h2>
         <input type="email" id="email" placeholder="Email (e.g. user@test.com)">
         <input type="password" id="password" placeholder="Password">
-        <button id="authBtn">Sign In / Sign Up</button>
-        <div class="version">Update Tag: VER_FIX_99</div>
+        
+        <button class="btn-login" onclick="handleLogin()">Sign In</button>
+        <button class="btn-signup" onclick="handleSignUp()">Create New Account</button>
+        
+        <div class="version">Update Tag: VER_FIX_REDIRECT</div>
     </div>
 
     <script>
         const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
-const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
 
-const _supabase = supabase.createClient(S_URL, S_KEY);
-
-        document.getElementById('authBtn').onclick = async () => {
+        // LOGIN FUNCTION
+        async function handleLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
-            // Attempt Login first
-            const { data, error: loginErr } = await _supabase.auth.signInWithPassword({ email, password });
             
-            if (loginErr) {
-                // If login fails, try signing up automatically
-                const { error: signUpErr } = await _supabase.auth.signUp({ email, password });
-                if (signUpErr) alert(signUpErr.message);
-                else alert("Account created! Check your email for a link.");
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                alert("Login failed: " + error.message);
             } else {
                 window.location.href = 'input.html';
             }
-        };
+        }
+
+        // SIGN UP FUNCTION
+        async function handleSignUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { error } = await _supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    // Redirects user back into the specific GitHub folder
+                    emailRedirectTo: 'https://mithiladhevendran-blip.github.io/InvestoMicro/input.html'
+                }
+            });
+
+            if (error) {
+                alert("Sign up failed: " + error.message);
+            } else {
+                alert("Account created! Go to your email and click the confirmation link to start.");
+            }
+        }
     </script>
 </body>
 </html>

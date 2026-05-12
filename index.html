@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MicroInvest Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: #f8fafc; }
         .box { background: #1e293b; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 350px; text-align: center; border: 1px solid #334155; }
@@ -22,10 +23,10 @@
         <h2 id="title">Welcome Back</h2>
         <p id="subtitle">Enter your details to sign in</p>
         
-        <input type="tel" placeholder="Phone Number">
-        <input type="password" placeholder="Password">
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Password">
         
-        <button onclick="window.location.href='input.html'" id="mainBtn">Sign In</button>
+        <button onclick="handleAuth()" id="mainBtn">Sign In</button>
         
         <div class="toggle-text" id="toggleArea">
             Don't have an account? <span onclick="toggleAuth()">Sign Up</span>
@@ -33,7 +34,13 @@
     </div>
 
     <script>
+        // Initialize Supabase Client using your project details
+        const SUPABASE_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
+        const SUPABASE_ANON_KEY = 'YOUR_PUBLISHABLE_ANON_KEY_HERE'; // Replace with the key from image_fd2356.png
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let isLogin = true;
+
         function toggleAuth() {
             isLogin = !isLogin;
             const title = document.getElementById('title');
@@ -51,6 +58,42 @@
                 subtitle.innerText = "Join MicroInvest to track spending";
                 mainBtn.innerText = "Sign Up";
                 toggleArea.innerHTML = `Already have an account? <span onclick="toggleAuth()">Sign In</span>`;
+            }
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                return alert("Please enter both email and password.");
+            }
+
+            if (isLogin) {
+                // Perform Sign In logic
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) {
+                    alert("Login Error: " + error.message);
+                } else {
+                    window.location.href = 'input.html'; // Redirect on success
+                }
+            } else {
+                // Perform Sign Up logic
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) {
+                    alert("Sign Up Error: " + error.message);
+                } else {
+                    alert("Check your email for the confirmation link!");
+                    toggleAuth(); // Switch back to login view
+                }
             }
         }
     </script>

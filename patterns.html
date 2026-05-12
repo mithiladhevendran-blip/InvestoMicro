@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spending Patterns</title>
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 500px; margin: auto; background: #0f172a; color: white; }
+        .chart-container { background: #1e293b; padding: 20px; border-radius: 20px; margin-bottom: 20px; }
+        .entry { padding: 12px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; background: #334155; color: #60a5fa; border: 1px solid #60a5fa; }
+        button { width:100%; padding:15px; background: #6366f1; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Spending Breakdown</h2>
+    <div class="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+    <div id="list"></div>
+    <button onclick="window.location.href='suggest.html'">Get Investment Advice</button>
+
+    <script>
+        const history = JSON.parse(localStorage.getItem('spendHistory') || '[]');
+        const list = document.getElementById('list');
+        
+        // Data for Chart
+        const counts = {
+            "Short Term / Important": 0,
+            "Short Term / Not Necessary": 0,
+            "Long Term / Necessary": 0,
+            "Long Term / Not Necessary": 0
+        };
+
+        history.forEach(item => {
+            counts[item.cat]++;
+            list.innerHTML += `<div class="entry"><span>${item.date}</span> <span class="tag">${item.cat}</span></div>`;
+        });
+
+        // Initialize Chart
+        new Chart(document.getElementById('myChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    data: Object.values(counts),
+                    backgroundColor: ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: { plugins: { legend: { labels: { color: 'white' } } } }
+        });
+    </script>
+</body>
+</html>

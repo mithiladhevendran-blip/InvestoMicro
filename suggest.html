@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Student Investment Score</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; padding: 30px; max-width: 450px; margin: auto; background: #0f172a; color: white; text-align: center; }
+        .score-box { background: #1e293b; padding: 40px 20px; border-radius: 30px; border: 2px solid #334155; margin-top: 20px; }
+        .score-number { font-size: 80px; font-weight: 800; color: #10b981; margin: 10px 0; display: block; text-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+        p { color: #94a3b8; line-height: 1.6; }
+        .badge { background: #334155; padding: 5px 15px; border-radius: 10px; font-size: 0.8rem; color: #60a5fa; text-transform: uppercase; font-weight: bold; }
+        .btn-retry { width: 100%; padding: 16px; background: #3b82f6; color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: bold; margin-top: 30px; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div class="score-box">
+        <span class="badge">Student Saving Score</span>
+        <span id="score" class="score-number">--</span>
+        <h3 id="status">Analyzing your wallet...</h3>
+        <p id="advice">Your spending habits determine your future investment capacity.</p>
+    </div>
+
+    <button class="btn-retry" onclick="window.location.href='input.html'">Track Next Payment</button>
+
+    <script>
+        const history = JSON.parse(localStorage.getItem('spendHistory') || '[]');
+        const total = history.length;
+        
+        // Count "Not Necessary" entries
+        const badSpending = history.filter(h => h.cat.includes('Not Necessary')).length;
+        
+        let score = 0.1;
+        let statusText = "Excellent!";
+        let adviceText = "You're a master of your money. A tiny 0.1 save is enough today.";
+
+        if (total > 0) {
+            // Formula: (Bad spending ratio) * 50
+            // If 100% is bad, score is 50. If 0% is bad, score is 0.1.
+            score = (badSpending / total) * 50;
+            if (score < 0.1) score = 0.1; // Floor it at 0.1
+        }
+
+        // Student-friendly status logic
+        if (score > 35) {
+            statusText = "Save More! (Level: 50)";
+            adviceText = "Too many snacks or toys! You need to invest 50 units to fix your balance.";
+            document.getElementById('score').style.color = "#ef4444";
+        } else if (score > 15) {
+            statusText = "Getting There";
+            adviceText = "A decent balance. Aim for a score below 10 next week.";
+            document.getElementById('score').style.color = "#f59e0b";
+        } else {
+            statusText = "Savings King!";
+            document.getElementById('score').style.color = "#10b981";
+        }
+
+        document.getElementById('score').innerText = score.toFixed(1);
+        document.getElementById('status').innerText = statusText;
+        document.getElementById('advice').innerText = adviceText;
+    </script>
+</body>
+</html>

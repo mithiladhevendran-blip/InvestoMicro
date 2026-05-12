@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Result</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 40px; max-width: 500px; margin: auto; text-align: center; background: #0f172a; color: white; }
+        .card { padding: 30px; border-radius: 20px; background: #1e293b; border: 1px solid #334155; }
+        h3 { color: #60a5fa; font-size: 1.6rem; margin: 20px 0; }
+        .desc { color: #94a3b8; line-height: 1.5; }
+        button { margin-top: 30px; padding: 15px 30px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 style="color: #94a3b8;">AI Result</h2>
+        <h3 id="cat">Classifying...</h3>
+        <p id="desc" class="desc"></p>
+        <button onclick="window.location.href='patterns.html'">Confirm & Save</button>
+    </div>
+    <script>
+        const sms = (localStorage.getItem('lastSMS') || "").toLowerCase();
+        let cat = "Long Term / Not Necessary";
+        let desc = "Discretionary purchase or non-essential toy.";
+
+        if (sms.includes('dog') || sms.includes('glucose') || sms.includes('pen') || sms.includes('emergency')) {
+            cat = "Short Term / Important";
+            desc = "Urgent necessities, food, or basic daily tools.";
+        } else if (sms.includes('movie') || sms.includes('snack') || sms.includes('chips') || sms.includes('burger')) {
+            cat = "Short Term / Not Necessary";
+            desc = "Instant cravings or entertainment.";
+        } else if (sms.includes('arduino') || sms.includes('med') || sms.includes('book')) {
+            cat = "Long Term / Necessary";
+            desc = "Investment in learning, health, or durable utility.";
+        }
+
+        document.getElementById('cat').innerText = cat;
+        document.getElementById('desc').innerText = desc;
+        
+        let history = JSON.parse(localStorage.getItem('spendHistory') || '[]');
+        history.push({cat: cat, date: new Date().toLocaleDateString()});
+        localStorage.setItem('spendHistory', JSON.stringify(history));
+    </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Input Payment</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 40px; max-width: 500px; margin: auto; background: #0f172a; color: #f8fafc; }
+        textarea { width: 100%; height: 150px; padding: 15px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; box-sizing: border-box; background: #1e293b; color: white; font-size: 1rem; }
+        button { padding: 15px 30px; background: #10b981; color: white; border: none; border-radius: 12px; cursor: pointer; width: 100%; font-size: 1rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Analyze Payment</h2>
+    <p style="color: #94a3b8;">Paste your SMS or type your spending below.</p>
+    <textarea id="sms" placeholder="e.g., Spent 500 on dog food and pens..."></textarea>
+    <button onclick="analyze()">Run AI Classification</button>
+    <script>
+        function analyze() {
+            const text = document.getElementById('sms').value;
+            if(!text) return alert("Please enter some text!");
+            localStorage.setItem('lastSMS', text);
+            window.location.href = 'ai.html';
+        }
+    </script>
+</body>
+</html>

@@ -2,63 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Student Investment Score</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Advice - InvestoMicro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; padding: 30px; max-width: 450px; margin: auto; background: #0f172a; color: white; text-align: center; }
-        .score-box { background: #1e293b; padding: 40px 20px; border-radius: 30px; border: 2px solid #334155; margin-top: 20px; }
-        .score-number { font-size: 80px; font-weight: 800; color: #10b981; margin: 10px 0; display: block; text-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-        p { color: #94a3b8; line-height: 1.6; }
-        .badge { background: #334155; padding: 5px 15px; border-radius: 10px; font-size: 0.8rem; color: #60a5fa; text-transform: uppercase; font-weight: bold; }
-        .btn-retry { width: 100%; padding: 16px; background: #3b82f6; color: white; border: none; border-radius: 15px; cursor: pointer; font-weight: bold; margin-top: 30px; font-size: 1rem; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; padding: 20px; text-align: center; }
+        .advice-card { background: #1e293b; padding: 30px; border-radius: 24px; max-width: 500px; margin: auto; border: 1px solid #334155; }
+        .stat-circle { font-size: 3rem; font-weight: 800; color: #3b82f6; margin: 20px 0; }
+        .message { color: #94a3b8; line-height: 1.6; }
+        .btn-back { margin-top: 20px; background: none; border: 1px solid #334155; color: #94a3b8; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div class="score-box">
-        <span class="badge">Student Saving Score</span>
-        <span id="score" class="score-number">--</span>
-        <h3 id="status">Analyzing your wallet...</h3>
-        <p id="advice">Your spending habits determine your future investment capacity.</p>
+    <div class="advice-card">
+        <h2 id="advice-title">Analyzing Your Habits...</h2>
+        <div id="percentage" class="stat-circle">0%</div>
+        <p id="advice-text" class="message">Fetching your latest financial data...</p>
+        
+        <button class="btn-back" onclick="window.location.href='patterns.html'">Back to Dashboard</button>
     </div>
 
-    <button class="btn-retry" onclick="window.location.href='input.html'">Track Next Payment</button>
-
     <script>
-        const history = JSON.parse(localStorage.getItem('spendHistory') || '[]');
-        const total = history.length;
-        
-        // Count "Not Necessary" entries
-        const badSpending = history.filter(h => h.cat.includes('Not Necessary')).length;
-        
-        let score = 0.1;
-        let statusText = "Excellent!";
-        let adviceText = "You're a master of your money. A tiny 0.1 save is enough today.";
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
 
-        if (total > 0) {
-            // Formula: (Bad spending ratio) * 50
-            // If 100% is bad, score is 50. If 0% is bad, score is 0.1.
-            score = (badSpending / total) * 50;
-            if (score < 0.1) score = 0.1; // Floor it at 0.1
+        async function generateAdvice() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return;
+
+            const { data } = await _supabase.from('spends').select('*');
+
+            if (data && data.length > 0) {
+                let totals = { "LTN": 0, "STI": 0, "STNN": 0, "LTNN": 0 };
+                let totalCash = 0;
+
+                data.forEach(item => {
+                    const amt = parseFloat(item.amount) || 0;
+                    totalCash += amt;
+                    if (item.category.includes('Short Term / Not Necessary')) totals.STNN += amt;
+                    // ... you can add other categories here
+                });
+
+                const badSpendingRatio = ((totals.STNN / totalCash) * 100).toFixed(1);
+                
+                document.getElementById('percentage').innerText = badSpendingRatio + "%";
+                
+                const title = document.getElementById('advice-title');
+                const text = document.getElementById('advice-text');
+
+                if (badSpendingRatio > 40) {
+                    title.innerText = "Warning: High Leakage";
+                    title.style.color = "#ef4444";
+                    text.innerText = "You are spending a large portion of your income on instant cravings. Try the 50/30/20 rule: limit 'wants' to 30%.";
+                } else if (badSpendingRatio > 20) {
+                    title.innerText = "Moderate Spending";
+                    title.style.color = "#f59e0b";
+                    text.innerText = "You're doing okay, but you could save $"+ (totalCash * 0.1).toFixed(0) +" more monthly by cutting just 10% of non-essentials.";
+                } else {
+                    title.innerText = "Investment Ready!";
+                    title.style.color = "#10b981";
+                    text.innerText = "Great job! Your 'fun' spending is low. You should move your surplus into an Index Fund or SIP.";
+                }
+            }
         }
 
-        // Student-friendly status logic
-        if (score > 35) {
-            statusText = "Save More! (Level: 50)";
-            adviceText = "Too many snacks or toys! You need to invest 50 units to fix your balance.";
-            document.getElementById('score').style.color = "#ef4444";
-        } else if (score > 15) {
-            statusText = "Getting There";
-            adviceText = "A decent balance. Aim for a score below 10 next week.";
-            document.getElementById('score').style.color = "#f59e0b";
-        } else {
-            statusText = "Savings King!";
-            document.getElementById('score').style.color = "#10b981";
-        }
-
-        document.getElementById('score').innerText = score.toFixed(1);
-        document.getElementById('status').innerText = statusText;
-        document.getElementById('advice').innerText = adviceText;
+        generateAdvice();
     </script>
 </body>
 </html>

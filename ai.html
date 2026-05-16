@@ -3,120 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - InvestoMicro</title>
+    <title>InvestoMicro v2.0</title>
     <script src="https://jsdelivr.net"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin:0; padding:20px; min-height:100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding-bottom: 80px; box-sizing: border-box; }
-        .card { background:#1e293b; padding:30px; border-radius:24px; border:1px solid #334155; box-shadow:0 10px 30px rgba(0,0,0,0.5); width: 400px; box-sizing: border-box; text-align: center; }
-        h3 { color:#60a5fa; font-size:1.6rem; margin: 10px 0; }
-        .desc { color:#94a3b8; line-height:1.6; min-height:80px; margin:15px 0; }
-        button { width:100%; padding:16px; margin:10px 0; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.05rem; }
-        button:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
-        .primary { background:#3b82f6; color: white; }
-        .secondary { background:#475569; color: white; }
+        body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: white; }
+        .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
+        input:focus { border-color: #3b82f6; }
         
-        .nav { position:fixed; bottom:0; left:0; right:0; background:#1e293b; border-top:1px solid #334155; display:flex; padding:10px; max-width:520px; margin:0 auto; box-sizing: border-box; }
-        .nav button { flex:1; margin:0 4px; padding:14px; background:#334155; border:none; border-radius:12px; color:white; font-size:0.95rem; cursor: pointer; }
-        .nav .active { background: #3b82f6; font-weight: bold; }
+        .btn-login { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        .btn-signup { width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 12px; cursor: pointer; font-weight: normal; margin-top: 10px; font-size: 0.9rem; }
+        
+        .btn-login:hover { background: #2563eb; }
+        .btn-signup:hover { color: white; border-color: #475569; }
+        .version { font-size: 10px; color: #475569; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2 style="color:#94a3b8; font-size:1rem; text-transform:uppercase; margin:0;">AI Spend Analysis</h2>
-        <h3 id="cat">Parsing Prompt Input...</h3>
-        <p id="desc" class="desc">Evaluating last submitted snippet context...</p>
+    <div class="box">
+        <h2 id="title">InvestoMicro</h2>
+        <input type="email" id="email" placeholder="Email (e.g. user@test.com)">
+        <input type="password" id="password" placeholder="Password">
         
-        <button id="saveBtn" class="primary" disabled>Processing...</button>
-        <button id="skipBtn" class="secondary" onclick="location.href='patterns.html'">Skip → Patterns</button>
+        <button class="btn-login" onclick="handleLogin()">Sign In</button>
+        <button class="btn-signup" onclick="handleSignUp()">Create New Account</button>
+        
+        <div class="version">Update Tag: VER_AUTO_REDIRECT_ROUTE</div>
     </div>
 
-    <div class="nav">
-        <button onclick="location.href='input.html'">Input</button>
-        <button class="active" onclick="location.href='ai.html'">AI Analysis</button>
-        <button onclick="location.href='patterns.html'">Patterns</button>
-        <button onclick="location.href='suggest.html'">Suggestions</button>
-    </div>
+    <script>
+        const S_URL = 'https://supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
 
-<script type="module">
-    // Replace with a secure Edge Function proxy setup later if in a production context
-    const GEMINI_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
-    const S_URL = 'https://supabase.co';
-    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
-    const _supabase = supabase.createClient(S_URL, S_KEY);
-
-    let activeUser = null;
-    let computedResult = null;
-    let extractedAmount = 0;
-    let rawText = localStorage.getItem('lastSMS') || "Manual Entry Expense";
-
-    async function checkSession() {
-        const { data } = await _supabase.auth.getSession();
-        if (!data || !data.session) {
-            window.location.href = 'index.html';
-        } else {
-            activeUser = data.session.user;
-            runAIAnalysis();
+        // ⚡ AUTO-REDIRECT ACTION
+        async function checkActiveSession() {
+            try {
+                const { data } = await _supabase.auth.getSession();
+                if (data && data.session) {
+                    console.log("Active session detected, routing straight to input workspace.");
+                    window.location.href = 'input.html';
+                }
+            } catch (err) {
+                console.error("Session intercept error:", err);
+            }
         }
-    }
-    checkSession();
+        // Initialize evaluation immediately when script parses
+        checkActiveSession();
 
-    async function runAIAnalysis() {
-        const url = `https://googleapis.com{GEMINI_KEY}`;
-        try {
-            const response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    systemInstruction: { parts: [{ text: "You are a consumer finance endpoint parser. Calculate or isolate the amount number, assign an emoji category, and write a micro budgeting insight statement." }] },
-                    contents: [{ parts: [{ text: `Raw Data Input Text String: "${rawText}"` }] }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                amount: { type: "NUMBER" },
-                                category: { type: "STRING" },
-                                summary: { type: "STRING" }
-                            },
-                            required: ["amount", "category", "summary"]
-                        }
-                    }
-                })
+        // LOGIN FUNCTION
+        async function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+            
+            if (error) {
+                alert("Login failed: " + error.message);
+            } else {
+                window.location.href = 'input.html';
+            }
+        }
+
+        // SIGN UP FUNCTION
+        async function handleSignUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { error } = await _supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    emailRedirectTo: 'https://github.io'
+                }
             });
 
-            const parsed = await response.json();
-            computedResult = JSON.parse(parsed.candidates[0].content.parts[0].text);
-            extractedAmount = computedResult.amount || 0;
-
-            document.getElementById('cat').innerText = computedResult.category;
-            document.getElementById('desc').innerText = computedResult.summary;
-            
-            const sBtn = document.getElementById('saveBtn');
-            sBtn.innerText = `Confirm & Save ₹${extractedAmount}`;
-            sBtn.disabled = false;
-            sBtn.onclick = commitRecord;
-        } catch (e) {
-            document.getElementById('cat').innerText = "Parsing Timeout";
-            document.getElementById('desc').innerText = "Review API credentials string validation parameters.";
+            if (error) {
+                alert("Sign up failed: " + error.message);
+            } else {
+                alert("Account created! Go to your email and click the confirmation link to start.");
+            }
         }
-    }
-
-    async function commitRecord() {
-        const sBtn = document.getElementById('saveBtn');
-        sBtn.disabled = true;
-        sBtn.innerText = "Staging...";
-
-        await _supabase.from('expenses').insert([{
-            user_id: activeUser.id,
-            amount: extractedAmount,
-            description: rawText,
-            category: computedResult.category,
-            tip: computedResult.summary,
-            created_at: new Date()
-        }]);
-
-        location.href = 'patterns.html';
-    }
-</script>
+    </script>
 </body>
 </html>

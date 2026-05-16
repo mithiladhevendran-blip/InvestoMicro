@@ -127,20 +127,31 @@
         let localAmount = localStorage.getItem('pending_amt') || 0;
         let localDesc = localStorage.getItem('pending_desc') || "";
 
-        // Simulated AI engine heuristic modeling logic
+        // UPDATED: Standardized heuristic engine targeting your 4 intent filters
         function runLocalIntentClassifier(text) {
             const parsed = text.toLowerCase();
-            if (parsed.includes('book') || parsed.includes('course') || parsed.includes('fee')) {
+            
+            // 1. Necessary / Long-term keyword arrays
+            if (parsed.includes('book') || parsed.includes('course') || parsed.includes('fee') || parsed.includes('rent') || parsed.includes('college')) {
                 return "Necessary / Long-term";
-            } else if (parsed.includes('vet') || parsed.includes('doctor') || parsed.includes('med')) {
+            } 
+            // 2. Unnecessary / Long-term keyword arrays (investments into luxuries or high ticket collections)
+            else if (parsed.includes('crypto') || parsed.includes('stock') || parsed.includes('gold') || parsed.includes('watch') || parsed.includes('collectible')) {
+                return "Unnecessary / Long-term";
+            } 
+            // 3. Necessary / Short-term keyword arrays
+            else if (parsed.includes('vet') || parsed.includes('doctor') || parsed.includes('med') || parsed.includes('food') || parsed.includes('grocery') || parsed.includes('cab')) {
                 return "Necessary / Short-term";
-            } else if (parsed.includes('fence') || parsed.includes('repair') || parsed.includes('fix')) {
-                return "Short Term Not Necessary";
+            } 
+            // 4. Short Term / Unnecessary keyword arrays (impulse buys)
+            else if (parsed.includes('fence') || parsed.includes('game') || parsed.includes('party') || parsed.includes('snack') || parsed.includes('pub') || parsed.includes('movie')) {
+                return "Short Term / Unnecessary";
             }
-            return "General / Discretionary";
+            
+            // Fallback default label
+            return "Short Term / Unnecessary";
         }
 
-        // Initialize setup elements on load state
         window.onload = function() {
             document.getElementById('ai-desc-display').value = localDesc;
             const derivedLabel = runLocalIntentClassifier(localDesc);
@@ -161,7 +172,6 @@
             const activeUser = sessionData.data.session.user;
             const computedCategory = document.getElementById('ai-label-display').innerText.replace('🤖 ', '');
 
-            // FIXED: Target table explicitly pointing to 'spends' to sync schemas
             const { error } = await _supabase
                 .from('spends')
                 .insert([
@@ -177,7 +187,6 @@
                 errBox.innerText = `Error writing row: ${error.message}`;
                 errBox.style.display = "block";
             } else {
-                // Clear state variables and advance workflow cleanly
                 localStorage.removeItem('pending_amt');
                 localStorage.removeItem('pending_desc');
                 window.location.href = 'patterns.html';

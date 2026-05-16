@@ -224,8 +224,18 @@
         <button onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
-    <script src="config.js"></script>
     <script>
+        // Fake checkActiveSession placeholder wrapper matching your codebase logic structures
+        async function checkActiveSession() {
+            const { data } = await _supabase.auth.getSession();
+            return data && data.session ? data.session.user : null;
+        }
+    </script>
+    <script>
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
         let currentActiveUser = null;
 
         function formatLabel(str) {
@@ -234,32 +244,26 @@
         }
 
         async function fetchMetricsDashboardData() {
-            if (typeof _supabase === 'undefined') {
-                document.getElementById('history-stack-box').innerHTML = 
-                    `<div style="color:var(--accent-red); padding:10px; font-size:0.8rem;">Supabase engine error. Verify your config.js file variables.</div>`;
-                return;
-            }
-
             try {
-                const user = await checkActiveSession(false);
+                const user = await checkActiveSession();
                 if (!user) {
                     document.getElementById('history-stack-box').innerHTML = 
-                        `<div style="color:var(--accent-red); padding:10px; font-size:0.8rem;">No authenticated active user session found. please go back to input layer.</div>`;
+                        `<div style="color:var(--accent-red); padding:10px; font-size:0.8rem;">No authenticated active user session found. Please log back in.</div>`;
                     return;
                 }
                 
                 currentActiveUser = user;
                 await renderLedgerLogs();
             } catch (err) {
-                console.error("Session crash sequence caught:", err);
+                console.error("Session framework error:", err);
             }
         }
 
         async function renderLedgerLogs() {
             try {
-                // Modified table target to accurately query user logs
+                // FIXED: Changed table path string pointer to target 'expenses' smoothly
                 const { data: spends, error } = await _supabase
-                    .from('spends')
+                    .from('expenses')
                     .select('id, category, amount, description, created_at')
                     .eq('user_id', currentActiveUser.id)
                     .order('created_at', { ascending: false });
@@ -356,7 +360,7 @@
                 });
 
             } catch (err) {
-                console.error("Render loop execution failure:", err);
+                console.error("Render loop failure:", err);
             }
         }
 
@@ -364,8 +368,9 @@
             if (!confirm("Delete this transaction row item permanently?")) return;
 
             try {
+                // FIXED: Target table altered to 'expenses' to execute database drops seamlessly
                 const { error } = await _supabase
-                    .from('spends')
+                    .from('expenses')
                     .delete()
                     .eq('id', rowId);
 
@@ -373,7 +378,7 @@
                 await renderLedgerLogs();
 
             } catch (err) {
-                alert("Database Eviction Error: Ensure row 'id' exists and RLS rules allow deletions on your table configuration.");
+                alert("Database Eviction Error: Ensure your table RLS policies allow deletion parameters.");
             }
         }
 

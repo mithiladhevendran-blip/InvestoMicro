@@ -2,189 +2,188 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvestoMicro - Local Expense Classifier</title>
+    <title>AI Result - InvestoMicro</title>
     <style>
-        :root {
-            --primary: #4f46e5;
-            --bg: #f9fafb;
-            --card-bg: #ffffff;
-            --text: #111827;
-            --border: #e5e7eb;
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            padding: 40px; 
+            max-width: 500px; 
+            margin: auto; 
+            text-align: center; 
+            background: #0f172a; 
+            color: white; 
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
+        .card { 
+            padding: 30px; 
+            border-radius: 20px; 
+            background: #1e293b; 
+            border: 1px solid #334155; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        h2 { color: #94a3b8; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 0; }
+        h3 { color: #60a5fa; font-size: 1.6rem; margin: 15px 0 5px 0; }
+        .desc { color: #94a3b8; line-height: 1.5; font-size: 0.95rem; margin-bottom: 25px; }
+        
+        /* Context Input Styling */
+        .refinement-area {
+            border-top: 1px solid #334155;
+            padding-top: 20px;
+            margin-top: 20px;
+            text-align: left;
         }
-        h2 { margin-top: 0; color: var(--primary); }
-        .form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
-        label { font-weight: 600; margin-bottom: 8px; font-size: 14px; }
-        textarea {
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 15px;
-            outline: none;
-            resize: vertical;
-        }
-        textarea:focus { border-color: var(--primary); }
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 16px;
+        .refinement-area label {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 8px;
             font-weight: 600;
-            cursor: pointer;
+        }
+        .refinement-area textarea {
             width: 100%;
+            box-sizing: border-box;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .refinement-area textarea:focus {
+            border-color: #3b82f6;
+        }
+
+        /* Button Groups */
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+        button { 
+            padding: 14px 20px; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 0.95rem;
             transition: opacity 0.2s;
         }
         button:hover { opacity: 0.9; }
-        .result-box {
-            margin-top: 25px;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 5px solid #d1d5db;
-            background: #f3f4f6;
-            display: none;
+        .btn-back {
+            background: #334155;
+            width: 35%;
         }
-        .result-box.active { display: block; }
-        .category-tag {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-bottom: 10px;
+        .btn-confirm { 
+            background: #10b981; /* Green accent matching your primary CTA */
+            width: 65%;
         }
-        /* Dynamic Category Accent Colors */
-        .cat-1 { background: #dcfce7; color: #166534; border-left-color: #22c55e !important; }
-        .cat-2 { background: #dbeafe; color: #1e40af; border-left-color: #3b82f6 !important; }
-        .cat-3 { background: #fef3c7; color: #92400e; border-left-color: #f59e0b !important; }
-        .cat-4 { background: #fee2e2; color: #991b1b; border-left-color: #ef4444 !important; }
     </style>
 </head>
 <body>
+    <div class="card">
+        <h2>AI Classification Result</h2>
+        <h3 id="cat">Classifying...</h3>
+        <p id="desc" class="desc"></p>
+        
+        <!-- Contextual Refinement Box -->
+        <div class="refinement-area">
+            <label for="contextInput">Finer Classification (Optional)</label>
+            <textarea id="contextInput" rows="2" placeholder="Describe why you bought this... (e.g., 'it was a gift', 'for my farm fence', 'business investment')" oninput="refineClassification()"></textarea>
+        </div>
 
-<div class="container">
-    <h2>InvestoMicro Expense Classifier</h2>
-
-    <div class="form-group">
-        <label for="expenseInput">What did you spend money on?</label>
-        <textarea id="expenseInput" rows="4" placeholder="Type your expense here... (e.g., medical checkup, pizza craving, birthday gift, buying an extra game controller)"></textarea>
+        <!-- Navigation Buttons -->
+        <div class="btn-group">
+            <button class="btn-back" onclick="goToInputPage()">← Back</button>
+            <button class="btn-confirm" onclick="saveAndProceed()">Confirm & Save</button>
+        </div>
     </div>
 
-    <button onclick="classifyExpenseLocal()">Classify Expense</button>
-
-    <div id="resultBox" class="result-box">
-        <div id="categoryTag" class="category-tag">Category</div>
-        <div style="font-weight: 600; font-size: 18px; margin-bottom: 8px;" id="resCategoryName"></div>
-        <p id="resReasoning" style="margin: 0; line-height: 1.5; color: #4b5563; font-size: 14px;"></p>
-    </div>
-</div>
-
-<script>
-function classifyExpenseLocal() {
-    const text = document.getElementById('expenseInput').value.trim();
-    const resultBox = document.getElementById('resultBox');
-    
-    if (!text) { alert('Please enter an expense description.'); return; }
-
-    const cleanText = text.toLowerCase();
-    let categoryId = 3; // Default fallback to Unnecessary Short-term if vague
-    let reason = "";
-
-    // --- RULE 1: STRICT GIFT OVERRIDE ---
-    if (cleanText.includes('gift') || cleanText.includes('present') || cleanText.includes('birthday')) {
-        categoryId = 1;
-        reason = "Classified based on rule: Items tagged as gifts are forced as Necessary and Immediate/Short term.";
-    } else {
-        // --- RULE 2: ADVANCED LOCAL SCANNING MATRICES ---
+    <script>
+        // Extract raw string from previous page
+        const rawSMS = (localStorage.getItem('lastSMS') || "").toLowerCase();
         
-        // Category 1 Matrices
-        const cat1Keywords = ['rent', 'food', 'groceries', 'bill', 'electricity', 'water', 'medical', 'doctor', 'medicine', 'hospital', 'repair', 'fix', 'fuel', 'petrol', 'diesel', 'cab', 'uber', 'transport', 'ticket'];
-        
-        // Category 2 Matrices
-        const cat2Keywords = ['insurance', 'tax', 'tuition', 'fee', 'college', 'school', 'house', 'home loan', 'emi', 'investment', 'gold', 'savings', 'retirement', 'annual', 'yearly', 'subscription premium'];
-        
-        // Category 3 Matrices
-        const cat3Keywords = ['snack', 'craving', 'chocolate', 'starbucks', 'coffee', 'ice cream', 'pizza', 'burger', 'swiggy', 'zomato', 'pub', 'beer', 'drink', 'movie', 'cinema', 'uber premier'];
-        
-        // Category 4 Matrices
-        const cat4Keywords = ['toy', 'gadget', 'ps5', 'xbox', 'console', 'game', 'watch', 'luxury', 'sneakers', 'collectible', 'skin', 'crypto', 'nft', 'jewelry', 'diamond', 'statue', 'action figure'];
+        // Setup initial classifications
+        let finalizedCat = "Unnecessary and Long term";
+        let finalizedDesc = "Discretionary purchase, leisure items, or non-essential hardware.";
 
-        // Compute scores based on occurrences
-        let score1 = cat1Keywords.reduce((acc, word) => acc + (cleanText.includes(word) ? 1 : 0), 0);
-        let score2 = cat2Keywords.reduce((acc, word) => acc + (cleanText.includes(word) ? 1 : 0), 0);
-        let score3 = cat3Keywords.reduce((acc, word) => acc + (cleanText.includes(word) ? 1 : 0), 0);
-        let score4 = cat4Keywords.reduce((acc, word) => acc + (cleanText.includes(word) ? 1 : 0), 0);
+        // 1. Initial Local Keyword Scan (Whole-word checking logic)
+        function checkInitialKeywords(text) {
+            const clean = text.toLowerCase();
+            
+            // Check for strict word boundaries to keep "buffalo" from breaking rules
+            const hasWord = (word) => new RegExp('\\b' + word + '\\b').test(clean);
 
-        // Tie-breaker and evaluation
-        let maxScore = Math.max(score1, score2, score3, score4);
-
-        if (maxScore === 0) {
-            // Contextual logic for untagged items based on length/phrases
-            if (cleanText.includes('ate') || cleanText.includes('hungry') || cleanText.includes('just')) {
-                categoryId = 3;
-                reason = "Detected contextual craving indicators. Marked as Unnecessary and Short term.";
-            } else if (cleanText.includes('buy') || cleanText.includes('bought')) {
-                categoryId = 4;
-                reason = "Detected casual asset acquisition. Marked as Unnecessary and Long term.";
-            } else {
-                categoryId = 3; 
-                reason = "No matching markers found. Categorized as Unnecessary Short-term by caution rules.";
+            if (hasWord('dog') || hasWord('glucose') || hasWord('pen') || hasWord('emergency') || hasWord('medicine') || hasWord('med') || hasWord('food')) {
+                finalizedCat = "Necessary and Immediate/Short term";
+                finalizedDesc = "Urgent necessities, healthcare items, food, or vital daily tools.";
+            } else if (hasWord('movie') || hasWord('snack') || hasWord('chips') || hasWord('burger') || hasWord('craving') || hasWord('pizza')) {
+                finalizedCat = "Unnecessary and Short term";
+                finalizedDesc = "Instant comfort purchases, snacks, or temporary entertainment.";
+            } else if (hasWord('arduino') || hasWord('book') || hasWord('course') || hasWord('insurance')) {
+                finalizedCat = "Necessary and Long term";
+                finalizedDesc = "Long-term infrastructure assets, core education, or durable utility investments.";
             }
-        } else {
-            if (maxScore === score1) {
-                categoryId = 1;
-                reason = "Matches markers relating directly to essential daily survival, utility bills, or unexpected urgent needs.";
-            } else if (maxScore === score2) {
-                categoryId = 2;
-                reason = "Matches indicators mapped to major life investments, core recurring liabilities, or forward security items.";
-            } else if (maxScore === score3) {
-                categoryId = 3;
-                reason = "Matches indicators mapped to fleeting impulse buying, food cravings, or immediate entertainment expenses.";
-            } else if (maxScore === score4) {
-                categoryId = 4;
-                reason = "Matches indicators mapped to modern non-essential physical assets, gaming, collections, or unutilized hardware.";
-            }
+            
+            updateUI();
         }
-    }
 
-    // Map ID integers to Display Properties
-    const categories = {
-        1: "Necessary and Immediate/Short term",
-        2: "Necessary and Long term",
-        3: "Unnecessary and Short term",
-        4: "Unnecessary and Long term"
-    };
+        // 2. Context-Aware Dynamic Override Logic
+        function refineClassification() {
+            const context = document.getElementById('contextInput').value.toLowerCase();
+            const hasContextWord = (word) => new RegExp('\\b' + word + '\\b').test(context);
 
-    // Render results dynamically via CSS variables
-    document.getElementById('resCategoryName').innerText = categories[categoryId];
-    document.getElementById('resReasoning').innerText = reason;
-    
-    const tag = document.getElementById('categoryTag');
-    tag.innerText = `Category ${categoryId}`;
-    
-    resultBox.className = 'result-box'; // reset
-    resultBox.classList.add('active', `cat-${categoryId}`);
-}
-</script>
+            // Run initial check first to establish baseline
+            checkInitialKeywords(rawSMS);
 
+            // RULE A: Gift Precedence
+            if (hasContextWord('gift') || hasContextWord('present') || hasContextWord('birthday')) {
+                finalizedCat = "Necessary and Immediate/Short term";
+                finalizedDesc = "Classified based on contextual override: Items tagged as gifts are prioritized as essential short-term gestures.";
+            }
+            // RULE B: Industrial/Asset/Property Defense Protection (e.g., Buffalo Fencing)
+            else if (hasContextWord('farm') || hasContextWord('fence') || hasContextWord('fencing') || hasContextWord('asset') || hasContextWord('security') || hasContextWord('work')) {
+                finalizedCat = "Necessary and Long term";
+                finalizedDesc = "Context refined: Tracked as core property maintenance, security defenses, or long-term operational infrastructure.";
+            }
+            // RULE C: Health/Survival Context
+            else if (hasContextWord('sick') || hasContextWord('doctor') || hasContextWord('health')) {
+                finalizedCat = "Necessary and Immediate/Short term";
+                finalizedDesc = "Context refined: Re-evaluated as an immediate healthcare or survival preservation expense.";
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('cat').innerText = finalizedCat;
+            document.getElementById('desc').innerText = finalizedDesc;
+        }
+
+        // Return to input.html without breaking history data states
+        function goToInputPage() {
+            window.location.href = 'input.html';
+        }
+
+        // Save data to localStorage arrays and advance to patterns page
+        function saveAndProceed() {
+            let history = JSON.parse(localStorage.getItem('spendHistory') || '[]');
+            history.push({
+                cat: finalizedCat, 
+                desc: finalizedDesc,
+                rawInput: rawSMS,
+                contextGiven: document.getElementById('contextInput').value,
+                date: new Date().toLocaleDateString()
+            });
+            localStorage.setItem('spendHistory', JSON.stringify(history));
+            window.location.href = 'patterns.html';
+        }
+
+        // Run the script on initial page frame load
+        checkInitialKeywords(rawSMS);
+    </script>
 </body>
 </html>

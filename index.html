@@ -10,89 +10,123 @@
         .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
         input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
         input:focus { border-color: #3b82f6; }
-        
-        /* Security mask trick: Hides characters as dots visually but keeps type as text to fool Samsung Pass */
         .mask-password { -webkit-text-security: disc; text-security: disc; }
-        
         .btn-login { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; }
         .btn-signup { width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 12px; cursor: pointer; margin-top: 10px; font-size: 0.9rem; }
+        /* Real-Time Screen Console Styles */
+        .debug-panel { margin-top: 15px; font-size: 0.8rem; background: #0f172a; border: 1px solid #ef4444; border-radius: 8px; padding: 10px; text-align: left; word-break: break-all; color: #ef4444; display: none; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>InvestoMicro</h2>
-        <!-- Standard text formats hide the input fields from Samsung's Autofill scanner -->
+        <h2 id="app-title">InvestoMicro</h2>
         <input type="text" id="email" placeholder="Email" autocomplete="off" name="sh-email">
         <input type="text" id="password" class="mask-password" placeholder="Password" autocomplete="off" name="sh-pass">
         
-        <button class="btn-login" onclick="handleLogin()">Sign In</button>
-        <button class="btn-signup" onclick="handleSignUp()">Create New Account</button>
+        <button class="btn-login" id="loginBtn" onclick="handleLogin()">Sign In</button>
+        <button class="btn-signup" id="signupBtn" onclick="handleSignUp()">Create New Account</button>
+        
+        <!-- Live Debug Output Panel -->
+        <div id="debugLog" class="debug-panel"></div>
     </div>
 
     <script>
-        // ⚡ FIXED: Restored your active instance endpoints securely
         const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         
         const _supabase = supabase.createClient(S_URL, S_KEY, {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: false
-            }
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
         });
 
-        // Instant redirect bypass if token storage payload exists
+        function showDebug(msg, isSuccess = false) {
+            const panel = document.getElementById('debugLog');
+            panel.style.display = 'block';
+            panel.style.borderColor = isSuccess ? '#10b981' : '#ef4444';
+            panel.style.color = isSuccess ? '#10b981' : '#f87171';
+            panel.innerText = msg;
+        }
+
+        // Auto-routing check sequence
         async function checkSession() {
             try {
-                const { data } = await _supabase.auth.getSession();
+                const { data, error } = await _supabase.auth.getSession();
+                if (error) {
+                    showDebug("Startup Session Error: " + error.message);
+                    return;
+                }
                 if (data?.session) {
+                    showDebug("Active token discovered! Routing...", true);
                     window.location.href = 'input.html';
                 }
             } catch(e) {
-                console.error("Session scan failed");
+                showDebug("Browser token storage crash: " + e.message);
             }
         }
         checkSession();
 
-        // Standard Password Sign In
+        // Standard Login
         async function handleLogin() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const btn = document.getElementById('loginBtn');
             
             if(!email || !password) return alert("Please fill out all fields.");
             
-            const { data, error } = await _supabase.auth.signInWithPassword({ 
-                email: email.trim(), 
-                password: password 
-            });
-            
-            if (error) {
-                alert("Login error: " + error.message);
-            } else if (data?.session) {
-                window.location.href = 'input.html';
+            btn.disabled = true;
+            btn.innerText = "Authenticating...";
+            showDebug("Contacting Supabase Node...", true);
+
+            try {
+                const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+                
+                if (error) {
+                    btn.disabled = false;
+                    btn.innerText = "Sign In";
+                    showDebug(`Error [${error.status || '400'}]: ${error.message} (Check if email confirmation is missing)`);
+                    return;
+                }
+
+                if (data?.session) {
+                    showDebug("Access Granted! Opening workspace...", true);
+                    window.location.href = 'input.html';
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = "Sign In";
+                    showDebug("Server completed handshake but returned an empty session payload.");
+                }
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerText = "Sign In";
+                showDebug("Unhandled Thread Exception: " + err.message);
             }
         }
 
         // Standard Signup
         async function handleSignUp() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-
+            
             if(!email || !password) return alert("Please fill out all fields.");
 
-            const { error } = await _supabase.auth.signUp({
-                email: email.trim(),
-                password: password,
-                options: {
-                    emailRedirectTo: 'https://github.io'
-                }
-            });
+            showDebug("Registering database entry...", true);
 
-            if (error) {
-                alert("Signup error: " + error.message);
-            } else {
-                alert("Account verification link sent to your email!");
+            try {
+                const { error } = await _supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { redirectTo: 'https://github.io' }
+                });
+
+                if (error) {
+                    showDebug("Signup Exception: " + error.message);
+                } else {
+                    document.getElementById('app-title').innerText = "Check Inbox!";
+                    showDebug("Verification link sent! Open your mail and verify before logging in.", true);
+                    document.getElementById('loginBtn').disabled = true;
+                    document.getElementById('signupBtn').style.display = 'none';
+                }
+            } catch (err) {
+                showDebug("Signup Code Fault: " + err.message);
             }
         }
     </script>

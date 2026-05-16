@@ -252,14 +252,31 @@
         }
 
         async function renderLedgerLogs() {
-            try {
-                const { data: spends, error } = await _supabase
-                    .from('spends')
-                    .select('id, category, amount, description, created_at')
-                    .eq('user_id', currentActiveUser.id)
-                    .order('created_at', { ascending: false });
+           spends.forEach(item => {
+    try {
+        let cat = item.category || "Short Term / Unnecessary";
+        let lowerCat = cat.toLowerCase();
+        
+        // Unify both "Not Necessary" and "Unnecessary" into a single structural category
+        if (lowerCat.includes("short term") || lowerCat.includes("short-term")) {
+            if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary") || lowerCat.includes("discretionary")) {
+                cat = "Short Term / Unnecessary";
+            } else if (lowerCat.includes("necessary")) {
+                cat = "Necessary / Short-term";
+            }
+        } else if (lowerCat.includes("long term") || lowerCat.includes("long-term")) {
+            if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary")) {
+                cat = "Unnecessary / Long-term";
+            } else if (lowerCat.includes("necessary")) {
+                cat = "Necessary / Long-term";
+            }
+        }
 
-                if (error) throw error;
+        const value = Number(item.amount) || 0;
+        monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
+        frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
+
+        // ... rest of your time tracking logic continues below safely ...
 
                 const peakCapDiv = document.getElementById('peak-capital-destination');
                 const peakVelDiv = document.getElementById('peak-velocity-destination');

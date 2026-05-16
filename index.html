@@ -3,72 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvestoMicro v2.0</title>
-    <script src="https://jsdelivr.net"></script>
+    <title>MicroInvest Login</title>
     <style>
-        body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: white; }
-        .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
+        body { font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: #f8fafc; }
+        .box { background: #1e293b; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 350px; text-align: center; border: 1px solid #334155; }
+        h2 { margin-bottom: 0.5rem; color: #3b82f6; letter-spacing: -1px; }
+        p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #334155; border-radius: 12px; box-sizing: border-box; background: #0f172a; color: white; outline: none; }
         input:focus { border-color: #3b82f6; }
-        .btn-login { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; }
-        .btn-signup { width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 12px; cursor: pointer; margin-top: 10px; font-size: 0.9rem; }
+        button { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 1.5rem; transition: 0.3s; }
+        button:hover { background: #2563eb; transform: translateY(-2px); }
+        .toggle-text { margin-top: 1.5rem; font-size: 0.85rem; color: #94a3b8; }
+        .toggle-text span { color: #3b82f6; cursor: pointer; font-weight: 600; text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>InvestoMicro</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
+        <h2 id="title">Welcome Back</h2>
+        <p id="subtitle">Enter your details to sign in</p>
         
-        <button class="btn-login" onclick="handleLogin()">Sign In</button>
-        <button class="btn-signup" onclick="handleSignUp()">Create New Account</button>
+        <input type="tel" placeholder="Phone Number">
+        <input type="password" placeholder="Password">
+        
+        <button onclick="window.location.href='input.html'" id="mainBtn">Sign In</button>
+        
+        <div class="toggle-text" id="toggleArea">
+            Don't have an account? <span onclick="toggleAuth()">Sign Up</span>
+        </div>
     </div>
 
     <script>
-        const S_URL = 'https://supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
-        const _supabase = supabase.createClient(S_URL, S_KEY);
+        let isLogin = true;
+        function toggleAuth() {
+            isLogin = !isLogin;
+            const title = document.getElementById('title');
+            const subtitle = document.getElementById('subtitle');
+            const mainBtn = document.getElementById('mainBtn');
+            const toggleArea = document.getElementById('toggleArea');
 
-        // 1. Instant check: If logged in, go straight to input page
-        async function checkSession() {
-            const { data } = await _supabase.auth.getSession();
-            if (data?.session) {
-                window.location.href = 'input.html';
-            }
-        }
-        checkSession();
-
-        // 2. Simple Login
-        async function handleLogin() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-            
-            if (error) {
-                alert("Login error: " + error.message);
-            } else if (data?.session) {
-                window.location.href = 'input.html';
-            }
-        }
-
-        // 3. Simple Signup
-        async function handleSignUp() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            const { error } = await _supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    emailRedirectTo: 'https://github.io'
-                }
-            });
-
-            if (error) {
-                alert("Signup error: " + error.message);
+            if (isLogin) {
+                title.innerText = "Welcome Back";
+                subtitle.innerText = "Enter your details to sign in";
+                mainBtn.innerText = "Sign In";
+                toggleArea.innerHTML = `Don't have an account? <span onclick="toggleAuth()">Sign Up</span>`;
             } else {
-                alert("Account verification link sent to your email!");
+                title.innerText = "Create Account";
+                subtitle.innerText = "Join MicroInvest to track spending";
+                mainBtn.innerText = "Sign Up";
+                toggleArea.innerHTML = `Already have an account? <span onclick="toggleAuth()">Sign In</span>`;
             }
         }
     </script>

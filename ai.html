@@ -6,124 +6,117 @@
     <title>AI Analysis - InvestoMicro</title>
     <script src="https://jsdelivr.net"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin:0; padding:20px; min-height:100vh; }
-        .card { background:#1e293b; padding:30px; border-radius:24px; border:1px solid #334155; box-shadow:0 10px 30px rgba(0,0,0,0.5); margin-bottom: 80px; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin:0; padding:20px; min-height:100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding-bottom: 80px; box-sizing: border-box; }
+        .card { background:#1e293b; padding:30px; border-radius:24px; border:1px solid #334155; box-shadow:0 10px 30px rgba(0,0,0,0.5); width: 400px; box-sizing: border-box; text-align: center; }
         h3 { color:#60a5fa; font-size:1.6rem; margin: 10px 0; }
         .desc { color:#94a3b8; line-height:1.6; min-height:80px; margin:15px 0; }
-        button { width:100%; padding:16px; margin:10px 0; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.05rem; transition: 0.2s; }
+        button { width:100%; padding:16px; margin:10px 0; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size:1.05rem; }
         button:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
         .primary { background:#3b82f6; color: white; }
         .secondary { background:#475569; color: white; }
-        .nav { position:fixed; bottom:0; left:0; right:0; background:#1e293b; border-top:1px solid #334155; display:flex; padding:10px; max-width:520px; margin:0 auto; }
-        .nav button { flex:1; margin:0 4px; padding:14px; background:#334155; border:none; border-radius:12px; color:white; font-size:0.95rem; }
+        
+        .nav { position:fixed; bottom:0; left:0; right:0; background:#1e293b; border-top:1px solid #334155; display:flex; padding:10px; max-width:520px; margin:0 auto; box-sizing: border-box; }
+        .nav button { flex:1; margin:0 4px; padding:14px; background:#334155; border:none; border-radius:12px; color:white; font-size:0.95rem; cursor: pointer; }
+        .nav .active { background: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2 style="color:#94a3b8; font-size:1rem; text-transform:uppercase; margin:0;">AI Spend Analysis</h2>
-        <h3 id="cat">Analyzing with Gemini...</h3>
-        <p id="desc" class="desc">Please wait...</p>
+        <h3 id="cat">Parsing Prompt Input...</h3>
+        <p id="desc" class="desc">Evaluating last submitted snippet context...</p>
         
-        <button id="saveBtn" class="primary" disabled>Loading...</button>
+        <button id="saveBtn" class="primary" disabled>Processing...</button>
         <button id="skipBtn" class="secondary" onclick="location.href='patterns.html'">Skip → Patterns</button>
     </div>
 
     <div class="nav">
-        <button onclick="location.href='ai.html'">AI Analysis</button>
+        <button onclick="location.href='input.html'">Input</button>
+        <button class="active" onclick="location.href='ai.html'">AI Analysis</button>
         <button onclick="location.href='patterns.html'">Patterns</button>
         <button onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
 <script type="module">
-    // CONFIGURATION
+    // Replace with a secure Edge Function proxy setup later if in a production context
     const GEMINI_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
-    const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE";
-    const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+    const S_URL = 'https://supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+    const _supabase = supabase.createClient(S_URL, S_KEY);
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let activeUser = null;
+    let computedResult = null;
+    let extractedAmount = 0;
+    let rawText = localStorage.getItem('lastSMS') || "Manual Entry Expense";
 
-    // Mock data representing the latest user transaction
-    const transaction = { amount: 1250, description: "Uber ride to corporate office" };
-    let analyzedData = null;
+    async function checkSession() {
+        const { data } = await _supabase.auth.getSession();
+        if (!data || !data.session) {
+            window.location.href = 'index.html';
+        } else {
+            activeUser = data.session.user;
+            runAIAnalysis();
+        }
+    }
+    checkSession();
 
-    async function analyzeTransaction() {
+    async function runAIAnalysis() {
         const url = `https://googleapis.com{GEMINI_KEY}`;
-        
         try {
             const response = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    // System instruction anchors the AI context to block off-topic hallucinations
-                    systemInstruction: {
-                        parts: [{ text: "You are a strict personal finance backend JSON API. Categorize consumer expenses and give a 1-sentence budget tip." }]
-                    },
-                    contents: [{
-                        parts: [{ text: `Amount: ${transaction.amount}, Text: "${transaction.description}"` }]
-                    }],
+                    systemInstruction: { parts: [{ text: "You are a consumer finance endpoint parser. Calculate or isolate the amount number, assign an emoji category, and write a micro budgeting insight statement." }] },
+                    contents: [{ parts: [{ text: `Raw Data Input Text String: "${rawText}"` }] }],
                     generationConfig: {
-                        // Forces the AI to respond with pure JSON matching this exact structure
                         responseMimeType: "application/json",
                         responseSchema: {
                             type: "OBJECT",
                             properties: {
-                                category: { type: "STRING", description: "Category name with a relevant emoji" },
-                                summary: { type: "STRING", description: "Short budgeting tip under 15 words" }
+                                amount: { type: "NUMBER" },
+                                category: { type: "STRING" },
+                                summary: { type: "STRING" }
                             },
-                            required: ["category", "summary"]
+                            required: ["amount", "category", "summary"]
                         }
                     }
                 })
             });
 
-            const resData = await response.json();
-            // Parse the forced JSON string response from Gemini
-            analyzedData = JSON.parse(resData.candidates[0].content.parts[0].text);
+            const parsed = await response.json();
+            computedResult = JSON.parse(parsed.candidates[0].content.parts[0].text);
+            extractedAmount = computedResult.amount || 0;
 
-            // Update UI elements smoothly
-            document.getElementById('cat').innerText = analyzedData.category;
-            document.getElementById('desc').innerText = analyzedData.summary;
+            document.getElementById('cat').innerText = computedResult.category;
+            document.getElementById('desc').innerText = computedResult.summary;
             
-            const saveBtn = document.getElementById('saveBtn');
-            saveBtn.innerText = `Confirm & Save ₹${transaction.amount}`;
-            saveBtn.disabled = false;
-            saveBtn.onclick = saveToSupabase;
-
-        } catch (err) {
-            document.getElementById('cat').innerText = "Analysis Failed";
-            document.getElementById('desc').innerText = "Make sure your API keys are valid and try again.";
-            console.error(err);
+            const sBtn = document.getElementById('saveBtn');
+            sBtn.innerText = `Confirm & Save ₹${extractedAmount}`;
+            sBtn.disabled = false;
+            sBtn.onclick = commitRecord;
+        } catch (e) {
+            document.getElementById('cat').innerText = "Parsing Timeout";
+            document.getElementById('desc').innerText = "Review API credentials string validation parameters.";
         }
     }
 
-    async function saveToSupabase() {
-        const btn = document.getElementById('saveBtn');
-        btn.disabled = true;
-        btn.innerText = "Saving...";
+    async function commitRecord() {
+        const sBtn = document.getElementById('saveBtn');
+        sBtn.disabled = true;
+        sBtn.innerText = "Staging...";
 
-        // Inserts the transaction and AI data into your database table
-        const { error } = await supabaseClient
-            .from('expenses') 
-            .insert([{
-                amount: transaction.amount,
-                description: transaction.description,
-                category: analyzedData.category,
-                tip: analyzedData.summary,
-                created_at: new Date()
-            }]);
+        await _supabase.from('expenses').insert([{
+            user_id: activeUser.id,
+            amount: extractedAmount,
+            description: rawText,
+            category: computedResult.category,
+            tip: computedResult.summary,
+            created_at: new Date()
+        }]);
 
-        if (error) {
-            alert("Error saving: " + error.message);
-            btn.disabled = false;
-            btn.innerText = "Try Saving Again";
-        } else {
-            alert("Transaction saved successfully!");
-            location.href = 'patterns.html'; // Redirect on success
-        }
+        location.href = 'patterns.html';
     }
-
-    // Trigger analysis on page load
-    window.onload = analyzeTransaction;
 </script>
 </body>
 </html>

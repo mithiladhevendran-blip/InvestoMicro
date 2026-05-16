@@ -10,29 +10,18 @@
         .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
         input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
         input:focus { border-color: #3b82f6; }
-        
         .btn-login { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; }
-        .btn-signup { width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 12px; cursor: pointer; font-weight: normal; margin-top: 10px; font-size: 0.9rem; }
-        
-        .btn-login:hover { background: #2563eb; }
-        .btn-signup:hover { color: white; border-color: #475569; }
-        .version { font-size: 10px; color: #475569; margin-top: 20px; }
-        .status-msg { margin-top: 15px; font-size: 0.85rem; color: #10b981; min-height: 20px; font-weight: 500; }
+        .btn-signup { width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 12px; cursor: pointer; margin-top: 10px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2 id="title">InvestoMicro</h2>
-        <input type="email" id="email" placeholder="Email (e.g. user@test.com)">
+        <h2>InvestoMicro</h2>
+        <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
         
-        <button class="btn-login" id="mainBtn" onclick="handleLogin()">Sign In</button>
-        <button class="btn-signup" id="subBtn" onclick="handleSignUp()">Create New Account</button>
-        
-        <!-- Live status feedback container -->
-        <div id="status" class="status-msg"></div>
-        
-        <div class="version">Update Tag: VER_AUTH_LIFECYCLE_FIX</div>
+        <button class="btn-login" onclick="handleLogin()">Sign In</button>
+        <button class="btn-signup" onclick="handleSignUp()">Create New Account</button>
     </div>
 
     <script>
@@ -40,46 +29,33 @@
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         const _supabase = supabase.createClient(S_URL, S_KEY);
 
-        // ⚡ ACTIVE EVENT LISTENER FOR REAL-TIME ROUTING
-        // This fires the instant local tokens load or whenever auth states mutate
-        _supabase.auth.onAuthStateChange((event, session) => {
-            console.log("Auth Event Intercepted:", event);
-            if (session) {
-                // Instantly routes logged-in profiles forward
+        // 1. Instant check: If logged in, go straight to input page
+        async function checkSession() {
+            const { data } = await _supabase.auth.getSession();
+            if (data?.session) {
                 window.location.href = 'input.html';
             }
-        });
+        }
+        checkSession();
 
-        // LOGIN FUNCTION
+        // 2. Simple Login
         async function handleLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const statusDiv = document.getElementById('status');
-            
-            if(!email || !password) return alert("Please fill out all fields.");
-            
-            statusDiv.style.color = "#60a5fa";
-            statusDiv.innerText = "Authenticating profile...";
             
             const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
             
             if (error) {
-                statusDiv.innerText = "";
-                alert("Login failed: " + error.message);
+                alert("Login error: " + error.message);
+            } else if (data?.session) {
+                window.location.href = 'input.html';
             }
-            // onAuthStateChange handles successful redirect automatically
         }
 
-        // SIGN UP FUNCTION
+        // 3. Simple Signup
         async function handleSignUp() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const statusDiv = document.getElementById('status');
-
-            if(!email || !password) return alert("Please specify an email and password.");
-
-            statusDiv.style.color = "#10b981";
-            statusDiv.innerText = "Registering user record...";
 
             const { error } = await _supabase.auth.signUp({
                 email,
@@ -90,14 +66,9 @@
             });
 
             if (error) {
-                statusDiv.innerText = "";
-                alert("Sign up failed: " + error.message);
+                alert("Signup error: " + error.message);
             } else {
-                // Dynamically changes UI text states without reloading page
-                document.getElementById('title').innerText = "Check Email!";
-                statusDiv.innerText = "Verification link sent! Click it to continue.";
-                document.getElementById('mainBtn').disabled = true;
-                document.getElementById('subBtn').style.display = 'none';
+                alert("Account verification link sent to your email!");
             }
         }
     </script>

@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spend Patterns - InvestoMicro</title>
+    <title>Suggestions - InvestoMicro</title>
     <script src="https://jsdelivr.net"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin:0; padding:20px; min-height:100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 80px; box-sizing: border-box; }
         .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 400px; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); box-sizing: border-box; }
         h2 { color: #3b82f6; margin-top: 0; text-align: center; }
-        .list-item { background: #0f172a; border: 1px solid #334155; padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .list-left { text-align: left; }
-        .list-cat { font-weight: bold; color: #60a5fa; }
-        .list-desc { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .list-amt { font-weight: bold; color: #10b981; }
+        .tip-card { background: #0f172a; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 8px; margin-bottom: 12px; font-size: 0.9rem; line-height: 1.5; color: #f1f5f9; }
+        .tip-header { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 4px; font-weight: bold; }
 
         .nav { position:fixed; bottom:0; left:0; right:0; background:#1e293b; border-top:1px solid #334155; display:flex; padding:10px; max-width:520px; margin:0 auto; box-sizing: border-box; }
         .nav button { flex:1; margin:0 4px; padding:14px; background:#334155; border:none; border-radius:12px; color:white; font-size:0.95rem; cursor: pointer; }
@@ -22,15 +19,15 @@
 </head>
 <body>
     <div class="box">
-        <h2>Spend Log Records</h2>
-        <div id="log-container"><p style="text-align:center; color:#64748b;">Loading transaction stack...</p></div>
+        <h2>AI Suggestions</h2>
+        <div id="tips-container"><p style="text-align:center; color:#64748b;">Evaluating tips ledger...</p></div>
     </div>
 
     <div class="nav">
         <button onclick="location.href='input.html'">Input</button>
         <button onclick="location.href='ai.html'">AI Analysis</button>
-        <button class="active" onclick="location.href='patterns.html'">Patterns</button>
-        <button onclick="location.href='suggest.html'">Suggestions</button>
+        <button onclick="location.href='patterns.html'">Patterns</button>
+        <button class="active" onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
     <script>
@@ -43,35 +40,32 @@
             if (!data || !data.session) {
                 window.location.href = 'index.html';
             } else {
-                fetchLogs(data.session.user.id);
+                fetchTips(data.session.user.id);
             }
         }
         checkSession();
 
-        async function fetchLogs(userId) {
+        async function fetchTips(userId) {
             try {
-                let { data: rows, error } = await _supabase.from('expenses').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+                let { data: rows, error } = await _supabase.from('expenses').select('category, tip').eq('user_id', userId).not('tip', 'is', null);
                 if (error) {
-                    const fallback = await _supabase.from('expenses').select('*').order('created_at', { ascending: false });
+                    const fallback = await _supabase.from('expenses').select('category, tip').not('tip', 'is', null);
                     rows = fallback.data;
                 }
 
-                const el = document.getElementById('log-container');
-                if(!rows || rows.length === 0) {
-                    el.innerHTML = `<p style="text-align:center; color:#64748b;">No entry ledgers logged yet.</p>`;
+                const container = document.getElementById('tips-container');
+                if (!rows || rows.length === 0) {
+                    container.innerHTML = `<p style="text-align:center; color:#64748b;">No advisory suggestions triggered yet.</p>`;
                     return;
                 }
 
-                el.innerHTML = rows.map(r => `
-                    <div class="list-item">
-                        <div class="list-left">
-                            <div class="list-cat">${r.category || 'Expense'}</div>
-                            <div class="list-desc">${r.description || ''}</div>
-                        </div>
-                        <div class="list-amt">₹${(r.amount || 0).toLocaleString()}</div>
+                container.innerHTML = rows.slice(0, 5).map(r => `
+                    <div class="tip-card">
+                        <div class="tip-header">${r.category || 'Insight'} Advisory</div>
+                        <div>${r.tip}</div>
                     </div>
                 `).join('');
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
             }
         }

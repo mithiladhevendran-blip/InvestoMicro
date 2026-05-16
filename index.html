@@ -10,6 +10,10 @@
         .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
         input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
         input:focus { border-color: #3b82f6; }
+        
+        /* Security mask trick: Hides characters as dots visually but keeps type as text to fool Samsung Pass */
+        .mask-password { -webkit-text-security: disc; text-security: disc; }
+        
         .btn-login { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; }
         .btn-signup { width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 12px; cursor: pointer; margin-top: 10px; font-size: 0.9rem; }
     </style>
@@ -17,9 +21,9 @@
 <body>
     <div class="box">
         <h2>InvestoMicro</h2>
-        <!-- autocomplete attributes force traditional password managers over hardware passkeys -->
-        <input type="email" id="email" placeholder="Email" autocomplete="username">
-        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+        <!-- Standard text formats hide the input fields from Samsung's Autofill scanner -->
+        <input type="text" id="email" placeholder="Email" autocomplete="off" name="sh-email">
+        <input type="text" id="password" class="mask-password" placeholder="Password" autocomplete="off" name="sh-pass">
         
         <button class="btn-login" onclick="handleLogin()">Sign In</button>
         <button class="btn-signup" onclick="handleSignUp()">Create New Account</button>
@@ -29,7 +33,6 @@
         const S_URL = 'https://supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         
-        // Strict client setup to block web auth hooks on older mobile chipsets
         const _supabase = supabase.createClient(S_URL, S_KEY, {
             auth: {
                 persistSession: true,
@@ -38,7 +41,6 @@
             }
         });
 
-        // Instant redirect bypass
         async function checkSession() {
             try {
                 const { data } = await _supabase.auth.getSession();
@@ -51,7 +53,6 @@
         }
         checkSession();
 
-        // Standard Password Sign In
         async function handleLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -70,7 +71,6 @@
             }
         }
 
-        // Standard Signup
         async function handleSignUp() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;

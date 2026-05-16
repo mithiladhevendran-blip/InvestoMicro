@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MicroInvest - Auth Suite</title>
-    <!-- Complete dependency module load for Supabase Client operations -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- FIX 1: Loaded the correct, absolute Supabase CDN JS bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { 
             font-family: 'Inter', system-ui, sans-serif; 
@@ -82,55 +82,54 @@
         <h2 id="title">Welcome Back</h2>
         <p id="subtitle">Enter your details to sign in</p>
         
-        <!-- Email/Username Group (Swapped phone for full Supabase Auth compatibility) -->
         <div class="form-group">
             <label for="email">Email Address</label>
             <input type="email" id="email" placeholder="name@example.com">
         </div>
 
-        <!-- Password Field Group (Hidden automatically during Reset View) -->
         <div class="form-group" id="password-group">
             <label for="password">Password</label>
             <input type="password" id="password" placeholder="••••••••">
         </div>
         
-        <!-- Forgot Password Action Trigger Link -->
         <div class="utility-links" id="utility-area">
-            <div></div> <!-- Spacer -->
+            <div></div>
             <div class="link-item" onclick="switchViewState('forgot')">Forgot Password?</div>
         </div>
 
         <button onclick="handleAuthAction()" id="mainBtn">Sign In</button>
         
-        <!-- Status Feedback Panels -->
         <div id="error-msg"></div>
         <div id="success-msg"></div>
 
-        <!-- Shared Mode Toggle Footer -->
         <div class="toggle-text" id="toggleArea">
             Don't have an account? <span onclick="switchViewState('signup')">Sign Up</span>
         </div>
     </div>
 
     <script>
-        // Synchronized cloud cluster config details from your backend parameters
-        const S_URL = 'https://supabase.co';
+        // Synchronized cloud cluster config details
+        const S_URL = 'https://funcvigewkhauenqx rbf.supabase.co'; // FIX 2: Extracted full Subdomain URL from your JWT token payload
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        
+        // FIX 3: Accessed createClient using the global window namespace injected by CDN bundle
         const _supabase = supabase.createClient(S_URL, S_KEY);
 
-        // Track state mode window context ('login', 'signup', 'forgot')
         let currentMode = 'login';
 
         // Auto routing security session check layer
         async function checkActiveSession() {
-            const { data } = await _supabase.auth.getSession();
-            if (data && data.session) {
-                window.location.href = 'input.html';
+            try {
+                const { data } = await _supabase.auth.getSession();
+                if (data && data.session) {
+                    window.location.href = 'input.html';
+                }
+            } catch (e) {
+                console.error("Session check failed:", e);
             }
         }
         checkActiveSession();
 
-        // 🔄 Dynamic View Router Engine (Handles all toggles smoothly)
         function switchViewState(targetMode) {
             currentMode = targetMode;
             
@@ -141,7 +140,6 @@
             const passGroup = document.getElementById('password-group');
             const utilityArea = document.getElementById('utility-area');
             
-            // Reset message boards when toggling states
             clearStatusMessages();
 
             if (currentMode === 'login') {
@@ -170,7 +168,6 @@
             }
         }
 
-        // 🛠️ Operational Backend Auth Actions Router
         async function handleAuthAction() {
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -181,7 +178,6 @@
             if (!email) { showMsg('error', 'Please enter your email address.'); return; }
             if (currentMode !== 'forgot' && !password) { showMsg('error', 'Please fill in your password.'); return; }
 
-            // Freeze interaction controls during transit
             mainBtn.disabled = true;
             mainBtn.innerText = "Processing...";
 
@@ -194,7 +190,7 @@
                 else if (currentMode === 'signup') {
                     const { data, error } = await _supabase.auth.signUp({ email, password });
                     if (error) throw error;
-                    showMsg('success', 'Sign up process complete! Check your email inbox for confirmation links.');
+                    showMsg('success', 'Sign up complete! Check your email for confirmation links.');
                     switchViewState('login');
                 } 
                 else if (currentMode === 'forgot') {
@@ -202,13 +198,12 @@
                         redirectTo: window.location.origin + '/input.html',
                     });
                     if (error) throw error;
-                    showMsg('success', 'Recovery configurations sent! Please monitor your inbox logs.');
+                    showMsg('success', 'Recovery link sent! Please check your inbox.');
                 }
             } catch (err) {
                 showMsg('error', err.message || 'An unexpected operation error occurred.');
             } finally {
                 mainBtn.disabled = false;
-                // Restore localized naming token state
                 if (currentMode === 'login') mainBtn.innerText = "Sign In";
                 else if (currentMode === 'signup') mainBtn.innerText = "Sign Up";
                 else if (currentMode === 'forgot') mainBtn.innerText = "Send Reset Link";

@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Result - InvestoMicro</title>
+    <title>AI Dynamic Result - InvestoMicro</title>
+    <!-- Complete dependency module load for Supabase Client operations -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         body { 
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
             padding: 40px; 
             max-width: 500px; 
             margin: auto; 
             text-align: center; 
             background: #0f172a; 
             color: white; 
+            padding-bottom: 90px;
+            box-sizing: border-box;
         }
         .card { 
             padding: 30px; 
@@ -20,170 +24,247 @@
             border: 1px solid #334155; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        h2 { color: #94a3b8; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 0; }
+        h2 { color: #94a3b8; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 0; }
         h3 { color: #60a5fa; font-size: 1.6rem; margin: 15px 0 5px 0; }
         .desc { color: #94a3b8; line-height: 1.5; font-size: 0.95rem; margin-bottom: 25px; }
         
-        /* Context Input Styling */
-        .refinement-area {
+        /* Persona Section Styling */
+        .section-box {
             border-top: 1px solid #334155;
-            padding-top: 20px;
-            margin-top: 20px;
+            padding-top: 18px;
+            margin-top: 18px;
             text-align: left;
         }
-        .refinement-area label {
+        .section-box label {
             color: #94a3b8;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             display: block;
             margin-bottom: 8px;
-            font-weight: 600;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .refinement-area textarea {
+        select, textarea {
             width: 100%;
             box-sizing: border-box;
             background: #0f172a;
             border: 1px solid #334155;
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 12px;
             color: white;
             font-family: inherit;
             font-size: 0.9rem;
-            resize: none;
             outline: none;
             transition: border-color 0.2s;
         }
-        .refinement-area textarea:focus {
+        select:focus, textarea:focus {
             border-color: #3b82f6;
         }
 
-        /* Button Groups */
-        .btn-group {
+        /* 3-Row Dynamic Routing Buttons Grid */
+        .nav-grid {
             display: flex;
-            gap: 12px;
+            flex-direction: column;
+            gap: 10px;
             margin-top: 25px;
         }
+        .row-split {
+            display: flex;
+            gap: 10px;
+        }
         button { 
-            padding: 14px 20px; 
+            padding: 14px; 
             color: white; 
             border: none; 
             border-radius: 12px; 
             cursor: pointer; 
             font-weight: bold; 
             font-size: 0.95rem;
-            transition: opacity 0.2s;
+            transition: 0.2s;
         }
-        button:hover { opacity: 0.9; }
-        .btn-back {
-            background: #334155;
-            width: 35%;
-        }
-        .btn-confirm { 
-            background: #10b981; /* Green accent matching your primary CTA */
-            width: 65%;
-        }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { background: #475569 !important; cursor: not-allowed; transform: none; opacity: 0.6; }
+        
+        .btn-db-save { background: #10b981; width: 100%; font-size: 1rem; }
+        .btn-go-input { background: #334155; flex: 1; }
+        .btn-go-patterns { background: #4b5563; flex: 1; }
+        .btn-go-suggest { background: #3b82f6; width: 100%; }
+        
+        #status-msg { margin-top: 12px; font-size: 0.85rem; display: none; font-weight: 500; }
+
+        /* Navigation Menu Bar */
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; padding: 10px; max-width: 520px; margin: 0 auto; box-sizing: border-box; z-index: 100; }
+        .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; cursor: pointer; }
+        .nav .active { background: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>AI Classification Result</h2>
+        <h2>AI Intent Classification</h2>
         <h3 id="cat">Classifying...</h3>
         <p id="desc" class="desc"></p>
         
-        <!-- Contextual Refinement Box -->
-        <div class="refinement-area">
-            <label for="contextInput">Finer Classification (Optional)</label>
-            <textarea id="contextInput" rows="2" placeholder="Describe why you bought this... (e.g., 'it was a gift', 'for my farm fence', 'business investment')" oninput="refineClassification()"></textarea>
+        <!-- Live Personality Profile Preferences Switch -->
+        <div class="section-box">
+            <label for="userPersona">Your Primary Lifestyle Profile</label>
+            <select id="userPersona" onchange="evaluatePersonalizedSpend()">
+                <option value="general">Standard (General Urban/Leisure Consumer)</option>
+                <option value="farmer">Agri-Business / Farm Operator</option>
+                <option value="student">Student / Academic Learner</option>
+                <option value="hobbyist">Tech Hobbyist / Maker</option>
+            </select>
         </div>
 
-        <!-- Navigation Buttons -->
-        <div class="btn-group">
-            <button class="btn-back" onclick="goToInputPage()">← Back</button>
-            <button class="btn-confirm" onclick="saveAndProceed()">Confirm & Save</button>
+        <!-- Finer Details Fallback Text Override Box -->
+        <div class="section-box">
+            <label for="contextInput">Finer Classification Notes</label>
+            <textarea id="contextInput" rows="2" placeholder="Clarify context details... (e.g., 'buying a toy present', 'unexpected medical breakdown')" oninput="evaluatePersonalizedSpend()"></textarea>
+        </div>
+
+        <!-- Multi-Directional Action Control Matrix -->
+        <div class="nav-grid">
+            <button class="btn-db-save" id="saveBtn" onclick="updateDatabaseRecord()">Confirm & Write to Database</button>
+            <div id="status-msg"></div>
+            
+            <div class="row-split">
+                <button class="btn-go-input" onclick="location.href='input.html'">← Entry Input</button>
+                <button class="btn-go-patterns" onclick="location.href='patterns.html'">📄 View Patterns</button>
+            </div>
+            <button class="btn-go-suggest" onclick="location.href='suggest.html'">💡 Go to Suggestions →</button>
         </div>
     </div>
 
+    <!-- Persistent Bottom App Navigation Menu -->
+    <div class="nav">
+        <button onclick="location.href='input.html'">Input</button>
+        <button class="active" onclick="location.href='ai.html'">AI Analysis</button>
+        <button onclick="location.href='patterns.html'">Patterns</button>
+        <button onclick="location.href='suggest.html'">Suggestions</button>
+    </div>
+
     <script>
-        // Extract raw string from previous page
+        // Extract parameters safely passed down from the primary entry logs
         const rawSMS = (localStorage.getItem('lastSMS') || "").toLowerCase();
-        
-        // Setup initial classifications
+        const rawAmount = parseFloat(localStorage.getItem('lastAmount') || "0");
+        const entryContext = (localStorage.getItem('userFinerContext') || "").toLowerCase();
+
+        // Preset user contextual input box with historical data if available
+        if (entryContext) {
+            document.getElementById('contextInput').value = localStorage.getItem('userFinerContext');
+        }
+
+        // Initialize Supabase Client Cluster using your persistent tracking parameters
+        const S_URL = 'https://supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
         let finalizedCat = "Unnecessary and Long term";
-        let finalizedDesc = "Discretionary purchase, leisure items, or non-essential hardware.";
+        let finalizedDesc = "";
 
-        // 1. Initial Local Keyword Scan (Whole-word checking logic)
-        function checkInitialKeywords(text) {
-            const clean = text.toLowerCase();
+        function evaluatePersonalizedSpend() {
+            const persona = document.getElementById('userPersona').value;
+            const liveNotes = document.getElementById('contextInput').value.toLowerCase();
             
-            // Check for strict word boundaries to keep "buffalo" from breaking rules
-            const hasWord = (word) => new RegExp('\\b' + word + '\\b').test(clean);
+            // Build absolute text matrix to scan whole keywords smoothly
+            const combinedText = `${rawSMS} ${entryContext} ${liveNotes}`;
+            const hasWord = (word) => new RegExp('\\b' + word + '\\b').test(combinedText);
 
-            if (hasWord('dog') || hasWord('glucose') || hasWord('pen') || hasWord('emergency') || hasWord('medicine') || hasWord('med') || hasWord('food')) {
+            // --- PRIORITY RULE 1: ABSOLUTE GIFT/PRESENT INTERCEPT ---
+            if (hasWord('gift') || hasWord('present') || hasWord('birthday') || hasWord('gifting')) {
                 finalizedCat = "Necessary and Immediate/Short term";
-                finalizedDesc = "Urgent necessities, healthcare items, food, or vital daily tools.";
+                finalizedDesc = "Priority Match: Items specified or tagged as gifts are mapped as important short-term gestures.";
+            } 
+            // --- PRIORITY RULE 2: PERSONA-BASED PROFILE CLASSIFICATION MATRIX ---
+            else if (hasWord('fence') || hasWord('fencing') || hasWord('buffalo')) {
+                if (persona === 'farmer') {
+                    finalizedCat = "Necessary and Long term";
+                    finalizedDesc = "Persona Match (Farmer): Fencing infrastructure represents a necessary long-term asset protecting property and livestock.";
+                } else {
+                    finalizedCat = "Unnecessary and Long term";
+                    finalizedDesc = "Persona Mismatch (Standard/Hobbyist): Fencing materials or decorative setups are marked as non-essential hardware assets.";
+                }
+            }
+            // --- PRIORITY RULE 3: CORE UTILITY VECTOR SETS ---
+            else if (hasWord('dog') || hasWord('glucose') || hasWord('pen') || hasWord('emergency') || hasWord('medicine') || hasWord('med') || hasWord('food')) {
+                finalizedCat = "Necessary and Immediate/Short term";
+                finalizedDesc = "Survival Need: Urgent medical care, nourishment supplies, or vital short-term functional tools.";
             } else if (hasWord('movie') || hasWord('snack') || hasWord('chips') || hasWord('burger') || hasWord('craving') || hasWord('pizza')) {
                 finalizedCat = "Unnecessary and Short term";
-                finalizedDesc = "Instant comfort purchases, snacks, or temporary entertainment.";
-            } else if (hasWord('arduino') || hasWord('book') || hasWord('course') || hasWord('insurance')) {
+                finalizedDesc = "Fleeting Spend: Immediate micro-cravings, impulse snack orders, or temporary entertainment loops.";
+            } else if (hasWord('arduino') || hasWord('book') || hasWord('course')) {
+                if (persona === 'student' || persona === 'hobbyist') {
+                    finalizedCat = "Necessary and Long term";
+                    finalizedDesc = "Persona Match: Essential educational modules, hardware tools, or self-improvement assets.";
+                } else {
+                    finalizedCat = "Unnecessary and Long term";
+                    finalizedDesc = "Leisure Splurge: Non-essential developmental equipment outside your primary operations profile.";
+                }
+            } else if (hasWord('insurance') || hasWord('tax') || hasWord('rent')) {
                 finalizedCat = "Necessary and Long term";
-                finalizedDesc = "Long-term infrastructure assets, core education, or durable utility investments.";
-            }
-            
-            updateUI();
-        }
-
-        // 2. Context-Aware Dynamic Override Logic
-        function refineClassification() {
-            const context = document.getElementById('contextInput').value.toLowerCase();
-            const hasContextWord = (word) => new RegExp('\\b' + word + '\\b').test(context);
-
-            // Run initial check first to establish baseline
-            checkInitialKeywords(rawSMS);
-
-            // RULE A: Gift Precedence
-            if (hasContextWord('gift') || hasContextWord('present') || hasContextWord('birthday')) {
-                finalizedCat = "Necessary and Immediate/Short term";
-                finalizedDesc = "Classified based on contextual override: Items tagged as gifts are prioritized as essential short-term gestures.";
-            }
-            // RULE B: Industrial/Asset/Property Defense Protection (e.g., Buffalo Fencing)
-            else if (hasContextWord('farm') || hasContextWord('fence') || hasContextWord('fencing') || hasContextWord('asset') || hasContextWord('security') || hasContextWord('work')) {
-                finalizedCat = "Necessary and Long term";
-                finalizedDesc = "Context refined: Tracked as core property maintenance, security defenses, or long-term operational infrastructure.";
-            }
-            // RULE C: Health/Survival Context
-            else if (hasContextWord('sick') || hasContextWord('doctor') || hasContextWord('health')) {
-                finalizedCat = "Necessary and Immediate/Short term";
-                finalizedDesc = "Context refined: Re-evaluated as an immediate healthcare or survival preservation expense.";
+                finalizedDesc = "Fixed Liability: Core recurring protection systems, legal taxes, or housing utility guarantees.";
+            } else {
+                // System default standard fallback placement
+                finalizedCat = "Unnecessary and Long term";
+                finalizedDesc = "Discretionary Purchase: Uncategorized utility item or specialized leisure asset hardware.";
             }
 
-            updateUI();
-        }
-
-        function updateUI() {
+            // Bind calculations directly to view labels
             document.getElementById('cat').innerText = finalizedCat;
             document.getElementById('desc').innerText = finalizedDesc;
         }
 
-        // Return to input.html without breaking history data states
-        function goToInputPage() {
-            window.location.href = 'input.html';
+        // 🔄 Live Supabase Cloud Database Push Implementation
+        async function updateDatabaseRecord() {
+            const saveBtn = document.getElementById('saveBtn');
+            const statusEl = document.getElementById('status-msg');
+            
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Synchronizing Rows...";
+            statusEl.style.display = "none";
+
+            try {
+                // Confirm user identity token context before compiling payloads
+                const { data: sessionData } = await _supabase.auth.getSession();
+                if (!sessionData || !sessionData.session) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const currentUserId = sessionData.session.user.id;
+                const dynamicNotes = document.getElementById('contextInput').value;
+                const activePersona = document.getElementById('userPersona').value;
+
+                // Push clean schema match parameters into remote tables
+                const { error } = await _supabase
+                    .from('expenses')
+                    .insert([{
+                        user_id: currentUserId,
+                        category: finalizedCat,
+                        description: rawSMS || "Manual transaction line item entry",
+                        finer_context: dynamicNotes ? `${dynamicNotes} [Profile: ${activePersona}]` : `Profile: ${activePersona}`,
+                        amount: rawAmount,
+                        created_at: new Date().toISOString()
+                    }]);
+
+                if (error) throw error;
+
+                // Flash confirmation indicator states upon completion
+                statusEl.innerText = "✅ Transaction securely written to Supabase cluster!";
+                statusEl.style.color = "#10b981";
+                statusEl.style.display = "block";
+
+            } catch (err) {
+                console.error("Database connection block broken:", err);
+                statusEl.innerText = `❌ Error writing row: ${err.message || 'Check terminal'}`;
+                statusEl.style.color = "#ef4444";
+                statusEl.style.display = "block";
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Confirm & Write to Database";
+            }
         }
 
-        // Save data to localStorage arrays and advance to patterns page
-        function saveAndProceed() {
-            let history = JSON.parse(localStorage.getItem('spendHistory') || '[]');
-            history.push({
-                cat: finalizedCat, 
-                desc: finalizedDesc,
-                rawInput: rawSMS,
-                contextGiven: document.getElementById('contextInput').value,
-                date: new Date().toLocaleDateString()
-            });
-            localStorage.setItem('spendHistory', JSON.stringify(history));
-            window.location.href = 'patterns.html';
-        }
-
-        // Run the script on initial page frame load
-        checkInitialKeywords(rawSMS);
+        // Boot system loops immediately when loading frame script trees
+        evaluatePersonalizedSpend();
     </script>
 </body>
 </html>

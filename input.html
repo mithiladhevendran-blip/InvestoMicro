@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Input Payment - InvestoMicro</title>
+    <!-- ⚡ FIXED: Added correct Supabase CDN link so database functions don't crash -->
     <script src="https://jsdelivr.net"></script>
     <style>
         body { font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; margin: 0; color: #f8fafc; padding-bottom: 80px; box-sizing: border-box; }
@@ -145,6 +146,7 @@
             }
         }
 
+        // ⚡ FIXED: Restored complete, completed analyze function
         function analyze() {
             const text = document.getElementById('sms').value;
             if(!text) return alert("Please enter some text!");

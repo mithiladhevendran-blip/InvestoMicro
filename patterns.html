@@ -231,13 +231,12 @@
 
         let currentActiveUser = null;
 
-        // Clean layout strings for rendering headers gracefully
+        // Cleans up category strings cleanly for user display rendering
         function formatLabel(str) {
             if (!str) return "General";
-            return str.replace(/And Immediate\/Short term/gi, "").replace(/And/gi, "&").trim();
+            return str.replace(/And/gi, "&").trim();
         }
 
-        // Dedicated session handler to bypass background lockups
         async function fetchMetricsDashboardData() {
             try {
                 const sessionData = await _supabase.auth.getSession();
@@ -270,8 +269,8 @@
                 const logBox = document.getElementById('history-stack-box');
 
                 if (!spends || spends.length === 0) {
-                    peakCapDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs</span>`;
-                    peakVelDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs</span>`;
+                    peakCapDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs found</span>`;
+                    peakVelDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs found</span>`;
                     timeDiv.innerText = "No data";
                     dayDiv.innerText = "No data";
                     logBox.innerHTML = `<div style="padding:16px; color:var(--text-muted); text-align:center;">Ledger completely empty.</div>`;
@@ -285,7 +284,20 @@
                 const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
                 spends.forEach(item => {
-                    const cat = item.category || "Uncategorized";
+                    // Normalize categories to match exactly no matter how capitalization changes
+                    let cat = item.category || "General";
+                    
+                    // Standardizing variations
+                    if (cat.toLowerCase().includes("short term") && cat.toLowerCase().includes("unnecessary")) {
+                        cat = "Short Term / Unnecessary";
+                    } else if (cat.toLowerCase().includes("necessary") && cat.toLowerCase().includes("short-term")) {
+                        cat = "Necessary / Short-term";
+                    } else if (cat.toLowerCase().includes("unnecessary") && cat.toLowerCase().includes("long-term")) {
+                        cat = "Unnecessary / Long-term";
+                    } else if (cat.toLowerCase().includes("necessary") && cat.toLowerCase().includes("long-term")) {
+                        cat = "Necessary / Long-term";
+                    }
+
                     const value = Number(item.amount) || 0;
 
                     monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
@@ -364,7 +376,7 @@
                 const { error } = await _supabase
                     .from('spends')
                     .delete()
-                    .eq('id', rowId);
+                    .eq('id', Number(rowId));
 
                 if (error) throw error;
                 await renderLedgerLogs();

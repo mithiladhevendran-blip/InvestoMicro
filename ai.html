@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyze Payment - MicroInvest</title>
+    <title>AI Intent Classifier - InvestoMicro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -17,7 +17,6 @@
             --text-muted: #94a3b8;
             --accent-blue: #3b82f6;
             --accent-emerald: #10b981;
-            --accent-emerald-hover: #059669;
             --accent-red: #ef4444;
         }
 
@@ -31,13 +30,159 @@
             background: var(--bg-main); 
             margin: 0; 
             color: var(--text-main); 
-            padding-bottom: 100px; 
+            padding: 20px;
+            padding-bottom: 120px; 
             box-sizing: border-box; 
         }
 
+        .top-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            width: 480px; 
+            background: var(--bg-card); 
+            padding: 12px 18px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 18px; 
+            box-sizing: border-box; 
+        }
+        .brand { font-weight: bold; color: var(--accent-blue); font-size: 1.1rem; }
+        .profile-badge { background: var(--accent-blue); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        .profile-badge:hover { background: #2563eb; }
+
         .box { 
             background: var(--bg-card); 
-            padding: 2.5rem; 
+            padding: 2.2rem; 
             border-radius: 20px; 
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); 
-            width:
+            width: 480px; 
+            text-align: center; 
+            border: 1px solid var(--border-color); 
+            box-sizing: border-box; 
+        }
+
+        h2 { margin-top: 0; margin-bottom: 4px; font-weight: 700; font-size: 1.3rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; }
+        .sub-header { font-size: 1.8rem; font-weight: 700; color: var(--accent-blue); margin-bottom: 24px; }
+        
+        .field-label { text-align: left; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; display: block; }
+        
+        .classification-box { background: rgba(59, 130, 246, 0.1); border: 2px dashed var(--accent-blue); border-radius: 12px; padding: 14px; color: var(--text-main); font-weight: 600; font-size: 1.1rem; margin-bottom: 20px; }
+        
+        .note-input { width: 100%; padding: 14px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; color: white; font-size: 1rem; box-sizing: border-box; margin-bottom: 20px; font-family: inherit; resize: none; }
+        
+        .btn-confirm { width: 100%; padding: 14px; background: var(--accent-emerald); border: none; border-radius: 12px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-bottom: 14px; }
+        .btn-confirm:hover { background: #059669; }
+
+        .btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .btn-secondary { flex: 1; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; }
+        .btn-secondary:hover { background: #475569; }
+
+        .error-msg { color: var(--accent-red); font-size: 0.85rem; margin-top: 10px; font-weight: 600; display: none; }
+
+        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
+        .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+        .nav-dock .active { background: var(--accent-blue); color: white !important; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="brand">InvestoMicro</div>
+        <button class="profile-badge" onclick="location.href='profile.html'">👤 Profile</button>
+    </div>
+
+    <div class="box">
+        <h2>AI Intent Classification</h2>
+        <div class="sub-header">Analysis Ready</div>
+
+        <span class="field-label">AI Classification Label</span>
+        <div class="classification-box" id="ai-label-display">🤖 Processing parameters...</div>
+
+        <span class="field-label">Passed Item Description</span>
+        <textarea id="ai-desc-display" class="note-input" rows="2" readonly></textarea>
+
+        <button class="btn-confirm" onclick="commitRowToSupabase()">Confirm & Write to Database</button>
+        <div class="error-msg" id="db-error"></div>
+
+        <div class="btn-row">
+            <button class="btn-secondary" onclick="location.href='input.html'">← Entry Input</button>
+            <button class="btn-secondary" onclick="location.href='patterns.html'">📄 View Patterns</button>
+        </div>
+    </div>
+
+    <div class="nav-dock">
+        <button onclick="location.href='input.html'">Input</button>
+        <button class="active" onclick="location.href='ai.html'">AI Analysis</button>
+        <button onclick="location.href='patterns.html'">Patterns</button>
+        <button onclick="location.href='suggest.html'">Suggestions</button>
+    </div>
+
+    <script>
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        let localAmount = localStorage.getItem('pending_amt') || 0;
+        let localDesc = localStorage.getItem('pending_desc') || "";
+
+        // Simulated AI engine heuristic modeling logic
+        function runLocalIntentClassifier(text) {
+            const parsed = text.toLowerCase();
+            if (parsed.includes('book') || parsed.includes('course') || parsed.includes('fee')) {
+                return "Necessary / Long-term";
+            } else if (parsed.includes('vet') || parsed.includes('doctor') || parsed.includes('med')) {
+                return "Necessary / Short-term";
+            } else if (parsed.includes('fence') || parsed.includes('repair') || parsed.includes('fix')) {
+                return "Short Term Not Necessary";
+            }
+            return "General / Discretionary";
+        }
+
+        // Initialize setup elements on load state
+        window.onload = function() {
+            document.getElementById('ai-desc-display').value = localDesc;
+            const derivedLabel = runLocalIntentClassifier(localDesc);
+            document.getElementById('ai-label-display').innerText = `🤖 ${derivedLabel}`;
+        };
+
+        async function commitRowToSupabase() {
+            const errBox = document.getElementById('db-error');
+            errBox.style.display = "none";
+
+            const sessionData = await _supabase.auth.getSession();
+            if (!sessionData.data || !sessionData.data.session) {
+                errBox.innerText = "Error: Session expired. Please log back in.";
+                errBox.style.display = "block";
+                return;
+            }
+
+            const activeUser = sessionData.data.session.user;
+            const computedCategory = document.getElementById('ai-label-display').innerText.replace('🤖 ', '');
+
+            // FIXED: Target table explicitly pointing to 'spends' to sync schemas
+            const { error } = await _supabase
+                .from('spends')
+                .insert([
+                    { 
+                        amount: parseFloat(localAmount), 
+                        description: localDesc, 
+                        category: computedCategory,
+                        user_id: activeUser.id
+                    }
+                ]);
+
+            if (error) {
+                errBox.innerText = `Error writing row: ${error.message}`;
+                errBox.style.display = "block";
+            } else {
+                // Clear state variables and advance workflow cleanly
+                localStorage.removeItem('pending_amt');
+                localStorage.removeItem('pending_desc');
+                window.location.href = 'patterns.html';
+            }
+        }
+    </script>
+</body>
+</html>

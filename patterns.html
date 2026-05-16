@@ -3,275 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spend Patterns & Analytics - InvestoMicro</title>
-    <!-- Complete dependency module load for Supabase Client operations -->
-    <script src="https://jsdelivr.net"></script>
+    <title>Transaction Patterns - MicroInvest</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: white; margin:0; padding:20px; min-height:100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 90px; box-sizing: border-box; }
-        .container { width: 100%; max-width: 460px; box-sizing: border-box; }
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-red: #ef4444;
+        }
+
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background: var(--bg-main); 
+            margin: 0; 
+            color: var(--text-main); 
+            padding-bottom: 120px; 
+            box-sizing: border-box; 
+        }
+
+        .header-profile {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .profile-avatar {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .box { 
+            background: var(--bg-card); 
+            padding: 2.2rem; 
+            border-radius: 20px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); 
+            width: 480px; 
+            text-align: center; 
+            border: 1px solid var(--border-color); 
+            box-sizing: border-box; 
+        }
+
+        h2 { margin-top: 0; margin-bottom: 1.5rem; font-weight: 700; font-size: 1.4rem; letter-spacing: -0.03em; color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 8px; }
         
-        /* Top Navigation Header & Profile Anchor Row */
-        .top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; background: #1e293b; padding: 12px 18px; border-radius: 16px; border: 1px solid #334155; margin-bottom: 18px; box-sizing: border-box; }
-        .brand { font-weight: bold; color: #3b82f6; font-size: 1.1rem; }
-        .profile-badge { background: #3b82f6; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
-        .profile-badge:hover { background: #2563eb; }
+        .metric-card {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .metric-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: 0.05em;
+        }
+        .metric-body {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #60a5fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .metric-sub {
+            font-size: 0.9rem;
+            color: var(--accent-emerald);
+        }
 
-        /* Universal Multi-Directional Jump Routing Box */
-        .router-card { background: #1e293b; padding: 1.2rem; border-radius: 20px; border: 1px solid #334155; margin-bottom: 18px; text-align: left; }
-        .router-title { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; letter-spacing: 0.5px; }
-        .router-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .router-links button { padding: 10px 4px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; border: none; cursor: pointer; color: white; }
-        .btn-link-input { background: #10b981; }
-        .btn-link-ai { background: #6366f1; }
-        .btn-link-suggest { background: #3b82f6; }
-        .btn-link-logout { background: #ef4444; grid-column: span 3; margin-top: 4px; }
+        .log-container {
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-main);
+            padding: 4px;
+        }
+        .log-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+        .log-item:last-child { border-bottom: none; }
+        .log-details { text-align: left; display: flex; flex-direction: column; gap: 2px; }
+        .log-desc { font-weight: 600; color: var(--text-main); }
+        .log-cat { font-size: 0.75rem; color: var(--text-muted); }
+        .log-amt { font-weight: 700; color: #f8fafc; }
 
-        /* Graphic Chart Display Blocks */
-        .chart-card { background: #1e293b; padding: 1.5rem; border-radius: 24px; border: 1px solid #334155; margin-bottom: 18px; text-align: left; }
-        .chart-heading { font-size: 1rem; color: #f8fafc; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
-        .bar-row { margin-bottom: 12px; }
-        .bar-labels { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
-        .bar-label-name { color: #94a3b8; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 260px; }
-        .bar-label-val { font-weight: bold; color: #f1f5f9; }
-        .bar-track { background: #0f172a; height: 10px; border-radius: 10px; overflow: hidden; border: 1px solid #1e293b; }
-        .bar-fill { height: 100%; border-radius: 10px; width: 0%; transition: width 0.6s ease-in-out; }
-        .fill-amt { background: #10b981; }
-        .fill-cnt { background: #60a5fa; }
+        .btn-direct {
+            width: 100%; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; margin-top: 18px;
+        }
+        .btn-direct:hover { background: #475569; }
 
-        /* Transaction History Ledger Stack */
-        .ledger-box { background: #1e293b; padding: 1.5rem; border-radius: 24px; border: 1px solid #334155; text-align: left; }
-        .ledger-title { color: #3b82f6; font-size: 1.2rem; font-weight: bold; margin-top: 0; margin-bottom: 15px; }
-        .list-item { background: #0f172a; border: 1px solid #334155; padding: 14px; border-radius: 16px; margin-bottom: 12px; position: relative; }
-        .list-cat { font-weight: bold; color: #60a5fa; font-size: 0.88rem; margin-bottom: 2px; }
-        .list-desc { font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; max-width: 320px; word-wrap: break-word; }
-        .list-context { font-size: 0.72rem; color: #10b981; font-style: italic; margin-bottom: 10px; }
-        
-        /* Interactive Row Configuration Management Controls */
-        .item-action-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1e293b; padding-top: 10px; margin-top: 4px; }
-        .amt-display { font-weight: bold; color: #10b981; font-size: 1rem; }
-        .btn-row { display: flex; gap: 8px; }
-        .btn-ctrl { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; border: none; cursor: pointer; font-weight: bold; color: white; }
-        .btn-edit { background: #f59e0b; }
-        .btn-del { background: #b91c1c; }
-
-        /* Persistent Navigation Tray Footer Layout */
-        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; padding: 10px; max-width: 520px; margin: 0 auto; box-sizing: border-box; z-index: 100; }
-        .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; cursor: pointer; width: auto; font-weight: normal; }
-        .nav button:hover { background: #475569; }
-        .nav .active { background: #3b82f6; font-weight: bold; }
+        /* Navigation Menu Bar */
+        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
+        .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+        .nav-dock .active { background: var(--accent-blue); color: white !important; font-weight: 600; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Top Anchor Bar Component -->
-        <div class="top-bar">
-            <div class="brand">InvestoMicro</div>
-            <button class="profile-badge" onclick="goToProfilePage()">👤 Profile</button>
-        </div>
 
-        <!-- Universal Link Access Module Box -->
-        <div class="router-card">
-            <div class="router-title">Quick Direct Navigation</div>
-            <div class="router-links">
-                <button class="btn-link-input" onclick="location.href='input.html'">← Input Entry</button>
-                <button class="btn-link-ai" onclick="location.href='ai.html'">⚙️ AI Engine</button>
-                <button class="btn-link-suggest" onclick="location.href='suggest.html'">💡 Advice Feed</button>
-                <button class="btn-link-logout" onclick="triggerSignOutBridge()">⚠️ Disconnect Session & Exit (Index)</button>
+    <div class="header-profile">
+        <div class="profile-avatar" id="avatar-initial">U</div>
+        <span id="profile-email">Loading user profile...</span>
+    </div>
+
+    <div class="box">
+        <h2>📊 Financial Flow Patterns</h2>
+
+        <div class="metric-card">
+            <div class="metric-title">💰 Highest Cumulative Capital Allocation</div>
+            <div class="metric-body" id="peak-capital-destination">
+                <span style="font-weight: 400; font-size: 0.9rem; color: var(--text-muted);">Calculating patterns...</span>
             </div>
         </div>
 
-        <!-- Metric Visualization 1: Capital Weight Value Accumulation -->
-        <div class="chart-card">
-            <div class="chart-heading">💰 Highest Cumulative Capital Allocation</div>
-            <div id="chart-amt-container"><p style="color:#64748b; font-size:0.85rem;">Calculating metrics...</p></div>
+        <div class="metric-card">
+            <div class="metric-title">📈 Transaction Velocity (Volume Frequency)</div>
+            <div class="metric-body" id="peak-velocity-destination">
+                <span style="font-weight: 400; font-size: 0.9rem; color: var(--text-muted);">Analyzing frequencies...</span>
+            </div>
         </div>
 
-        <!-- Metric Visualization 2: Total Occurrence Event Tallies -->
-        <div class="chart-card">
-            <div class="chart-heading">📊 Transaction Velocity (Volume Frequency)</div>
-            <div id="chart-cnt-container"><p style="color:#64748b; font-size:0.85rem;">Calculating metrics...</p></div>
+        <div style="text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.05em;">
+            Transaction Stack Logs
+        </div>
+        <div class="log-container" id="history-stack-box">
+            <div style="padding: 16px; color: var(--text-muted); font-size: 0.85rem; text-align: center;">Loading history stream...</div>
         </div>
 
-        <!-- Data Log Stream Output Deck Component -->
-        <div class="ledger-box">
-            <div class="ledger-title">Transaction Stack Logs</div>
-            <div id="log-container"><p style="color:#64748b; font-size:0.85rem; text-align:center;">Loading database records...</p></div>
-        </div>
+        <button class="btn-direct" onclick="location.href='input.html'">← Return to Input Entry</button>
     </div>
 
-    <!-- App System Navigation Tray Component -->
-    <div class="nav">
+    <div class="nav-dock">
         <button onclick="location.href='input.html'">Input</button>
         <button onclick="location.href='ai.html'">AI Analysis</button>
         <button class="active" onclick="location.href='patterns.html'">Patterns</button>
         <button onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
+    <script src="config.js"></script>
     <script>
-        const S_URL = 'https://supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
-        const _supabase = supabase.createClient(S_URL, S_KEY);
+        async function fetchMetricsDashboardData() {
+            // Confirm profile context assignment
+            const user = await checkActiveSession(false);
+            if (!user) return;
 
-        let activeUserTokenId = null;
+            document.getElementById('profile-email').innerText = user.email;
+            document.getElementById('avatar-initial').innerText = user.email.charAt(0).toUpperCase();
 
-        async function verifyAuthenticationState() {
             try {
-                const { data } = await _supabase.auth.getSession();
-                if (!data || !data.session) {
-                    window.location.href = 'index.html';
-                } else {
-                    activeUserTokenId = data.session.user.id;
-                    fetchAndRenderWorkspace();
-                }
-            } catch (err) {
-                window.location.href = 'index.html';
-            }
-        }
-        verifyAuthenticationState();
-
-        async function fetchAndRenderWorkspace() {
-            try {
-                let { data: rows, error } = await _supabase
-                    .from('expenses')
-                    .select('*')
-                    .eq('user_id', activeUserTokenId)
+                // Fetch direct log tracking sequence mapped against 'spends'
+                const { data: spends, error } = await _supabase
+                    .from('spends')
+                    .select('category, amount, description, created_at')
+                    .eq('user_id', user.id)
                     .order('created_at', { ascending: false });
-                
-                if (error) {
-                    const fallback = await _supabase.from('expenses').select('*').order('created_at', { ascending: false });
-                    rows = fallback.data;
-                }
 
-                renderAnalyticsCharts(rows || []);
-                renderLedgerStream(rows || []);
-
-            } catch (e) {
-                console.error("Dashboard render blocking structural crash:", e);
-            }
-        }
-
-        // 📊 Render Local Pure-CSS Graph Modules
-        function renderAnalyticsCharts(data) {
-            const amtMap = { "Necessary and Immediate/Short term": 0, "Necessary and Long term": 0, "Unnecessary and Short term": 0, "Unnecessary and Long term": 0 };
-            const cntMap = { "Necessary and Immediate/Short term": 0, "Necessary and Long term": 0, "Unnecessary and Short term": 0, "Unnecessary and Long term": 0 };
-            
-            let totalAmountAllocated = 0;
-            let highestCountVolume = 0;
-
-            data.forEach(r => {
-                const category = r.category || "Unnecessary and Long term";
-                const amount = Number(r.amount) || 0;
-                
-                if (amtMap.hasOwnProperty(category)) {
-                    amtMap[category] += amount;
-                    cntMap[category] += 1;
-                    totalAmountAllocated += amount;
-                }
-            });
-
-            for (const key in cntMap) {
-                if (cntMap[key] > highestCountVolume) highestCountVolume = cntMap[key];
-            }
-
-            const cleanLabel = (str) => str.replace("and ", "").replace("term", "");
-
-            // Construct Cumulative Amount Values Graph Frame
-            document.getElementById('chart-amt-container').innerHTML = Object.keys(amtMap).map(cat => {
-                const val = amtMap[cat];
-                const pct = totalAmountAllocated > 0 ? (val / totalAmountAllocated) * 100 : 0;
-                return `
-                    <div class="bar-row">
-                        <div class="bar-labels">
-                            <div class="bar-label-name">${cleanLabel(cat)}</div>
-                            <div class="bar-label-val">₹${val.toLocaleString()}</div>
-                        </div>
-                        <div class="bar-track"><div class="bar-fill fill-amt" style="width: ${pct}%"></div></div>
-                    </div>`;
-            }).join('');
-
-            // Construct Frequency Event Counts Graph Frame
-            document.getElementById('chart-cnt-container').innerHTML = Object.keys(cntMap).map(cat => {
-                const val = cntMap[cat];
-                const pct = highestCountVolume > 0 ? (val / highestCountVolume) * 100 : 0;
-                return `
-                    <div class="bar-row">
-                        <div class="bar-labels">
-                            <div class="bar-label-name">${cleanLabel(cat)}</div>
-                            <div class="bar-label-val">${val} txns</div>
-                        </div>
-                        <div class="bar-track"><div class="bar-fill fill-cnt" style="width: ${pct}%"></div></div>
-                    </div>`;
-            }).join('');
-        }
-
-        // 📄 Render Interactive Log Items Matrix
-        function renderLedgerStream(rows) {
-            const container = document.getElementById('log-container');
-            if (!rows || rows.length === 0) {
-                container.innerHTML = `<p style="text-align:center; color:#64748b; font-size:0.85rem; padding: 20px 0;">No active logs processed yet.</p>`;
-                return;
-            }
-
-            container.innerHTML = rows.map(r => {
-                const displayContext = r.finer_context || r.contextGiven || '';
-                return `
-                    <div class="list-item" id="row-${r.id}">
-                        <div class="list-cat">${r.category || 'Expense'}</div>
-                        <div class="list-desc">${r.description || 'Manual Item line'}</div>
-                        ${displayContext ? `<div class="list-context">💡 ${displayContext}</div>` : ''}
-                        
-                        <div class="item-action-row">
-                            <div class="amt-display">₹${(r.amount || 0).toLocaleString()}</div>
-                            <div class="btn-row">
-                                <button class="btn-ctrl btn-edit" onclick="triggerRowReclassification('${r.id}', '${escapeHtml(r.description || '')}', ${r.amount || 0}, '${escapeHtml(displayContext)}')">✏️ Edit</button>
-                                <button class="btn-ctrl btn-del" onclick="deleteRecordRow('${r.id}')">🗑️ Delete</button>
-                            </div>
-                        </div>
-                    </div>`;
-            }).join('');
-        }
-
-        // 🔄 Edit Modification Router Redirecting to AI File Matrix
-        function triggerRowReclassification(id, desc, amt, context) {
-            // Remove old row trace before initializing override sequence mapping
-            localStorage.setItem('lastSMS', desc);
-            localStorage.setItem('lastAmount', amt);
-            localStorage.setItem('userFinerContext', context);
-            
-            // Delete record entry from remote tables so re-saving doesn't create twins
-            deleteRecordRow(id, false); 
-            window.location.href = 'ai.html';
-        }
-
-        // 🗑️ Delete Operational Record Row Command Pipeline
-        async function deleteRecordRow(rowId, triggerRefresh = true) {
-            if (triggerRefresh && !confirm("Are you sure you want to permanently clear this row log?")) return;
-            try {
-                const { error } = await _supabase.from('expenses').delete().eq('id', rowId);
                 if (error) throw error;
-                
-                if (triggerRefresh) {
-                    const targetDOMRow = document.getElementById(`row-${rowId}`);
-                    if (targetDOMRow) targetDOMRow.remove();
-                    fetchAndRenderWorkspace();
+
+                const peakCapDiv = document.getElementById('peak-capital-destination');
+                const peakVelDiv = document.getElementById('peak-velocity-destination');
+                const logBox = document.getElementById('history-stack-box');
+
+                if (!spends || spends.length === 0) {
+                    peakCapDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs committed yet</span>`;
+                    peakVelDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No txns recorded yet</span>`;
+                    logBox.innerHTML = `<div style="padding:16px; color:var(--text-muted); text-align:center;">Empty ledger.</div>`;
+                    return;
                 }
-            } catch(err) {
-                alert(`Operation failure: ${err.message}`);
+
+                // Crunch aggregations locally for instant loading
+                const monetaryMap = {};
+                const frequencyMap = {};
+
+                spends.forEach(item => {
+                    const cat = item.category || "Uncategorized";
+                    const value = Number(item.amount) || 0;
+
+                    monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
+                    frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
+                });
+
+                let topCapCat = "", topCapVal = -1;
+                let topFreqCat = "", topFreqVal = -1;
+
+                for (const cat in monetaryMap) {
+                    if (monetaryMap[cat] > topCapVal) { topCapVal = monetaryMap[cat]; topCapCat = cat; }
+                    if (frequencyMap[cat] > topFreqVal) { topFreqVal = frequencyMap[cat]; topFreqCat = cat; }
+                }
+
+                // Format the Matrix Label displays cleanly
+                const formatLabel = (str) => str.replace("And Immediate/Short term", "").replace("And", "&");
+
+                peakCapDiv.innerHTML = `<span>${formatLabel(topCapCat)}</span> <span class="metric-sub">₹${topCapVal.toLocaleString()}</span>`;
+                peakVelDiv.innerHTML = `<span>${formatLabel(topFreqCat)}</span> <span class="metric-sub" style="color:#60a5fa">${topFreqVal} txns</span>`;
+
+                // Build out the list items for the log ledger feed
+                logBox.innerHTML = "";
+                spends.forEach(item => {
+                    const cleanDesc = item.description || "Untitled Transaction";
+                    const cleanAmt = (Number(item.amount) || 0).toLocaleString();
+                    const cleanCat = formatLabel(item.category || "General");
+
+                    const row = document.createElement('div');
+                    row.className = 'log-item';
+                    row.innerHTML = `
+                        <div class="log-details">
+                            <span class="log-desc">${cleanDesc}</span>
+                            <span class="log-cat">${cleanCat}</span>
+                        </div>
+                        <span class="log-amt">₹${cleanAmt}</span>
+                    `;
+                    logBox.appendChild(row);
+                });
+
+            } catch (err) {
+                console.error("Ledger rendering matrix runtime error:", err);
             }
         }
 
-        function goToProfilePage() {
-            window.location.href = 'profile.html';
-        }
-
-        async function triggerSignOutBridge() {
-            await _supabase.auth.signOut();
-            window.location.href = 'index.html';
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
+        window.onload = fetchMetricsDashboardData;
     </script>
 </body>
 </html>

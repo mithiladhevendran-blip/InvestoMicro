@@ -233,7 +233,12 @@
 
         function formatLabel(str) {
             if (!str) return "General";
-            return str.replace(/And/gi, "&").trim();
+            // Normalizes strings smoothly for clean visual output
+            let formatted = str.replace(/And/gi, "&").trim();
+            if (formatted.toLowerCase().includes("discretionary") || formatted.toLowerCase().includes("general")) {
+                return "Short Term / Unnecessary";
+            }
+            return formatted;
         }
 
         async function fetchMetricsDashboardData() {
@@ -252,31 +257,14 @@
         }
 
         async function renderLedgerLogs() {
-           spends.forEach(item => {
-    try {
-        let cat = item.category || "Short Term / Unnecessary";
-        let lowerCat = cat.toLowerCase();
-        
-        // Unify both "Not Necessary" and "Unnecessary" into a single structural category
-        if (lowerCat.includes("short term") || lowerCat.includes("short-term")) {
-            if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary") || lowerCat.includes("discretionary")) {
-                cat = "Short Term / Unnecessary";
-            } else if (lowerCat.includes("necessary")) {
-                cat = "Necessary / Short-term";
-            }
-        } else if (lowerCat.includes("long term") || lowerCat.includes("long-term")) {
-            if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary")) {
-                cat = "Unnecessary / Long-term";
-            } else if (lowerCat.includes("necessary")) {
-                cat = "Necessary / Long-term";
-            }
-        }
+            try {
+                const { data: spends, error } = await _supabase
+                    .from('spends')
+                    .select('id, category, amount, description, created_at')
+                    .eq('user_id', currentActiveUser.id)
+                    .order('created_at', { ascending: false });
 
-        const value = Number(item.amount) || 0;
-        monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
-        frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
-
-        // ... rest of your time tracking logic continues below safely ...
+                if (error) throw error;
 
                 const peakCapDiv = document.getElementById('peak-capital-destination');
                 const peakVelDiv = document.getElementById('peak-velocity-destination');
@@ -304,17 +292,21 @@
                         let cat = item.category || "Short Term / Unnecessary";
                         let lowerCat = cat.toLowerCase();
                         
-                        // Strict data sanitization and categorization mapping
-                        if (lowerCat.includes("short term") && lowerCat.includes("unnecessary")) {
-                            cat = "Short Term / Unnecessary";
-                        } else if (lowerCat.includes("necessary") && lowerCat.includes("short-term")) {
-                            cat = "Necessary / Short-term";
-                        } else if (lowerCat.includes("unnecessary") && lowerCat.includes("long-term")) {
-                            cat = "Unnecessary / Long-term";
-                        } else if (lowerCat.includes("necessary") && lowerCat.includes("long-term")) {
-                            cat = "Necessary / Long-term";
+                        // Strict data sanitization: maps both "Not Necessary", old structural tags, and legacy variants seamlessly
+                        if (lowerCat.includes("short term") || lowerCat.includes("short-term")) {
+                            if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary") || lowerCat.includes("discretionary") || lowerCat.includes("general")) {
+                                cat = "Short Term / Unnecessary";
+                            } else if (lowerCat.includes("necessary")) {
+                                cat = "Necessary / Short-term";
+                            }
+                        } else if (lowerCat.includes("long term") || lowerCat.includes("long-term")) {
+                            if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary")) {
+                                cat = "Unnecessary / Long-term";
+                            } else if (lowerCat.includes("necessary")) {
+                                cat = "Necessary / Long-term";
+                            }
                         } else if (lowerCat.includes("discretionary") || lowerCat.includes("general")) {
-                            cat = "Short Term / Unnecessary"; // Clean out stale database structural legacy names
+                            cat = "Short Term / Unnecessary";
                         }
 
                         const value = Number(item.amount) || 0;
@@ -336,7 +328,7 @@
                             }
                         }
                     } catch (rowErr) {
-                        console.error("Skipped a corrupt row item data structure safely:", rowErr);
+                        console.error("Skipped row anomaly safely:", rowErr);
                     }
                 });
 

@@ -3,88 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - InvestoMicro</title>
+    <title>AI Result - InvestoMicro</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; padding: 20px; background: #0f172a; color: white; text-align: center; }
-        .container { max-width: 500px; margin: auto; }
-        .chart-box { background: #1e293b; padding: 20px; border-radius: 24px; margin-bottom: 30px; min-height: 250px; display: flex; justify-content: center; align-items: center; }
-        .item { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
-        .cat-tag { font-size: 0.7rem; padding: 4px 12px; border-radius: 20px; border: 1px solid #3b82f6; color: #60a5fa; }
-        .btn-advice { width: 100%; padding: 16px; background: #6366f1; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        body { font-family: 'Inter', sans-serif; padding: 40px; max-width: 520px; margin: auto; text-align: center; background: #0f172a; color: white; min-height: 100vh; display: flex; align-items: center;}
+        .card { padding: 30px; border-radius: 24px; background: #1e293b; border: 1px solid #334155; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h3 { color: #60a5fa; font-size: 1.55rem; margin: 20px 0; }
+        .desc { color: #94a3b8; line-height: 1.6; margin: 20px 0; min-height: 90px; }
+        button { padding: 16px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        button:hover:not(:disabled) { background: #2563eb; transform: translateY(-2px); }
+        button:disabled { background: #475569; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Spending Breakdown</h2>
-        
-        <div class="chart-box">
-            <canvas id="myChart"></canvas>
-        </div>
-
-        <div id="history">Loading data...</div>
-        
-        <button class="btn-advice" onclick="window.location.href='suggest.html'">Get Investment Advice</button>
+    <div class="card">
+        <h2 style="color: #94a3b8; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;">AI Spend Analysis</h2>
+        <h3 id="cat">Analyzing with Gemini...</h3>
+        <p id="desc" class="desc"></p>
+        <button id="saveBtn">Confirm & Save ₹0</button>
+        <p id="saveStatus" class="status"></p>
     </div>
 
-    <script>
-        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
-        const _supabase = supabase.createClient(S_URL, S_KEY);
+<script type="module">
+    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";   // ← Change this
 
-        async function loadData() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) window.location.href = 'index.html';
+    const _supabase = supabase.createClient(
+        'https://funcvigewkhauenqxrbf.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo'
+    );
 
-            const { data, error } = await _supabase
-                .from('spends')
-                .select('*')
-                .order('created_at', { ascending: false });
+    const sms = (localStorage.getItem('lastSMS') || "").trim();
+    let finalCategory = "Short Term Not Necessary";
+    let finalAmount = 0;
 
-            if (data) {
-                renderList(data);
-                renderChart(data);
-            }
+    function extractAmount(text) {
+        const regex = /(?:₹|Rs\.?|INR)?\s*(\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?/gi;
+        let match, max = 0;
+        while ((match = regex.exec(text)) !== null) {
+            const num = parseFloat(match[1].replace(/,/g, ''));
+            if (num > max) max = num;
         }
+        return max;
+    }
 
-        function renderList(data) {
-            const div = document.getElementById('history');
-            div.innerHTML = data.map(item => `
-                <div class="item">
-                    <span style="font-size: 0.8rem; color: #94a3b8;">${new Date(item.created_at).toLocaleDateString()}</span>
-                    <span class="cat-tag">${item.category}</span>
-                </div>
-            `).join('');
-        }
+    finalAmount = extractAmount(sms);
 
-        function renderChart(data) {
-            // Count how many times each category appears
-            const counts = {};
-            data.forEach(item => {
-                counts[item.category] = (counts[item.category] || 0) + 1;
+    async function runAnalysis() {
+        document.getElementById('saveBtn').disabled = true;
+        document.getElementById('cat').innerText = "Gemini Thinking...";
+
+        try {
+            const prompt = `Classify this expense into ONE category only.
+Message: "${sms}"
+Amount: ₹${finalAmount}
+
+Categories:
+- Long Term Necessary
+- Short Term Important  
+- Short Term Not Necessary
+- Long Term Not Necessary
+
+Reply in this exact format:
+Category: [category name]
+Reason: [one short reason]`;
+
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             });
 
-            const ctx = document.getElementById('myChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(counts),
-                    datasets: [{
-                        data: Object.values(counts),
-                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { display: false } // Keeping it clean
-                    }
-                }
-            });
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+            if (text.toLowerCase().includes("long term necessary")) finalCategory = "Long Term Necessary";
+            else if (text.toLowerCase().includes("short term important")) finalCategory = "Short Term Important";
+            else if (text.toLowerCase().includes("long term not necessary")) finalCategory = "Long Term Not Necessary";
+            else finalCategory = "Short Term Not Necessary";
+
+            document.getElementById('desc').innerHTML = `<strong>${finalCategory}</strong><br><small>${text}</small>`;
+
+        } catch (e) {
+            document.getElementById('desc').innerText = "Using rules...";
+            finalCategory = /fence|buffalo|farm|school|rent|medical|fee/i.test(sms.toLowerCase()) ? "Long Term Necessary" : "Short Term Not Necessary";
         }
 
-        loadData();
-    </script>
+        document.getElementById('cat').innerText = finalCategory;
+        document.getElementById('saveBtn').innerText = `Confirm & Save ₹${finalAmount}`;
+        document.getElementById('saveBtn').disabled = false;
+    }
+
+    window.saveToCloud = async () => {
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "Saving...";
+        btn.disabled = true;
+
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) return alert("Please login");
+
+        await _supabase.from('spends').insert([{
+            user_id: user.id,
+            category: finalCategory,
+            description: sms,
+            amount: finalAmount,
+            created_at: new Date().toISOString()
+        }]);
+
+        window.location.href = 'patterns.html';
+    };
+
+    if (sms) runAnalysis();
+    else document.getElementById('cat').innerText = "No SMS found";
+</script>
 </body>
 </html>

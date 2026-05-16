@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Analysis - MicroInvest</title>
+    <title>Transaction Input - InvestoMicro</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-main: #0f172a;
@@ -17,8 +16,6 @@
             --text-muted: #94a3b8;
             --accent-blue: #3b82f6;
             --accent-emerald: #10b981;
-            --accent-emerald-hover: #059669;
-            --accent-red: #ef4444;
         }
 
         body { 
@@ -31,90 +28,48 @@
             background: var(--bg-main); 
             margin: 0; 
             color: var(--text-main); 
-            padding-bottom: 100px; 
+            padding: 20px;
+            padding-bottom: 120px; 
             box-sizing: border-box; 
         }
 
-        /* Top Right User Profile Badge Frame */
-        .header-profile {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-card);
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: 1px solid var(--border-color);
-            font-size: 0.85rem;
-            font-weight: 500;
+        .top-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            width: 480px; 
+            background: var(--bg-card); 
+            padding: 12px 18px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 18px; 
+            box-sizing: border-box; 
         }
-        .profile-avatar {
-            width: 24px;
-            height: 24px;
-            background: var(--accent-blue);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
+        .brand { font-weight: bold; color: var(--accent-blue); font-size: 1.1rem; }
+        .profile-badge { background: var(--accent-blue); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        .profile-badge:hover { background: #2563eb; }
 
         .box { 
             background: var(--bg-card); 
-            padding: 2.5rem; 
+            padding: 2.2rem; 
             border-radius: 20px; 
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); 
-            width: 440px; 
+            width: 480px; 
             text-align: center; 
             border: 1px solid var(--border-color); 
             box-sizing: border-box; 
         }
 
-        h2 { margin-top: 0; margin-bottom: 0.5rem; font-weight: 700; font-size: 1.5rem; letter-spacing: -0.03em; color: var(--text-muted); text-transform: uppercase; }
-        .status-header { font-size: 2rem; font-weight: 700; color: var(--accent-blue); margin-bottom: 1.5rem; letter-spacing: -0.02em; }
+        h2 { margin-top: 0; margin-bottom: 1.5rem; font-weight: 700; font-size: 1.4rem; color: var(--text-main); }
         
-        .field-group { text-align: left; margin-bottom: 20px; }
-        .field-group label { display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.05em; }
-        
-        /* Styled Display Text Boxes */
-        .display-value {
-            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); box-sizing: border-box; background: var(--bg-main); color: white; font-size: 0.95rem; min-height: 48px; display: flex; align-items: center;
-        }
+        .input-group { text-align: left; margin-bottom: 18px; }
+        .input-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .input-group input { width: 100%; padding: 12px 16px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; color: white; font-size: 1rem; box-sizing: border-box; transition: border 0.2s; }
+        .input-group input:focus { border-color: var(--accent-blue); outline: none; }
 
-        /* Large Dynamic AI Label Badge */
-        .ai-result-badge {
-            background: rgba(59, 130, 246, 0.1);
-            border: 2px dashed var(--accent-blue);
-            border-radius: 14px;
-            padding: 18px;
-            font-weight: 700;
-            font-size: 1.25rem;
-            color: #60a5fa;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+        .btn-submit { width: 100%; padding: 14px; background: var(--accent-blue); border: none; border-radius: 12px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-submit:hover { background: #2563eb; }
 
-        button.btn-action { 
-            width: 100%; padding: 14px; background: var(--accent-emerald); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; font-size: 0.95rem; margin-bottom: 12px;
-        }
-        button.btn-action:hover { background: var(--accent-emerald-hover); transform: translateY(-1px); }
-
-        .btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
-        .btn-secondary { flex: 1; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; }
-        .btn-secondary:hover { background: #475569; }
-
-        #error-msg, #success-msg { font-size: 0.85rem; margin: 10px 0; display: none; font-weight: 500; text-align: center; line-height: 1.4; }
-        #error-msg { color: var(--accent-red); }
-        #success-msg { color: var(--accent-emerald); }
-
-        /* Fixed Navigation Menu Dock Bar */
         .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
         .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
         .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
@@ -123,150 +78,41 @@
 </head>
 <body>
 
-    <div class="header-profile">
-        <div class="profile-avatar" id="avatar-initial">U</div>
-        <span id="profile-email">Loading user...</span>
+    <div class="top-bar">
+        <div class="brand">InvestoMicro</div>
+        <button class="profile-badge" onclick="location.href='profile.html'">👤 Profile</button>
     </div>
 
     <div class="box">
-        <h2>AI Intent Classification</h2>
-        <div class="status-header" id="status-text">Classifying...</div>
-        
-        <div class="field-group">
-            <label>AI Classification Label</label>
-            <div class="ai-result-badge" id="ai-matrix-badge">
-                Analyzing vectors...
-            </div>
+        <h2>📥 Record Transaction</h2>
+        <div class="input-group">
+            <label>Amount (₹)</label>
+            <input type="number" id="tx-amount" placeholder="e.g. 500">
         </div>
-
-        <div class="field-group">
-            <label>Passed Item Description</label>
-            <div class="display-value" id="passed-desc">No description data passed...</div>
+        <div class="input-group">
+            <label>Description / Note</label>
+            <input type="text" id="tx-desc" placeholder="e.g. text books">
         </div>
-        
-        <button class="btn-action" id="write-btn" onclick="commitToDatabase()">Confirm & Write to Database</button>
-        
-        <div id="error-msg"></div>
-        <div id="success-msg"></div>
-
-        <div class="btn-row">
-            <button class="btn-secondary" onclick="location.href='input.html'">← Entry Input</button>
-            <button class="btn-secondary" onclick="location.href='patterns.html'">📄 View Patterns</button>
-        </div>
+        <button class="btn-submit" onclick="processToAiAnalysis()">Analyze Intent →</button>
     </div>
 
     <div class="nav-dock">
-        <button onclick="location.href='input.html'">Input</button>
-        <button class="active" onclick="location.href='ai.html'">AI Analysis</button>
+        <button class="active" onclick="location.href='input.html'">Input</button>
+        <button onclick="location.href='ai.html'">AI Analysis</button>
         <button onclick="location.href='patterns.html'">Patterns</button>
         <button onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
-    <script src="config.js"></script>
     <script>
-        let globalUserId = null;
-        let finalComputedCategory = "Necessary / Short-term";
-
-        async function initPageFlow() {
-            const user = await checkActiveSession(false);
-            if (user) {
-                globalUserId = user.id;
-                document.getElementById('profile-email').innerText = user.email;
-                document.getElementById('avatar-initial').innerText = user.email.charAt(0).toUpperCase();
-                
-                // Show description captured from input.html
-                const savedDesc = localStorage.getItem('userFinerContext') || "";
-                document.getElementById('passed-desc').innerText = savedDesc;
-                
-                runAIClassificationEngine(savedDesc);
-            }
-        }
-        window.onload = initPageFlow;
-
-        function runAIClassificationEngine(descriptionText) {
-            const sms = (localStorage.getItem('lastSMS') || "").toLowerCase();
-            const desc = descriptionText.toLowerCase();
-            const badgeEl = document.getElementById('ai-matrix-badge');
-
-            // CRITICAL SYSTEM EXCLUSION: Vet, Pet, and Animal treatments are strictly forced to Necessary
-            const lifeKeywords = ['vet', 'dog', 'cat', 'pet', 'animal', 'doctor', 'hospital', 'medical', 'medicine', 'vaccine', 'treatment'];
-            if (lifeKeywords.some(keyword => sms.includes(keyword) || desc.includes(keyword))) {
-                if (sms.includes('surgery') || desc.includes('annual') || desc.includes('yearly') || desc.includes('operation')) {
-                    finalComputedCategory = "Necessary / Long-term";
-                } else {
-                    finalComputedCategory = "Necessary / Short-term";
-                }
-                badgeEl.innerHTML = `🧬 ${finalComputedCategory}`;
-                document.getElementById('status-text').innerText = "Analysis Ready";
-                return;
-            }
-
-            // Balanced 2x2 Matrix Classification Core Logic Engine
-            if (sms.includes('investment') || sms.includes('sip') || desc.includes('asset') || desc.includes('insurance') || desc.includes('farm')) {
-                finalComputedCategory = "Necessary / Long-term";
-            } else if (sms.includes('swiggy') || sms.includes('zomato') || desc.includes('movie') || desc.includes('game') || desc.includes('gift') || desc.includes('dress')) {
-                finalComputedCategory = "Unnecessary / Short-term";
-            } else if (desc.includes('rent') || desc.includes('electricity') || sms.includes('bill') || desc.includes('groceries')) {
-                finalComputedCategory = "Necessary / Short-term";
-            } else {
-                finalComputedCategory = "Necessary / Short-term";
-            }
-
-            badgeEl.innerHTML = `🤖 ${finalComputedCategory}`;
-            document.getElementById('status-text').innerText = "Analysis Ready";
-        }
-
-        async function commitToDatabase() {
-            const errorDiv = document.getElementById('error-msg');
-            const successDiv = document.getElementById('success-msg');
-            const writeBtn = document.getElementById('write-btn');
+        function processToAiAnalysis() {
+            const amt = document.getElementById('tx-amount').value;
+            const desc = document.getElementById('tx-desc').value;
+            if(!amt || !desc) { alert("Please complete all inputs"); return; }
             
-            errorDiv.style.display = "none";
-            successDiv.style.display = "none";
-
-            const currentAmount = localStorage.getItem('lastAmount') || "0";
-            const savedDesc = localStorage.getItem('userFinerContext') || "";
-
-            if (!globalUserId) {
-                errorDiv.innerText = "Error: Active profile session token is missing.";
-                errorDiv.style.display = "block";
-                return;
-            }
-
-            writeBtn.disabled = true;
-            writeBtn.innerText = "Writing to Spends...";
-
-            try {
-                // Verified table targeting directly against your 'spends' schema
-                const { error } = await _supabase
-                    .from('spends')
-                    .insert([
-                        { 
-                            user_id: globalUserId,
-                            amount: parseFloat(currentAmount),
-                            category: finalComputedCategory, 
-                            description: savedDesc,
-                            created_at: new Date().toISOString()
-                        }
-                    ]);
-
-                if (error) throw error;
-
-                successDiv.innerText = "Logged successfully to your spends table!";
-                successDiv.style.display = "block";
-                
-                // Clear out data storage keys once committed successfully
-                localStorage.removeItem('lastSMS');
-                localStorage.removeItem('lastAmount');
-                localStorage.removeItem('userFinerContext');
-
-            } catch (err) {
-                errorDiv.innerText = "Database Failure: " + (err.message || err);
-                errorDiv.style.display = "block";
-            } finally {
-                writeBtn.disabled = false;
-                writeBtn.innerText = "Confirm & Write to Database";
-            }
+            // Storing temporarily to share data across pages without database friction
+            localStorage.setItem('pending_amt', amt);
+            localStorage.setItem('pending_desc', desc);
+            window.location.href = 'ai.html';
         }
     </script>
 </body>

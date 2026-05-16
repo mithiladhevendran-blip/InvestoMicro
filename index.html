@@ -3,55 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MicroInvest Login</title>
+    <title>MicroInvest - Auth Suite</title>
+    <!-- Complete dependency module load for Supabase Client operations -->
+    <script src="https://jsdelivr.net"></script>
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: #f8fafc; }
-        .box { background: #1e293b; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 350px; text-align: center; border: 1px solid #334155; }
-        h2 { margin-bottom: 0.5rem; color: #3b82f6; letter-spacing: -1px; }
-        p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
-        input { width: 100%; padding: 14px; margin: 8px 0; border: 1px solid #334155; border-radius: 12px; box-sizing: border-box; background: #0f172a; color: white; outline: none; }
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            background: #0f172a; 
+            margin: 0; 
+            color: #f8fafc; 
+        }
+        .box { 
+            background: #1e293b; 
+            padding: 2.5rem; 
+            border-radius: 24px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); 
+            width: 380px; 
+            text-align: center; 
+            border: 1px solid #334155; 
+            box-sizing: border-box;
+        }
+        h2 { margin-top: 0; margin-bottom: 0.5rem; color: #3b82f6; letter-spacing: -1px; font-size: 1.8rem; }
+        p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; margin-top: 0; }
+        
+        .form-group { text-align: left; margin-bottom: 14px; }
+        label { display: block; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; margin-bottom: 6px; }
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            border: 1px solid #334155; 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            background: #0f172a; 
+            color: white; 
+            outline: none; 
+            font-size: 0.95rem;
+        }
         input:focus { border-color: #3b82f6; }
-        button { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 1.5rem; transition: 0.3s; }
+        
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin-top: 1.2rem; 
+            font-size: 1rem;
+            transition: 0.3s; 
+        }
         button:hover { background: #2563eb; transform: translateY(-2px); }
-        .toggle-text { margin-top: 1.5rem; font-size: 0.85rem; color: #94a3b8; }
+        button:disabled { background: #475569; cursor: not-allowed; transform: none; }
+        
+        .utility-links {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.8rem;
+        }
+        .link-item { color: #60a5fa; cursor: pointer; text-decoration: underline; font-weight: 500; }
+        
+        .toggle-text { margin-top: 1.5rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #334155; padding-top: 15px; }
         .toggle-text span { color: #3b82f6; cursor: pointer; font-weight: 600; text-decoration: underline; }
+        
+        #error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 10px; display: none; text-align: center; }
+        #success-msg { color: #10b981; font-size: 0.85rem; margin-top: 10px; display: none; text-align: center; }
     </style>
 </head>
 <body>
+
     <div class="box">
         <h2 id="title">Welcome Back</h2>
         <p id="subtitle">Enter your details to sign in</p>
         
-        <input type="tel" placeholder="Phone Number">
-        <input type="password" placeholder="Password">
+        <!-- Email/Username Group (Swapped phone for full Supabase Auth compatibility) -->
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" placeholder="name@example.com">
+        </div>
+
+        <!-- Password Field Group (Hidden automatically during Reset View) -->
+        <div class="form-group" id="password-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
         
-        <button onclick="window.location.href='input.html'" id="mainBtn">Sign In</button>
+        <!-- Forgot Password Action Trigger Link -->
+        <div class="utility-links" id="utility-area">
+            <div></div> <!-- Spacer -->
+            <div class="link-item" onclick="switchViewState('forgot')">Forgot Password?</div>
+        </div>
+
+        <button onclick="handleAuthAction()" id="mainBtn">Sign In</button>
         
+        <!-- Status Feedback Panels -->
+        <div id="error-msg"></div>
+        <div id="success-msg"></div>
+
+        <!-- Shared Mode Toggle Footer -->
         <div class="toggle-text" id="toggleArea">
-            Don't have an account? <span onclick="toggleAuth()">Sign Up</span>
+            Don't have an account? <span onclick="switchViewState('signup')">Sign Up</span>
         </div>
     </div>
 
     <script>
-        let isLogin = true;
-        function toggleAuth() {
-            isLogin = !isLogin;
+        // Synchronized cloud cluster config details from your backend parameters
+        const S_URL = 'https://supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        // Track state mode window context ('login', 'signup', 'forgot')
+        let currentMode = 'login';
+
+        // Auto routing security session check layer
+        async function checkActiveSession() {
+            const { data } = await _supabase.auth.getSession();
+            if (data && data.session) {
+                window.location.href = 'input.html';
+            }
+        }
+        checkActiveSession();
+
+        // 🔄 Dynamic View Router Engine (Handles all toggles smoothly)
+        function switchViewState(targetMode) {
+            currentMode = targetMode;
+            
             const title = document.getElementById('title');
             const subtitle = document.getElementById('subtitle');
             const mainBtn = document.getElementById('mainBtn');
             const toggleArea = document.getElementById('toggleArea');
+            const passGroup = document.getElementById('password-group');
+            const utilityArea = document.getElementById('utility-area');
+            
+            // Reset message boards when toggling states
+            clearStatusMessages();
 
-            if (isLogin) {
+            if (currentMode === 'login') {
                 title.innerText = "Welcome Back";
                 subtitle.innerText = "Enter your details to sign in";
                 mainBtn.innerText = "Sign In";
-                toggleArea.innerHTML = `Don't have an account? <span onclick="toggleAuth()">Sign Up</span>`;
-            } else {
+                passGroup.style.display = "block";
+                utilityArea.style.display = "flex";
+                toggleArea.innerHTML = `Don't have an account? <span onclick="switchViewState('signup')">Sign Up</span>`;
+            } 
+            else if (currentMode === 'signup') {
                 title.innerText = "Create Account";
                 subtitle.innerText = "Join MicroInvest to track spending";
                 mainBtn.innerText = "Sign Up";
-                toggleArea.innerHTML = `Already have an account? <span onclick="toggleAuth()">Sign In</span>`;
+                passGroup.style.display = "block";
+                utilityArea.style.display = "none";
+                toggleArea.innerHTML = `Already have an account? <span onclick="switchViewState('login')">Sign In</span>`;
+            } 
+            else if (currentMode === 'forgot') {
+                title.innerText = "Reset Password";
+                subtitle.innerText = "Enter email to receive recovery instructions";
+                mainBtn.innerText = "Send Reset Link";
+                passGroup.style.display = "none";
+                utilityArea.style.display = "none";
+                toggleArea.innerHTML = `Back to <span onclick="switchViewState('login')">Sign In</span>`;
             }
+        }
+
+        // 🛠️ Operational Backend Auth Actions Router
+        async function handleAuthAction() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const mainBtn = document.getElementById('mainBtn');
+            
+            clearStatusMessages();
+
+            if (!email) { showMsg('error', 'Please enter your email address.'); return; }
+            if (currentMode !== 'forgot' && !password) { showMsg('error', 'Please fill in your password.'); return; }
+
+            // Freeze interaction controls during transit
+            mainBtn.disabled = true;
+            mainBtn.innerText = "Processing...";
+
+            try {
+                if (currentMode === 'login') {
+                    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    window.location.href = 'input.html';
+                } 
+                else if (currentMode === 'signup') {
+                    const { data, error } = await _supabase.auth.signUp({ email, password });
+                    if (error) throw error;
+                    showMsg('success', 'Sign up process complete! Check your email inbox for confirmation links.');
+                    switchViewState('login');
+                } 
+                else if (currentMode === 'forgot') {
+                    const { data, error } = await _supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: window.location.origin + '/input.html',
+                    });
+                    if (error) throw error;
+                    showMsg('success', 'Recovery configurations sent! Please monitor your inbox logs.');
+                }
+            } catch (err) {
+                showMsg('error', err.message || 'An unexpected operation error occurred.');
+            } finally {
+                mainBtn.disabled = false;
+                // Restore localized naming token state
+                if (currentMode === 'login') mainBtn.innerText = "Sign In";
+                else if (currentMode === 'signup') mainBtn.innerText = "Sign Up";
+                else if (currentMode === 'forgot') mainBtn.innerText = "Send Reset Link";
+            }
+        }
+
+        function showMsg(type, text) {
+            const el = document.getElementById(`${type}-msg`);
+            el.innerText = text;
+            el.style.display = "block";
+        }
+
+        function clearStatusMessages() {
+            document.getElementById('error-msg').style.display = "none";
+            document.getElementById('success-msg').style.display = "none";
         }
     </script>
 </body>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - InvestoMicro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-red: #ef4444;
+        }
+
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: var(--bg-main); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding-bottom: 90px; 
+            box-sizing: border-box; 
+        }
+        
+        .container { width: 100%; max-width: 460px; box-sizing: border-box; }
+        
+        .box-card { 
+            background: var(--bg-card); 
+            padding: 1.5rem; 
+            border-radius: 24px; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 18px; 
+            text-align: center; 
+        }
+
+        .align-left { text-align: left; }
+        
+        h2 { color: var(--accent-blue); margin-top: 0; font-size: 1.2rem; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+        
+        /* Profile Image Styles */
+        .avatar-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 14px auto;
+        }
+        .profile-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #334155;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--accent-blue);
+            object-fit: cover;
+        }
+        .file-input-label {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: var(--accent-blue);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: 2px solid var(--bg-card);
+        }
+        .hidden-input { display: none; }
+
+        .user-email {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .user-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        /* Settings Rows */
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .settings-row:last-child { border-bottom: none; }
+        .settings-info { display: flex; flex-direction: column; gap: 2px; }
+        .settings-title { font-size: 0.9rem; font-weight: 500; }
+        .settings-desc { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Toggle Switch styling */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-emerald); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .btn-action {
+            width: 100%; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; margin-top: 6px;
+        }
+        .btn-action:hover { background: #475569; }
+        .btn-logout { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-logout:hover { background: var(--accent-red); color: white; }
+
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; padding: 10px; max-width: 520px; margin: 0 auto; box-sizing: border-box; z-index: 100; }
+        .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; cursor: pointer; font-weight: normal; }
+        .nav button:hover { background: #475569; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <div class="box-card">
+            <div class="avatar-container">
+                <div id="avatar-display" class="profile-avatar">U</div>
+                <label for="avatar-file-input" class="file-input-label">📸</label>
+                <input type="file" id="avatar-file-input" class="hidden-input" accept="image/*" onchange="handleImageUpload(event)">
+            </div>
+            <div class="user-email" id="profile-email">Loading account...</div>
+            <div class="user-id" id="profile-id">ID: ---------</div>
+        </div>
+
+        <div class="box-card align-left">
+            <h2>⚙️ Core Settings</h2>
+            
+            <div class="settings-row">
+                <div class="settings-info">
+                    <span class="settings-title">Local Currency Lock</span>
+                    <span class="settings-desc">Keep ledger fixed to Indian Rupee (₹)</span>
+                </div>
+                <span style="font-weight: 600; color: var(--accent-emerald); font-size: 0.9rem;">INR (₹)</span>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-info">
+                    <span class="settings-title">Biometric Lock simulation</span>
+                    <span class="settings-desc">Require session token checks on load</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" checked disabled>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="box-card">
+            <button class="btn-action" onclick="location.href='input.html'">← Return to Workspace</button>
+            <button class="btn-action btn-logout" onclick="triggerSignOutBridge()" style="margin-top: 12px;">⚠️ Disconnect Session & Exit</button>
+        </div>
+    </div>
+
+    <div class="nav">
+        <button onclick="location.href='input.html'">Input</button>
+        <button onclick="location.href='ai.html'">AI Analysis</button>
+        <button onclick="location.href='patterns.html'">Patterns</button>
+        <button onclick="location.href='suggest.html'">Suggestions</button>
+    </div>
+
+    <script>
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        async function verifyAuthenticationState() {
+            try {
+                const { data } = await _supabase.auth.getSession();
+                if (!data || !data.session) {
+                    window.location.href = 'index.html';
+                } else {
+                    const user = data.session.user;
+                    document.getElementById('profile-email').innerText = user.email;
+                    document.getElementById('profile-id').innerText = `ID: ${user.id.substring(0, 15)}...`;
+                    
+                    const initial = user.email.charAt(0).toUpperCase();
+                    const avatarBox = document.getElementById('avatar-display');
+                    
+                    // Check local storage placeholder memory for profile picture mock setup
+                    const savedAvatar = localStorage.getItem(`avatar_${user.id}`);
+                    if (savedAvatar) {
+                        avatarBox.innerHTML = `<img src="${savedAvatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                    } else {
+                        avatarBox.innerText = initial;
+                    }
+                }
+            } catch (err) {
+                window.location.href = 'index.html';
+            }
+        }
+        window.onload = verifyAuthenticationState;
+
+        // Image Selection handler logic
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Enforcing profile pic parameters: limit file sizes to avoid local storage memory bloat
+            if (file.size > 1024 * 1024) { 
+                alert("Please select a profile image under 1MB to optimize rendering speeds.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Image = e.target.result;
+                const { data } = await _supabase.auth.getSession();
+                if (data && data.session) {
+                    localStorage.setItem(`avatar_${data.session.user.id}`, base64Image);
+                    document.getElementById('avatar-display').innerHTML = `<img src="${base64Image}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function triggerSignOutBridge() {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

@@ -3,70 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Input Payment - InvestoMicro</title>
-    <!-- Corrected full dependency module load for Supabase Client operations -->
-    <script src="https://jsdelivr.net"></script>
+    <title>Analyze Payment - MicroInvest</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; margin: 0; color: #f8fafc; padding-bottom: 90px; box-sizing: border-box; }
-        .box { background: #1e293b; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 440px; text-align: center; border: 1px solid #334155; box-sizing: border-box; }
-        h2 { margin-top: 0; margin-bottom: 0.5rem; color: #3b82f6; letter-spacing: -1px; }
-        p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; }
-        
-        .field-group { text-align: left; margin-bottom: 15px; }
-        .field-group label { display: block; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; margin-bottom: 6px; letter-spacing: 0.5px; }
-        
-        textarea { width: 100%; height: 100px; padding: 12px; border-radius: 12px; border: 1px solid #334155; box-sizing: border-box; background: #0f172a; color: white; font-size: 0.95rem; outline: none; resize: none; font-family: inherit; }
-        textarea:focus { border-color: #3b82f6; }
-        
-        .inline-fields { display: flex; gap: 12px; margin-bottom: 15px; }
-        .inline-fields .field-group { flex: 1; margin-bottom: 0; }
-        input { width: 100%; padding: 12px; border: 1px solid #334155; border-radius: 12px; box-sizing: border-box; background: #0f172a; color: white; outline: none; font-size: 0.95rem; }
-        input:focus { border-color: #3b82f6; }
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-blue-hover: #2563eb;
+            --accent-emerald: #10b981;
+            --accent-emerald-hover: #059669;
+            --accent-red: #ef4444;
+        }
 
-        button { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 1rem; margin-top: 5px; }
-        button:hover { background: #059669; transform: translateY(-2px); }
-        .logout-btn { background: none; color: #ef4444; border: none; margin-top: 15px; cursor: pointer; font-size: 0.8rem; text-decoration: underline; padding: 5px; width: auto; }
-        
-        /* Analytics Blocks */
-        .analytics-container { margin-top: 24px; border-top: 1px solid #334155; padding-top: 20px; text-align: left; }
-        .analytics-title { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; font-weight: bold; text-align: center; }
-        .metric-card { background: #0f172a; padding: 12px 16px; border-radius: 14px; border: 1px solid #334155; margin-bottom: 10px; }
-        .metric-label { font-size: 0.75rem; color: #64748b; margin-bottom: 4px; font-weight: 500; }
-        .metric-value { font-size: 0.95rem; font-weight: bold; color: #60a5fa; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .metric-sub { font-size: 0.85rem; color: #10b981; font-weight: bold; white-space: nowrap; }
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background: var(--bg-main); 
+            margin: 0; 
+            color: var(--text-main); 
+            padding-bottom: 100px; 
+            box-sizing: border-box; 
+            -webkit-font-smoothing: antialiased;
+        }
 
-        /* Navigation Menu Bar */
-        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; padding: 10px; max-width: 520px; margin: 0 auto; box-sizing: border-box; z-index: 100; }
-        .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; font-weight: normal; cursor: pointer; margin-top: 0; width: auto; }
-        .nav button:hover { background: #475569; }
-        .nav .active { background: #3b82f6; font-weight: bold; }
+        .box { 
+            background: var(--bg-card); 
+            padding: 2.5rem; 
+            border-radius: 20px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); 
+            width: 440px; 
+            text-align: center; 
+            border: 1px solid var(--border-color); 
+            box-sizing: border-box; 
+        }
+
+        h2 { 
+            margin-top: 0; 
+            margin-bottom: 0.5rem; 
+            color: var(--text-main); 
+            font-weight: 700;
+            font-size: 1.75rem;
+            letter-spacing: -0.03em; 
+        }
+
+        p { 
+            color: var(--text-muted); 
+            font-size: 0.9rem; 
+            margin-bottom: 2rem; 
+            font-weight: 400;
+        }
+        
+        .field-group { 
+            text-align: left; 
+            margin-bottom: 18px; 
+        }
+
+        .field-group label { 
+            display: block; 
+            font-size: 0.75rem; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            letter-spacing: 0.05em; 
+        }
+        
+        textarea, input { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-color); 
+            box-sizing: border-box; 
+            background: var(--bg-main); 
+            color: white; 
+            font-size: 0.95rem; 
+            outline: none; 
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        textarea {
+            height: 90px;
+            resize: none;
+        }
+
+        textarea:focus, input:focus { 
+            border-color: var(--accent-blue); 
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        
+        .inline-fields { 
+            display: flex; 
+            gap: 12px; 
+            margin-bottom: 18px; 
+        }
+
+        .inline-fields .field-group { 
+            flex: 1; 
+            margin-bottom: 0; 
+        }
+
+        button.btn-primary { 
+            width: 100%; 
+            padding: 14px; 
+            background: var(--accent-emerald); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: all 0.2s ease; 
+            font-size: 0.95rem; 
+            margin-top: 5px; 
+        }
+
+        button.btn-primary:hover { 
+            background: var(--accent-emerald-hover); 
+            transform: translateY(-1px); 
+        }
+
+        button.btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .logout-btn { 
+            background: none; 
+            color: var(--accent-red); 
+            border: none; 
+            margin-top: 24px; 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            font-weight: 500;
+            text-decoration: none; 
+            padding: 5px; 
+            width: auto; 
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .logout-btn:hover { 
+            opacity: 1;
+            text-decoration: underline;
+        }
+        
+        /* Analytics Blocks Panels */
+        .analytics-container { 
+            margin-top: 28px; 
+            border-top: 1px solid var(--border-color); 
+            padding-top: 24px; 
+            text-align: left; 
+        }
+
+        .analytics-title { 
+            font-size: 0.75rem; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            letter-spacing: 0.08em; 
+            margin-bottom: 14px; 
+            font-weight: 700; 
+            text-align: center; 
+        }
+
+        .metric-card { 
+            background: var(--bg-main); 
+            padding: 14px 18px; 
+            border-radius: 14px; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 12px; 
+        }
+
+        .metric-label { 
+            font-size: 0.75rem; 
+            color: #64748b; 
+            margin-bottom: 6px; 
+            font-weight: 600; 
+        }
+
+        .metric-value { 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            color: #60a5fa; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            gap: 8px; 
+        }
+
+        .metric-sub { 
+            font-size: 0.9rem; 
+            color: var(--accent-emerald); 
+            font-weight: 700; 
+            white-space: nowrap; 
+        }
+
+        /* Fixed Navigation Menu Dock Bar */
+        .nav-dock { 
+            position: fixed; 
+            bottom: 24px; 
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 41, 59, 0.8); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color); 
+            display: flex; 
+            padding: 8px; 
+            width: 440px; 
+            border-radius: 16px;
+            box-sizing: border-box; 
+            z-index: 100; 
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+        }
+
+        .nav-dock button { 
+            flex: 1; 
+            margin: 0 4px; 
+            padding: 12px; 
+            background: transparent; 
+            border: none; 
+            border-radius: 10px; 
+            color: var(--text-muted); 
+            font-size: 0.85rem; 
+            font-weight: 500; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            width: auto; 
+        }
+
+        .nav-dock button:hover { 
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-dock .active { 
+            background: var(--accent-blue); 
+            color: white !important;
+            font-weight: 600; 
+        }
     </style>
 </head>
 <body>
+
     <div class="box">
         <h2>Analyze Payment</h2>
-        <p>Paste bank statement string or type manually.</p>
+        <p>Paste bank statement string or type details manually.</p>
         
         <div class="field-group">
             <label for="sms">Statement Data / Entry Text</label>
-            <textarea id="sms" placeholder="e.g., HDFC Bank: Credit Card Txn on account XX123 for INR 15000..." oninput="autoExtractAmount()"></textarea>
+            <textarea id="sms" placeholder="e.g., HDFC Bank: Credit Card Txn on account XX123 for INR 1500..." oninput="autoExtractAmount()"></textarea>
         </div>
 
         <div class="inline-fields">
             <div class="field-group">
                 <label for="amount">Transaction Amount (₹)</label>
-                <input type="number" id="amount" placeholder="e.g., 15000">
+                <input type="number" id="amount" placeholder="e.g., 1500">
             </div>
         </div>
 
         <div class="field-group">
             <label for="exactItemDesc">Item Description (Where was it spent?)</label>
-            <textarea id="exactItemDesc" style="height: 65px;" placeholder="e.g., bought fencing infrastructure for my farm, or gift for friend's marriage..."></textarea>
+            <textarea id="exactItemDesc" style="height: 75px;" placeholder="e.g., dog vet clinical checkup, groceries..."></textarea>
         </div>
         
-        <button onclick="analyze()">Run Local Classification</button>
+        <button class="btn-primary" onclick="analyze()">Run Local Classification</button>
         
-        <!-- Live Insight Summary Panels -->
         <div class="analytics-container">
             <div class="analytics-title">Spend Insights</div>
             
@@ -81,40 +292,30 @@
             </div>
         </div>
 
-        <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+        <button class="logout-btn" onclick="handleLogout()">Sign Out of Application</button>
     </div>
 
-    <!-- App System Menu Bar -->
-    <div class="nav">
+    <div class="nav-dock">
         <button class="active" onclick="location.href='input.html'">Input</button>
         <button onclick="location.href='ai.html'">AI Analysis</button>
         <button onclick="location.href='patterns.html'">Patterns</button>
         <button onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
+    <script src="config.js"></script>
     <script>
-        const S_URL = 'https://supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
-        const _supabase = supabase.createClient(S_URL, S_KEY);
-
-        async function checkSession() {
-            try {
-                const { data } = await _supabase.auth.getSession();
-                if (!data || !data.session) {
-                    window.location.href = 'index.html';
-                } else {
-                    loadUserMetrics(data.session.user.id);
-                }
-            } catch (err) {
-                window.location.href = 'index.html';
+        // Use our global modular check routing mechanism 
+        async function runSecurityGateCheck() {
+            const user = await checkActiveSession(false);
+            if (user) {
+                loadUserMetrics(user.id);
             }
         }
-        checkSession();
+        runSecurityGateCheck();
 
-        // Safe regex utility to pull amounts dynamically from complex banking lines
+        // Safe regex utility to pull amounts dynamically from complex text banking lines
         function autoExtractAmount() {
             const rawText = document.getElementById('sms').value;
-            // Matches 'rs. 500', 'inr 1,200', 'spent 450' patterns cleanly
             const regex = /(?:rs\.?|inr|spent|amt|vpa)\s*([0-9,]+(?:\.[0-9]+)?)/i;
             const match = rawText.match(regex);
             if (match && match[1]) {
@@ -130,10 +331,7 @@
                     .select('category, amount')
                     .eq('user_id', userId);
 
-                if (error) {
-                    const fallback = await _supabase.from('expenses').select('category, amount');
-                    expenses = fallback.data;
-                }
+                if (error) throw error;
 
                 if (!expenses || expenses.length === 0) {
                     document.getElementById('top-amount-cat').innerHTML = `<span style="color:#64748b; font-weight:normal;">No history tracked yet</span>`;
@@ -166,7 +364,6 @@
                     }
                 }
 
-                // Shorten text strings slightly to keep the UI beautiful
                 const cleanLabel = (c) => c.replace("And Immediate/Short term", "").replace("And", "&");
 
                 document.getElementById('top-amount-cat').innerHTML = `<span>${cleanLabel(maxAmtCat)}</span> <span class="metric-sub">₹${maxAmtVal.toLocaleString()}</span>`;
@@ -186,7 +383,6 @@
             if (!amountInput) { alert('Please enter or verify the transaction value numeric amount.'); return; }
             if (!descriptionInput) { alert('Please clarify where this capital was spent in the item description field.'); return; }
 
-            // Stash variables safely across current working cache window
             localStorage.setItem('lastSMS', statementInput);
             localStorage.setItem('lastAmount', amountInput);
             localStorage.setItem('userFinerContext', descriptionInput);

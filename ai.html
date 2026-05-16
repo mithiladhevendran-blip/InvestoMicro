@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Intent Classifier - InvestoMicro</title>
+    <title>Transaction Patterns - MicroInvest</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
             background: var(--bg-main); 
             margin: 0; 
             color: var(--text-main); 
-            padding: 20px;
+            padding-top: 20px;
             padding-bottom: 120px; 
             box-sizing: border-box; 
         }
@@ -62,23 +62,109 @@
             box-sizing: border-box; 
         }
 
-        h2 { margin-top: 0; margin-bottom: 4px; font-weight: 700; font-size: 1.3rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; }
-        .sub-header { font-size: 1.8rem; font-weight: 700; color: var(--accent-blue); margin-bottom: 24px; }
+        h2 { margin-top: 0; margin-bottom: 1.5rem; font-weight: 700; font-size: 1.4rem; color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 8px; }
         
-        .field-label { text-align: left; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; display: block; }
-        
-        .classification-box { background: rgba(59, 130, 246, 0.1); border: 2px dashed var(--accent-blue); border-radius: 12px; padding: 14px; color: var(--text-main); font-weight: 600; font-size: 1.1rem; margin-bottom: 20px; }
-        
-        .note-input { width: 100%; padding: 14px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; color: white; font-size: 1rem; box-sizing: border-box; margin-bottom: 20px; font-family: inherit; resize: none; }
-        
-        .btn-confirm { width: 100%; padding: 14px; background: var(--accent-emerald); border: none; border-radius: 12px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-bottom: 14px; }
-        .btn-confirm:hover { background: #059669; }
+        .metric-card {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .metric-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: 0.05em;
+        }
+        .metric-body {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #60a5fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .metric-sub {
+            font-size: 0.9rem;
+            color: var(--accent-emerald);
+        }
 
-        .btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
-        .btn-secondary { flex: 1; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; }
-        .btn-secondary:hover { background: #475569; }
+        .simple-row-grid {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .mini-block {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: left;
+        }
+        .mini-title {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            margin-bottom: 4px;
+        }
+        .mini-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
 
-        .error-msg { color: var(--accent-red); font-size: 0.85rem; margin-top: 10px; font-weight: 600; display: none; }
+        .log-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-main);
+            padding: 4px;
+        }
+        .log-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+        .log-item:last-child { border-bottom: none; }
+        .log-left-block { display: flex; align-items: center; gap: 12px; flex: 1; }
+        
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+            border-radius: 6px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.2s ease;
+            margin-right: 4px;
+        }
+        .btn-delete:hover {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .log-details { text-align: left; display: flex; flex-direction: column; gap: 2px; }
+        .log-desc { font-weight: 600; color: var(--text-main); }
+        .log-cat { font-size: 0.75rem; color: var(--text-muted); }
+        .log-amt { font-weight: 700; color: #f8fafc; }
+
+        .btn-direct {
+            width: 100%; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; margin-top: 10px;
+        }
+        .btn-direct:hover { background: #475569; }
 
         .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
         .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
@@ -94,28 +180,47 @@
     </div>
 
     <div class="box">
-        <h2>AI Intent Classification</h2>
-        <div class="sub-header">Analysis Ready</div>
+        <h2>📊 Financial Flow Patterns</h2>
 
-        <span class="field-label">AI Classification Label</span>
-        <div class="classification-box" id="ai-label-display">🤖 Processing parameters...</div>
-
-        <span class="field-label">Passed Item Description</span>
-        <textarea id="ai-desc-display" class="note-input" rows="2" readonly></textarea>
-
-        <button class="btn-confirm" onclick="commitRowToSupabase()">Confirm & Write to Database</button>
-        <div class="error-msg" id="db-error"></div>
-
-        <div class="btn-row">
-            <button class="btn-secondary" onclick="location.href='input.html'">← Entry Input</button>
-            <button class="btn-secondary" onclick="location.href='patterns.html'">📄 View Patterns</button>
+        <div class="metric-card">
+            <div class="metric-title">💰 Highest Cumulative Capital Allocation</div>
+            <div class="metric-body" id="peak-capital-destination">
+                <span style="font-weight: 400; font-size: 0.9rem; color: var(--text-muted);">Syncing database...</span>
+            </div>
         </div>
+
+        <div class="metric-card">
+            <div class="metric-title">📈 Transaction Velocity (Volume Frequency)</div>
+            <div class="metric-body" id="peak-velocity-destination">
+                <span style="font-weight: 400; font-size: 0.9rem; color: var(--text-muted);">Syncing velocity...</span>
+            </div>
+        </div>
+
+        <div class="simple-row-grid">
+            <div class="mini-block">
+                <div class="mini-title">🕒 Peak Spending Time</div>
+                <div class="mini-value" id="stat-peak-time">Syncing...</div>
+            </div>
+            <div class="mini-block">
+                <div class="mini-title">📅 Prone Day of Week</div>
+                <div class="mini-value" id="stat-peak-day">Syncing...</div>
+            </div>
+        </div>
+
+        <div style="text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.05em;">
+            Transaction Stack Logs
+        </div>
+        <div class="log-container" id="history-stack-box">
+            <div style="padding: 16px; color: var(--text-muted); font-size: 0.85rem; text-align: center;">Opening ledger connection...</div>
+        </div>
+
+        <button class="btn-direct" onclick="location.href='input.html'">← Return to Input Entry</button>
     </div>
 
     <div class="nav-dock">
         <button onclick="location.href='input.html'">Input</button>
-        <button class="active" onclick="location.href='ai.html'">AI Analysis</button>
-        <button onclick="location.href='patterns.html'">Patterns</button>
+        <button onclick="location.href='ai.html'">AI Analysis</button>
+        <button class="active" onclick="location.href='patterns.html'">Patterns</button>
         <button onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
@@ -124,74 +229,152 @@
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         const _supabase = supabase.createClient(S_URL, S_KEY);
 
-        let localAmount = localStorage.getItem('pending_amt') || 0;
-        let localDesc = localStorage.getItem('pending_desc') || "";
+        let currentActiveUser = null;
 
-        // UPDATED: Standardized heuristic engine targeting your 4 intent filters
-        function runLocalIntentClassifier(text) {
-            const parsed = text.toLowerCase();
-            
-            // 1. Necessary / Long-term keyword arrays
-            if (parsed.includes('book') || parsed.includes('course') || parsed.includes('fee') || parsed.includes('rent') || parsed.includes('college')) {
-                return "Necessary / Long-term";
-            } 
-            // 2. Unnecessary / Long-term keyword arrays (investments into luxuries or high ticket collections)
-            else if (parsed.includes('crypto') || parsed.includes('stock') || parsed.includes('gold') || parsed.includes('watch') || parsed.includes('collectible')) {
-                return "Unnecessary / Long-term";
-            } 
-            // 3. Necessary / Short-term keyword arrays
-            else if (parsed.includes('vet') || parsed.includes('doctor') || parsed.includes('med') || parsed.includes('food') || parsed.includes('grocery') || parsed.includes('cab')) {
-                return "Necessary / Short-term";
-            } 
-            // 4. Short Term / Unnecessary keyword arrays (impulse buys)
-            else if (parsed.includes('fence') || parsed.includes('game') || parsed.includes('party') || parsed.includes('snack') || parsed.includes('pub') || parsed.includes('movie')) {
-                return "Short Term / Unnecessary";
-            }
-            
-            // Fallback default label
-            return "Short Term / Unnecessary";
+        // Clean layout strings for rendering headers gracefully
+        function formatLabel(str) {
+            if (!str) return "General";
+            return str.replace(/And Immediate\/Short term/gi, "").replace(/And/gi, "&").trim();
         }
 
-        window.onload = function() {
-            document.getElementById('ai-desc-display').value = localDesc;
-            const derivedLabel = runLocalIntentClassifier(localDesc);
-            document.getElementById('ai-label-display').innerText = `🤖 ${derivedLabel}`;
-        };
-
-        async function commitRowToSupabase() {
-            const errBox = document.getElementById('db-error');
-            errBox.style.display = "none";
-
-            const sessionData = await _supabase.auth.getSession();
-            if (!sessionData.data || !sessionData.data.session) {
-                errBox.innerText = "Error: Session expired. Please log back in.";
-                errBox.style.display = "block";
-                return;
+        // Dedicated session handler to bypass background lockups
+        async function fetchMetricsDashboardData() {
+            try {
+                const sessionData = await _supabase.auth.getSession();
+                if (!sessionData.data || !sessionData.data.session) {
+                    document.getElementById('history-stack-box').innerHTML = 
+                        `<div style="color:var(--accent-red); padding:10px; font-size:0.8rem;">No active session found. Go to input to log in.</div>`;
+                    return;
+                }
+                currentActiveUser = sessionData.data.session.user;
+                await renderLedgerLogs();
+            } catch (err) {
+                console.error("Dashboard engine error:", err);
             }
+        }
 
-            const activeUser = sessionData.data.session.user;
-            const computedCategory = document.getElementById('ai-label-display').innerText.replace('🤖 ', '');
+        async function renderLedgerLogs() {
+            try {
+                const { data: spends, error } = await _supabase
+                    .from('spends')
+                    .select('id, category, amount, description, created_at')
+                    .eq('user_id', currentActiveUser.id)
+                    .order('created_at', { ascending: false });
 
-            const { error } = await _supabase
-                .from('spends')
-                .insert([
-                    { 
-                        amount: parseFloat(localAmount), 
-                        description: localDesc, 
-                        category: computedCategory,
-                        user_id: activeUser.id
+                if (error) throw error;
+
+                const peakCapDiv = document.getElementById('peak-capital-destination');
+                const peakVelDiv = document.getElementById('peak-velocity-destination');
+                const timeDiv = document.getElementById('stat-peak-time');
+                const dayDiv = document.getElementById('stat-peak-day');
+                const logBox = document.getElementById('history-stack-box');
+
+                if (!spends || spends.length === 0) {
+                    peakCapDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs</span>`;
+                    peakVelDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs</span>`;
+                    timeDiv.innerText = "No data";
+                    dayDiv.innerText = "No data";
+                    logBox.innerHTML = `<div style="padding:16px; color:var(--text-muted); text-align:center;">Ledger completely empty.</div>`;
+                    return;
+                }
+
+                const monetaryMap = {};
+                const frequencyMap = {};
+                const hourMap = { Morning: 0, Afternoon: 0, Evening: 0, Night: 0 };
+                const dayNameMap = { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0, Saturday: 0 };
+                const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+                spends.forEach(item => {
+                    const cat = item.category || "Uncategorized";
+                    const value = Number(item.amount) || 0;
+
+                    monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
+                    frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
+
+                    if (item.created_at) {
+                        const d = new Date(item.created_at);
+                        const hour = d.getHours();
+                        const dayName = daysOfWeek[d.getDay()];
+
+                        if (hour >= 5 && hour < 12) hourMap.Morning++;
+                        else if (hour >= 12 && hour < 17) hourMap.Afternoon++;
+                        else if (hour >= 17 && hour < 21) hourMap.Evening++;
+                        else hourMap.Night++;
+
+                        if (dayName) dayNameMap[dayName]++;
                     }
-                ]);
+                });
 
-            if (error) {
-                errBox.innerText = `Error writing row: ${error.message}`;
-                errBox.style.display = "block";
-            } else {
-                localStorage.removeItem('pending_amt');
-                localStorage.removeItem('pending_desc');
-                window.location.href = 'patterns.html';
+                let topCapCat = "None", topCapVal = 0;
+                for (const cat in monetaryMap) {
+                    if (monetaryMap[cat] > topCapVal) { topCapVal = monetaryMap[cat]; topCapCat = cat; }
+                }
+
+                let topFreqCat = "None", topFreqVal = 0;
+                for (const cat in frequencyMap) {
+                    if (frequencyMap[cat] > topFreqVal) { topFreqVal = frequencyMap[cat]; topFreqCat = cat; }
+                }
+
+                let maxHourCount = -1, peakTimeChunk = "No data";
+                for (const chunk in hourMap) {
+                    if (hourMap[chunk] > maxHourCount && hourMap[chunk] > 0) { maxHourCount = hourMap[chunk]; peakTimeChunk = chunk; }
+                }
+
+                let maxDayCount = -1, peakDayName = "No data";
+                for (const day in dayNameMap) {
+                    if (dayNameMap[day] > maxDayCount && dayNameMap[day] > 0) { maxDayCount = dayNameMap[day]; peakDayName = day; }
+                }
+
+                peakCapDiv.innerHTML = `<span>${formatLabel(topCapCat)}</span> <span class="metric-sub">₹${topCapVal.toLocaleString()}</span>`;
+                peakVelDiv.innerHTML = `<span>${formatLabel(topFreqCat)}</span> <span class="metric-sub" style="color:#60a5fa">${topFreqVal} txns</span>`;
+                
+                timeDiv.innerText = peakTimeChunk;
+                dayDiv.innerText = peakDayName;
+
+                logBox.innerHTML = "";
+                spends.forEach(item => {
+                    const cleanDesc = item.description || "Untitled Transaction";
+                    const cleanAmt = (Number(item.amount) || 0).toLocaleString();
+                    const cleanCat = formatLabel(item.category);
+
+                    const row = document.createElement('div');
+                    row.className = 'log-item';
+                    row.innerHTML = `
+                        <div class="log-left-block">
+                            <button class="btn-delete" onclick="deleteTransactionRow(${item.id})">✕</button>
+                            <div class="log-details">
+                                <span class="log-desc">${cleanDesc}</span>
+                                <span class="log-cat">${cleanCat}</span>
+                            </div>
+                        </div>
+                        <span class="log-amt">₹${cleanAmt}</span>
+                    `;
+                    logBox.appendChild(row);
+                });
+
+            } catch (err) {
+                console.error("Render failure:", err);
             }
         }
+
+        async function deleteTransactionRow(rowId) {
+            if (!confirm("Delete this transaction row item permanently?")) return;
+
+            try {
+                const { error } = await _supabase
+                    .from('spends')
+                    .delete()
+                    .eq('id', rowId);
+
+                if (error) throw error;
+                await renderLedgerLogs();
+
+            } catch (err) {
+                alert("Database Eviction Error.");
+            }
+        }
+
+        window.onload = fetchMetricsDashboardData;
     </script>
 </body>
 </html>

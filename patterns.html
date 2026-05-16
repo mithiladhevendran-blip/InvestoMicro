@@ -231,7 +231,6 @@
 
         let currentActiveUser = null;
 
-        // Cleans up category strings cleanly for user display rendering
         function formatLabel(str) {
             if (!str) return "General";
             return str.replace(/And/gi, "&").trim();
@@ -248,7 +247,7 @@
                 currentActiveUser = sessionData.data.session.user;
                 await renderLedgerLogs();
             } catch (err) {
-                console.error("Dashboard engine error:", err);
+                console.error("Dashboard engine startup error:", err);
             }
         }
 
@@ -269,8 +268,8 @@
                 const logBox = document.getElementById('history-stack-box');
 
                 if (!spends || spends.length === 0) {
-                    peakCapDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs found</span>`;
-                    peakVelDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs found</span>`;
+                    peakCapDiv.innerHTML = `<span>No logs found</span>`;
+                    peakVelDiv.innerHTML = `<span>No logs found</span>`;
                     timeDiv.innerText = "No data";
                     dayDiv.innerText = "No data";
                     logBox.innerHTML = `<div style="padding:16px; color:var(--text-muted); text-align:center;">Ledger completely empty.</div>`;
@@ -284,36 +283,43 @@
                 const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
                 spends.forEach(item => {
-                    // Normalize categories to match exactly no matter how capitalization changes
-                    let cat = item.category || "General";
-                    
-                    // Standardizing variations
-                    if (cat.toLowerCase().includes("short term") && cat.toLowerCase().includes("unnecessary")) {
-                        cat = "Short Term / Unnecessary";
-                    } else if (cat.toLowerCase().includes("necessary") && cat.toLowerCase().includes("short-term")) {
-                        cat = "Necessary / Short-term";
-                    } else if (cat.toLowerCase().includes("unnecessary") && cat.toLowerCase().includes("long-term")) {
-                        cat = "Unnecessary / Long-term";
-                    } else if (cat.toLowerCase().includes("necessary") && cat.toLowerCase().includes("long-term")) {
-                        cat = "Necessary / Long-term";
-                    }
+                    try {
+                        let cat = item.category || "Short Term / Unnecessary";
+                        let lowerCat = cat.toLowerCase();
+                        
+                        // Strict data sanitization and categorization mapping
+                        if (lowerCat.includes("short term") && lowerCat.includes("unnecessary")) {
+                            cat = "Short Term / Unnecessary";
+                        } else if (lowerCat.includes("necessary") && lowerCat.includes("short-term")) {
+                            cat = "Necessary / Short-term";
+                        } else if (lowerCat.includes("unnecessary") && lowerCat.includes("long-term")) {
+                            cat = "Unnecessary / Long-term";
+                        } else if (lowerCat.includes("necessary") && lowerCat.includes("long-term")) {
+                            cat = "Necessary / Long-term";
+                        } else if (lowerCat.includes("discretionary") || lowerCat.includes("general")) {
+                            cat = "Short Term / Unnecessary"; // Clean out stale database structural legacy names
+                        }
 
-                    const value = Number(item.amount) || 0;
+                        const value = Number(item.amount) || 0;
+                        monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
+                        frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
 
-                    monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
-                    frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
+                        if (item.created_at) {
+                            const d = new Date(item.created_at);
+                            if (!isNaN(d.getTime())) {
+                                const hour = d.getHours();
+                                const dayName = daysOfWeek[d.getDay()];
 
-                    if (item.created_at) {
-                        const d = new Date(item.created_at);
-                        const hour = d.getHours();
-                        const dayName = daysOfWeek[d.getDay()];
+                                if (hour >= 5 && hour < 12) hourMap.Morning++;
+                                else if (hour >= 12 && hour < 17) hourMap.Afternoon++;
+                                else if (hour >= 17 && hour < 21) hourMap.Evening++;
+                                else hourMap.Night++;
 
-                        if (hour >= 5 && hour < 12) hourMap.Morning++;
-                        else if (hour >= 12 && hour < 17) hourMap.Afternoon++;
-                        else if (hour >= 17 && hour < 21) hourMap.Evening++;
-                        else hourMap.Night++;
-
-                        if (dayName) dayNameMap[dayName]++;
+                                if (dayName) dayNameMap[dayName]++;
+                            }
+                        }
+                    } catch (rowErr) {
+                        console.error("Skipped a corrupt row item data structure safely:", rowErr);
                     }
                 });
 
@@ -347,7 +353,7 @@
                 spends.forEach(item => {
                     const cleanDesc = item.description || "Untitled Transaction";
                     const cleanAmt = (Number(item.amount) || 0).toLocaleString();
-                    const cleanCat = formatLabel(item.category);
+                    const cleanCat = formatLabel(item.category || "Short Term / Unnecessary");
 
                     const row = document.createElement('div');
                     row.className = 'log-item';
@@ -365,7 +371,7 @@
                 });
 
             } catch (err) {
-                console.error("Render failure:", err);
+                console.error("Critical Render loop failed:", err);
             }
         }
 
@@ -382,7 +388,7 @@
                 await renderLedgerLogs();
 
             } catch (err) {
-                alert("Database Eviction Error.");
+                alert("Database deletion failed. Double check your Supabase Table RLS permissions.");
             }
         }
 

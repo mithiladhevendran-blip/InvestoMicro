@@ -26,18 +26,8 @@
             width: 100%; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
         }
-        h3 { 
-            color: #60a5fa; 
-            font-size: 1.55rem; 
-            margin: 20px 0; 
-            letter-spacing: -0.5px; 
-        }
-        .desc { 
-            color: #94a3b8; 
-            line-height: 1.6; 
-            margin-bottom: 25px; 
-            min-height: 60px; 
-        }
+        h3 { color: #60a5fa; font-size: 1.55rem; margin: 20px 0; letter-spacing: -0.5px; }
+        .desc { color: #94a3b8; line-height: 1.6; margin-bottom: 25px; min-height: 70px; }
         button { 
             padding: 16px; 
             background: #3b82f6; 
@@ -47,21 +37,20 @@
             cursor: pointer; 
             font-weight: bold; 
             width: 100%; 
-            transition: 0.2s; 
             font-size: 1.05rem;
         }
-        button:hover { background: #2563eb; transform: translateY(-2px); }
-        button:disabled { background: #475569; cursor: not-allowed; transform: none; }
+        button:hover:not(:disabled) { background: #2563eb; transform: translateY(-2px); }
+        button:disabled { background: #475569; cursor: not-allowed; }
         .status { font-size: 0.75rem; color: #64748b; margin-top: 12px; }
-        .confidence { font-size: 0.8rem; color: #22c55e; margin-top: 8px; }
+        .confidence { font-size: 0.82rem; color: #22c55e; margin-top: 6px; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2 style="color: #94a3b8; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;">AI Spend Analysis</h2>
-        <h3 id="cat">Analyzing SMS...</h3>
+        <h3 id="cat">Analyzing...</h3>
         <p id="desc" class="desc"></p>
-        <button id="saveBtn" onclick="saveToCloud()">Confirm & Save</button>
+        <button id="saveBtn">Confirm & Save</button>
         <p id="saveStatus" class="status"></p>
     </div>
 
@@ -81,30 +70,25 @@
 
     let finalCategory = "Short Term / Not Necessary";
     let finalAmount = 0;
-    let confidence = 0;
 
-    // === Improved Amount Extraction ===
+    // Improved Amount Extraction
     function extractAmount(text) {
-        // Matches common Indian formats: 450, ₹450, Rs. 1,250.50, 1250 etc.
         const regex = /(?:₹|Rs\.?|INR)?\s*(\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?/gi;
-        let match;
-        let maxAmount = 0;
-        
+        let match, max = 0;
         while ((match = regex.exec(text)) !== null) {
             const num = parseFloat(match[1].replace(/,/g, ''));
-            if (num > maxAmount) maxAmount = num;
+            if (num > max) max = num;
         }
-        return maxAmount;
+        return max;
     }
 
     finalAmount = extractAmount(sms);
 
-    // === Better Labels ===
     const labels = [
-        "Long Term Necessary",      // Education, rent, insurance, medical, etc.
-        "Short Term Important",     // Groceries, milk, transport, daily needs
-        "Short Term Not Necessary", // Luxury, entertainment, impulse
-        "Long Term Not Necessary"   // Big non-essential purchases
+        "Long Term Necessary",
+        "Short Term Important",
+        "Short Term Not Necessary",
+        "Long Term Not Necessary"
     ];
 
     async function runAnalysis() {
@@ -113,52 +97,44 @@
 
         try {
             const classifier = await pipeline('zero-shot-classification', 
-                'Xenova/distilbert-base-uncased-mnli-all-mini-v2', 
-                { quantized: true }
-            );
+                'Xenova/distilbert-base-uncased-mnli-all-mini-v2', { quantized: true });
 
-            // Better hypothesis template for financial context
-            const hypothesisTemplate = "This expense is {}.";
-            
             const output = await classifier(sms, labels, {
-                hypothesisTemplate: hypothesisTemplate,
-                multi_label: false
+                hypothesisTemplate: "This is a {} expense.",
             });
 
             finalCategory = output.labels[0];
-            confidence = (output.scores[0] * 100).toFixed(1);
+            const confidence = (output.scores[0] * 100).toFixed(1);
 
-            descElement.innerHTML = `
-                AI classified this as <strong>${finalCategory}</strong><br>
-                <span class="confidence">Confidence: ${confidence}%</span>
-            `;
+            descElement.innerHTML = `AI classified as <strong>${finalCategory}</strong><br><span class="confidence">Confidence: ${confidence}%</span>`;
 
         } catch (e) {
-            console.error("AI failed:", e);
-            descElement.innerText = "Using smart rules (offline mode)...";
-            finalCategory = applyFallbackRules(sms);
+            console.log("AI model failed, using advanced rules");
+            descElement.innerText = "Using smart rules (offline mode)";
+            finalCategory = applyAdvancedRules(sms);
         }
 
         catElement.innerText = finalCategory;
-        saveBtn.disabled = false;
         saveBtn.innerText = `Confirm & Save ₹${finalAmount}`;
+        saveBtn.disabled = false;
     }
 
-    // === Stronger Fallback Rules ===
-    function applyFallbackRules(text) {
+    // === Much Stronger Rules ===
+    function applyAdvancedRules(text) {
         const lower = text.toLowerCase();
 
-        // Education & Long-term Necessary
-        if (/textbook|book|school|college|fee|tuition|exam|education|course|class|uniform/i.test(lower)) {
+        // === Long Term Necessary ===
+        if (/fence|buffalo|cow|goat|farm|agri|tractor|land|plot|house|rent|emi|loan|insurance|medical|hospital|doctor|school|college|fee|tuition|textbook|book|education/i.test(lower)) {
             return "Long Term Necessary";
         }
-        if (/rent|house|emi|loan|insurance|medical|hospital|doctor|medicine/i.test(lower)) {
-            return "Long Term Necessary";
-        }
-        if (/grocery|milk|vegetable|rice|atta|gas|electricity|water|internet/i.test(lower)) {
+
+        // === Short Term Important ===
+        if (/milk|grocery|rice|atta|dal|vegetable|gas|electricity|water|internet|bus|auto|petrol/i.test(lower)) {
             return "Short Term Important";
         }
-        if (/movie|game|hotel|restaurant|party|shopping|clothes|shoes/i.test(lower)) {
+
+        // === Short Term Not Necessary ===
+        if (/movie|game|hotel|restaurant|party|beer|whisky|shopping|clothes|shoes|mobile|game/i.test(lower)) {
             return "Short Term Not Necessary";
         }
 
@@ -166,18 +142,12 @@
     }
 
     window.saveToCloud = async () => {
-        saveBtn.innerText = "Saving to cloud...";
+        saveBtn.innerText = "Saving...";
         saveBtn.disabled = true;
 
         try {
             const { data: { user } } = await _supabase.auth.getUser();
-            
-            if (!user) {
-                alert("Please sign in first");
-                saveBtn.innerText = "Confirm & Save";
-                saveBtn.disabled = false;
-                return;
-            }
+            if (!user) return alert("Please login first");
 
             const { error } = await _supabase.from('spends').insert([{
                 user_id: user.id,
@@ -187,23 +157,18 @@
                 created_at: new Date().toISOString()
             }]);
 
-            if (!error) {
-                window.location.href = 'patterns.html';
-            } else {
-                throw error;
-            }
+            if (!error) window.location.href = 'patterns.html';
+            else alert("Error: " + error.message);
         } catch (err) {
-            console.error(err);
-            alert("Save failed: " + (err.message || err));
-            saveBtn.innerText = "Try Again";
+            alert("Save failed. Try again.");
+            saveBtn.innerText = `Confirm & Save ₹${finalAmount}`;
             saveBtn.disabled = false;
         }
     };
 
-    // Auto-run
     if (!sms) {
-        catElement.innerText = "No SMS found";
-        descElement.innerText = "Please go back and select a message.";
+        catElement.innerText = "No SMS Detected";
+        descElement.innerText = "Go back and select a message first.";
     } else {
         runAnalysis();
     }

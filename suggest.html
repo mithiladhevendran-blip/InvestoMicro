@@ -3,77 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Investment Advice - InvestoMicro</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Spend Patterns - InvestoMicro</title>
+    <script src="https://jsdelivr.net"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; padding: 20px; text-align: center; }
-        .advice-card { background: #1e293b; padding: 30px; border-radius: 24px; max-width: 500px; margin: auto; border: 1px solid #334155; }
-        .stat-circle { font-size: 3rem; font-weight: 800; color: #3b82f6; margin: 20px 0; }
-        .message { color: #94a3b8; line-height: 1.6; }
-        .btn-back { margin-top: 20px; background: none; border: 1px solid #334155; color: #94a3b8; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin:0; padding:20px; min-height:100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 80px; box-sizing: border-box; }
+        .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 400px; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); box-sizing: border-box; }
+        h2 { color: #3b82f6; margin-top: 0; text-align: center; }
+        .list-item { background: #0f172a; border: 1px solid #334155; padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .list-left { text-align: left; }
+        .list-cat { font-weight: bold; color: #60a5fa; }
+        .list-desc { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .list-amt { font-weight: bold; color: #10b981; }
+
+        .nav { position:fixed; bottom:0; left:0; right:0; background:#1e293b; border-top:1px solid #334155; display:flex; padding:10px; max-width:520px; margin:0 auto; box-sizing: border-box; }
+        .nav button { flex:1; margin:0 4px; padding:14px; background:#334155; border:none; border-radius:12px; color:white; font-size:0.95rem; cursor: pointer; }
+        .nav .active { background: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="advice-card">
-        <h2 id="advice-title">Analyzing Your Habits...</h2>
-        <div id="percentage" class="stat-circle">0%</div>
-        <p id="advice-text" class="message">Fetching your latest financial data...</p>
-        
-        <button class="btn-back" onclick="window.location.href='patterns.html'">Back to Dashboard</button>
+    <div class="box">
+        <h2>Spend Log Records</h2>
+        <div id="log-container"><p style="text-align:center; color:#64748b;">Loading transaction stack...</p></div>
+    </div>
+
+    <div class="nav">
+        <button onclick="location.href='input.html'">Input</button>
+        <button onclick="location.href='ai.html'">AI Analysis</button>
+        <button class="active" onclick="location.href='patterns.html'">Patterns</button>
+        <button onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
     <script>
-    const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
-    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
-    const _supabase = supabase.createClient(S_URL, S_KEY);
+        const S_URL = 'https://supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
 
-    async function generateAdvice() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (!user) return;
-
-        // Fetch all spending for this user
-        const { data } = await _supabase.from('spends').select('*');
-
-        if (data && data.length > 0) {
-            let totalWaste = 0; // Sum of Short Term / Not Necessary
-            let totalNecessary = 0;
-
-            data.forEach(item => {
-                const amt = parseFloat(item.amount) || 0;
-                if (item.category.includes('Not Necessary')) {
-                    totalWaste += amt;
-                } else {
-                    totalNecessary += amt;
-                }
-            });
-
-            // Update the big number to show Rupees
-            const displayValue = document.getElementById('percentage');
-            displayValue.innerText = "₹" + totalWaste.toLocaleString('en-IN');
-            
-            const title = document.getElementById('advice-title');
-            const text = document.getElementById('advice-text');
-
-            // Logic based on total Rupees wasted
-            if (totalWaste > 5000) {
-                title.innerText = "Heavy Leakage Found";
-                title.style.color = "#ef4444";
-                text.innerText = `You have spent ₹${totalWaste} on non-essentials. If you invested this in a Nifty 50 Index Fund, it could grow significantly. Start a SIP today!`;
-            } else if (totalWaste > 0) {
-                title.innerText = "Minor Leaks";
-                title.style.color = "#f59e0b";
-                text.innerText = `You've spent ₹${totalWaste} on cravings. Try to cut this by 50% next month and put the rest into a digital gold vault.`;
+        async function checkSession() {
+            const { data } = await _supabase.auth.getSession();
+            if (!data || !data.session) {
+                window.location.href = 'index.html';
             } else {
-                title.innerText = "Perfect Discipline";
-                title.style.color = "#10b981";
-                text.innerText = "You haven't wasted a single Rupee! You are ready to explore high-yield investment options.";
+                fetchLogs(data.session.user.id);
             }
-        } else {
-            document.getElementById('advice-text').innerText = "No data found. Start by adding your expenses!";
         }
-    }
+        checkSession();
 
-    generateAdvice();
-</script>
+        async function fetchLogs(userId) {
+            try {
+                let { data: rows, error } = await _supabase.from('expenses').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+                if (error) {
+                    const fallback = await _supabase.from('expenses').select('*').order('created_at', { ascending: false });
+                    rows = fallback.data;
+                }
+
+                const el = document.getElementById('log-container');
+                if(!rows || rows.length === 0) {
+                    el.innerHTML = `<p style="text-align:center; color:#64748b;">No entry ledgers logged yet.</p>`;
+                    return;
+                }
+
+                el.innerHTML = rows.map(r => `
+                    <div class="list-item">
+                        <div class="list-left">
+                            <div class="list-cat">${r.category || 'Expense'}</div>
+                            <div class="list-desc">${r.description || ''}</div>
+                        </div>
+                        <div class="list-amt">₹${(r.amount || 0).toLocaleString()}</div>
+                    </div>
+                `).join('');
+            } catch(e) {
+                console.error(e);
+            }
+        }
+    </script>
 </body>
 </html>

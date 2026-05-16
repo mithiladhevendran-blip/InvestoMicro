@@ -6,7 +6,7 @@
     <title>Transaction Patterns - MicroInvest</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -104,7 +104,6 @@
             color: var(--accent-emerald);
         }
 
-        /* Direct Timeline Extra Metric Panel Blocks */
         .simple-row-grid {
             display: flex;
             gap: 12px;
@@ -160,6 +159,7 @@
             cursor: pointer;
             font-size: 0.75rem;
             font-weight: 600;
+            border: none;
             transition: all 0.2s ease;
         }
         .btn-delete:hover {
@@ -177,4 +177,218 @@
         }
         .btn-direct:hover { background: #475569; }
 
-        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(
+        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
+        .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+        .nav-dock .active { background: var(--accent-blue); color: white !important; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="header-profile">
+        <div class="profile-avatar" id="avatar-initial">U</div>
+        <span id="profile-email">Loading profile...</span>
+    </div>
+
+    <div class="box">
+        <h2>📊 Financial Flow Patterns</h2>
+
+        <div class="metric-card">
+            <div class="metric-title">💰 Highest Cumulative Capital Allocation</div>
+            <div class="metric-body" id="peak-capital-destination">
+                <span style="font-weight: 400; font-size: 0.9rem; color: var(--text-muted);">Calculating patterns...</span>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-title">📈 Transaction Velocity (Volume Frequency)</div>
+            <div class="metric-body" id="peak-velocity-destination">
+                <span style="font-weight: 400; font-size: 0.9rem; color: var(--text-muted);">Analyzing frequencies...</span>
+            </div>
+        </div>
+
+        <div class="simple-row-grid">
+            <div class="mini-block">
+                <div class="mini-title">🕒 Peak Spending Time</div>
+                <div class="mini-value" id="stat-peak-time">Analyzing...</div>
+            </div>
+            <div class="mini-block">
+                <div class="mini-title">📅 Prone Day of Week</div>
+                <div class="mini-value" id="stat-peak-day">Analyzing...</div>
+            </div>
+        </div>
+
+        <div style="text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.05em;">
+            Transaction Stack Logs
+        </div>
+        <div class="log-container" id="history-stack-box">
+            <div style="padding: 16px; color: var(--text-muted); font-size: 0.85rem; text-align: center;">Loading history stream...</div>
+        </div>
+
+        <button class="btn-direct" onclick="location.href='input.html'">← Return to Input Entry</button>
+    </div>
+
+    <div class="nav-dock">
+        <button onclick="location.href='input.html'">Input</button>
+        <button onclick="location.href='ai.html'">AI Analysis</button>
+        <button class="active" onclick="location.href='patterns.html'">Patterns</button>
+        <button onclick="location.href='suggest.html'">Suggestions</button>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        let currentActiveUser = null;
+
+        // Formats classifications neatly
+        function formatLabel(str) {
+            if (!str) return "General";
+            return str.replace(/And Immediate\/Short term/gi, "").replace(/And/gi, "&").trim();
+        }
+
+        async function fetchMetricsDashboardData() {
+            // Guard against uninitialized Supabase client crashes
+            if (typeof _supabase === 'undefined') {
+                document.getElementById('history-stack-box').innerHTML = 
+                    `<div style="color:var(--accent-red); padding:10px;">Configuration dynamic loading error. Check config.js</div>`;
+                return;
+            }
+
+            try {
+                const user = await checkActiveSession(false);
+                if (!user) return;
+                
+                currentActiveUser = user;
+                document.getElementById('profile-email').innerText = user.email;
+                document.getElementById('avatar-initial').innerText = user.email.charAt(0).toUpperCase();
+
+                await renderLedgerLogs();
+            } catch (err) {
+                console.error("Session fetch exception error:", err);
+            }
+        }
+
+        async function renderLedgerLogs() {
+            try {
+                const { data: spends, error } = await _supabase
+                    .from('spends')
+                    .select('id, category, amount, description, created_at')
+                    .eq('user_id', currentActiveUser.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const peakCapDiv = document.getElementById('peak-capital-destination');
+                const peakVelDiv = document.getElementById('peak-velocity-destination');
+                const timeDiv = document.getElementById('stat-peak-time');
+                const dayDiv = document.getElementById('stat-peak-day');
+                const logBox = document.getElementById('history-stack-box');
+
+                if (!spends || spends.length === 0) {
+                    peakCapDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs recorded</span>`;
+                    peakVelDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No txns found</span>`;
+                    timeDiv.innerText = "No data";
+                    dayDiv.innerText = "No data";
+                    logBox.innerHTML = `<div style="padding:16px; color:var(--text-muted); text-align:center;">Empty ledger.</div>`;
+                    return;
+                }
+
+                const monetaryMap = {};
+                const frequencyMap = {};
+                const hourMap = { Morning: 0, Afternoon: 0, Evening: 0, Night: 0 };
+                const dayNameMap = { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0, Saturday: 0 };
+                const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+                spends.forEach(item => {
+                    const cat = item.category || "Uncategorized";
+                    const value = Number(item.amount) || 0;
+
+                    monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
+                    frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
+
+                    if (item.created_at) {
+                        const d = new Date(item.created_at);
+                        const hour = d.getHours();
+                        const dayName = daysOfWeek[d.getDay()];
+
+                        if (hour >= 5 && hour < 12) hourMap.Morning++;
+                        else if (hour >= 12 && hour < 17) hourMap.Afternoon++;
+                        else if (hour >= 17 && hour < 21) hourMap.Evening++;
+                        else hourMap.Night++;
+
+                        if (dayName) dayNameMap[dayName]++;
+                    }
+                });
+
+                let topCapCat = "None", topCapVal = 0;
+                for (const cat in monetaryMap) {
+                    if (monetaryMap[cat] > topCapVal) { topCapVal = monetaryMap[cat]; topCapCat = cat; }
+                }
+
+                let topFreqCat = "None", topFreqVal = 0;
+                for (const cat in frequencyMap) {
+                    if (frequencyMap[cat] > topFreqVal) { topFreqVal = frequencyMap[cat]; topFreqCat = cat; }
+                }
+
+                let maxHourCount = -1, peakTimeChunk = "No data";
+                for (const chunk in hourMap) {
+                    if (hourMap[chunk] > maxHourCount && hourMap[chunk] > 0) { maxHourCount = hourMap[chunk]; peakTimeChunk = chunk; }
+                }
+
+                let maxDayCount = -1, peakDayName = "No data";
+                for (const day in dayNameMap) {
+                    if (dayNameMap[day] > maxDayCount && dayNameMap[day] > 0) { maxDayCount = dayNameMap[day]; peakDayName = day; }
+                }
+
+                peakCapDiv.innerHTML = `<span>${formatLabel(topCapCat)}</span> <span class="metric-sub">₹${topCapVal.toLocaleString()}</span>`;
+                peakVelDiv.innerHTML = `<span>${formatLabel(topFreqCat)}</span> <span class="metric-sub" style="color:#60a5fa">${topFreqVal} txns</span>`;
+                
+                timeDiv.innerText = peakTimeChunk;
+                dayDiv.innerText = peakDayName;
+
+                logBox.innerHTML = "";
+                spends.forEach(item => {
+                    const cleanDesc = item.description || "Untitled Transaction";
+                    const cleanAmt = (Number(item.amount) || 0).toLocaleString();
+                    const cleanCat = formatLabel(item.category);
+
+                    const row = document.createElement('div');
+                    row.className = 'log-item';
+                    row.innerHTML = `
+                        <div class="log-left-block">
+                            <button class="btn-delete" onclick="deleteTransactionRow(${item.id})">✕</button>
+                            <div class="log-details">
+                                <span class="log-desc">${cleanDesc}</span>
+                                <span class="log-cat">${cleanCat}</span>
+                            </div>
+                        </div>
+                        <span class="log-amt">₹${cleanAmt}</span>
+                    `;
+                    logBox.appendChild(row);
+                });
+
+            } catch (err) {
+                console.error("Ledger crash recovery pipeline operational:", err);
+            }
+        }
+
+        async function deleteTransactionRow(rowId) {
+            if (!confirm("Delete this transaction row item permanently?")) return;
+
+            try {
+                const { error } = await _supabase
+                    .from('spends')
+                    .delete()
+                    .eq('id', rowId);
+
+                if (error) throw error;
+                await renderLedgerLogs();
+
+            } catch (err) {
+                alert("Could not remove row: Make sure your 'id' column is marked as Primary Key in Supabase!");
+            }
+        }
+
+        window.onload = fetchMetricsDashboardData;
+    </script>
+</body>
+</html>

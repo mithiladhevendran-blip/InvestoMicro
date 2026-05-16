@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Savings Plan - InvestoMicro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -26,11 +29,11 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            padding-bottom: 90px; 
+            padding-bottom: 120px; 
             box-sizing: border-box; 
         }
         
-        .container { width: 100%; max-width: 460px; box-sizing: border-box; }
+        .container { width: 100%; max-width: 480px; box-sizing: border-box; }
         
         .top-bar { 
             display: flex; 
@@ -45,17 +48,21 @@
             box-sizing: border-box; 
         }
         .brand { font-weight: bold; color: var(--accent-blue); font-size: 1.1rem; }
+        .profile-badge { background: var(--accent-blue); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        .profile-badge:hover { background: #2563eb; }
         
         .box-card { 
             background: var(--bg-card); 
-            padding: 1.5rem; 
+            padding: 2.2rem; 
             border-radius: 24px; 
             border: 1px solid var(--border-color); 
             margin-bottom: 18px; 
             text-align: left; 
+            box-sizing: border-box;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); 
         }
         
-        h2 { color: var(--accent-blue); margin-top: 0; font-size: 1.2rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        h2 { color: var(--accent-blue); margin-top: 0; font-size: 1.3rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
         
         .report-text { 
             font-size: 0.95rem; 
@@ -86,21 +93,22 @@
             transition: width 0.6s ease; 
         }
 
-        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; padding: 10px; max-width: 520px; margin: 0 auto; box-sizing: border-box; z-index: 100; }
-        .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; cursor: pointer; font-weight: normal; }
-        .nav button:hover { background: #475569; }
-        .nav .active { background: var(--accent-blue); font-weight: bold; }
+        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
+        .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+        .nav-dock .active { background: var(--accent-blue); color: white !important; font-weight: 600; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="top-bar">
             <div class="brand">InvestoMicro</div>
+            <button class="profile-badge" onclick="location.href='profile.html'">👤 Profile</button>
         </div>
 
         <div class="box-card">
             <h2>💰 End-Of-Day Safe Investment</h2>
-            <div class="investment-value" id="invest-amount-display">₹0</div>
+            <div class="investment-value" id="invest-amount-display">₹0.00</div>
             <p class="report-text" id="invest-analysis-text">Analyzing your secure cash reserves...</p>
             <div class="progress-track">
                 <div class="progress-bar" id="invest-bar"></div>
@@ -115,7 +123,7 @@
         </div>
     </div>
 
-    <div class="nav">
+    <div class="nav-dock">
         <button onclick="location.href='input.html'">Input</button>
         <button onclick="location.href='ai.html'">AI Analysis</button>
         <button onclick="location.href='patterns.html'">Patterns</button>
@@ -143,24 +151,21 @@
 
         async function processDashboardInsights(userId) {
             try {
+                // FIXED: Target 'spends' table instead of 'expenses'
                 let { data: rows, error } = await _supabase
-                    .from('expenses')
+                    .from('spends')
                     .select('*')
                     .eq('user_id', userId);
                 
-                if (error || !rows || rows.length === 0) {
-                    // Fallback attempt to query shared table parameters smoothly
-                    const fallback = await _supabase.from('expenses').select('*');
-                    rows = fallback.data || [];
-                }
+                if (error) throw error;
 
                 const distContainer = document.getElementById('distribution-container');
 
                 if (!rows || rows.length === 0) {
                     distContainer.innerHTML = `<p class="report-text" style="color:var(--text-muted);">No entries recorded. Add items inside the input screen to review recommendations.</p>`;
-                    document.getElementById('invest-amount-display').innerText = "₹15";
+                    document.getElementById('invest-amount-display').innerText = "₹15.00";
                     document.getElementById('invest-bar').style.width = "30%";
-                    document.getElementById('invest-analysis-text').innerText = "Invest ₹15. This is a baseline safe calculation to help build active liquidity while protecting your daily pipeline balances.";
+                    document.getElementById('invest-analysis-text').innerText = "Invest ₹15.00. This is a baseline safe calculation to help build active liquidity while protecting your daily pipeline balances.";
                     return;
                 }
 
@@ -173,6 +178,7 @@
                     const amt = Number(r.amount) || 0;
                     totalAmount += amt;
 
+                    // Support matching both tracking variations across tables smoothly
                     if (cat.includes("unnecessary")) {
                         totalUnnecessary += amt;
                     } else {
@@ -180,34 +186,36 @@
                     }
                 });
 
-                // --- SMART RUPEE MATHEMATICAL INVESTMENT ALLOCATION FORMULA ---
-                // Capped strictly between ₹0 and ₹50 to fulfill spending requirements for the coming days.
+                // --- DYNAMIC RUPEE MATHEMATICAL INVESTMENT ALLOCATION FORMULA ---
+                // Changes values completely dynamically including decimals based on structural metrics
                 let calculatedInvestment = 0;
                 
                 if (totalAmount > 0) {
-                    // Base baseline target starts higher if unnecessary spending (leaks) can be redirected
                     const leakFactor = totalUnnecessary / totalAmount;
-                    calculatedInvestment = Math.round((leakFactor * 35) + 10);
+                    // Creates an organic floating calculation variant capped under a ceiling rate
+                    calculatedInvestment = (leakFactor * 35) + (totalAmount * 0.02) + 5;
                 } else {
-                    calculatedInvestment = 15; // Balanced general default fallback
+                    calculatedInvestment = 15.50; 
                 }
 
-                // Hard clamps to secure system execution safety boundaries
-                if (calculatedInvestment > 50) calculatedInvestment = 50;
+                // Clamps investment ceiling logic safely between 0 and 100
+                if (calculatedInvestment > 100) calculatedInvestment = 100;
                 if (calculatedInvestment < 0) calculatedInvestment = 0;
 
-                // Update text configurations dynamically
-                document.getElementById('invest-amount-display').innerText = `₹${calculatedInvestment}`;
-                document.getElementById('invest-bar').style.width = `${(calculatedInvestment / 50) * 100}%`;
+                // Format to exactly two decimal structures dynamically
+                const formattedInvestment = calculatedInvestment.toFixed(2);
+
+                // Update text view wrappers
+                document.getElementById('invest-amount-display').innerText = `₹${formattedInvestment}`;
+                document.getElementById('invest-bar').style.width = `${Math.min((calculatedInvestment / 100) * 100, 100)}%`;
                 
                 document.getElementById('invest-analysis-text').innerText = 
-                    `Invest ₹${calculatedInvestment}. This end-of-day target balances your savings pipeline without tying up the residual cash required for your upcoming short-term liabilities.`;
+                    `Invest ₹${formattedInvestment}. This end-of-day target balances your savings pipeline without tying up the residual cash required for your upcoming short-term liabilities.`;
 
-                // Simplified Summary Text Generation Pipeline
                 distContainer.innerHTML = `
                     <p class="report-text">
-                        Your structural layout shows <b>₹${totalEssential.toLocaleString()}</b> routed to essential commitments, and 
-                        <b>₹${totalUnnecessary.toLocaleString()}</b> tied to non-utility items. Restructuring these minor components helps lock down consistent safety reserves.
+                        Your structural layout shows <b>₹${totalEssential.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> routed to essential commitments, and 
+                        <b>₹${totalUnnecessary.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b> tied to non-utility items. Restructuring these minor components helps lock down consistent safety reserves.
                     </p>
                 `;
 

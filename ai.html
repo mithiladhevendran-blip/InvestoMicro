@@ -8,26 +8,23 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            padding: 40px 20px; 
+            padding: 20px; 
             max-width: 520px; 
             margin: auto; 
-            text-align: center; 
             background: #0f172a; 
             color: white; 
             min-height: 100vh; 
-            display: flex; 
-            align-items: center;
         }
         .card { 
             padding: 30px; 
             border-radius: 24px; 
             background: #1e293b; 
             border: 1px solid #334155; 
-            width: 100%; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
         }
         h3 { color: #60a5fa; font-size: 1.55rem; margin: 20px 0; }
         .desc { color: #94a3b8; line-height: 1.6; margin: 20px 0; min-height: 90px; }
+        
         button { 
             padding: 16px; 
             background: #3b82f6; 
@@ -41,8 +38,28 @@
         }
         button:hover:not(:disabled) { background: #2563eb; transform: translateY(-2px); }
         button:disabled { background: #475569; }
-        .secondary-btn {
-            background: #475569;
+
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            display: flex;
+            padding: 10px 0;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+        .nav button {
+            flex: 1;
+            margin: 0 5px;
+            padding: 12px;
+            font-size: 0.9rem;
+            background: #334155;
+        }
+        .nav button.active {
+            background: #3b82f6;
         }
     </style>
 </head>
@@ -53,13 +70,18 @@
         <p id="desc" class="desc"></p>
         
         <button id="saveBtn">Confirm & Save ₹0</button>
-        <button id="skipBtn" class="secondary-btn" style="display:none;">Skip & Go to Dashboard</button>
-        
-        <p id="saveStatus" class="status"></p>
+        <button id="skipBtn" style="background:#475569;">Skip & View Patterns</button>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="nav">
+        <button onclick="goTo('ai.html')">AI Analysis</button>
+        <button onclick="goTo('patterns.html')">Patterns</button>
+        <button onclick="goTo('suggestions.html')">Suggestions</button>
     </div>
 
 <script type="module">
-    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";   // ←←← PUT YOUR KEY
+    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";   // ←←← PUT YOUR KEY HERE
 
     const _supabase = supabase.createClient(
         'https://funcvigewkhauenqxrbf.supabase.co',
@@ -87,7 +109,7 @@
         document.getElementById('cat').innerText = "Gemini Analyzing...";
 
         try {
-            const prompt = `Classify this expense into ONE category only.\nMessage: "${sms}"\nAmount: ₹${finalAmount}\n\nCategories:\n- Long Term Necessary\n- Short Term Important\n- Short Term Not Necessary\n- Long Term Not Necessary\n\nReply in this exact format:\nCategory: [exact category name]\nReason: [short reason]`;
+            const prompt = `Classify this expense into ONE category only.\nMessage: "${sms}"\nAmount: ₹${finalAmount}\n\nCategories:\n- Long Term Necessary\n- Short Term Important\n- Short Term Not Necessary\n- Long Term Not Necessary\n\nReply strictly in this format:\nCategory: [category name]\nReason: [short reason]`;
 
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: "POST",
@@ -98,26 +120,27 @@
             const data = await res.json();
             const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-            if (text.toLowerCase().includes("long term necessary")) finalCategory = "Long Term Necessary";
-            else if (text.toLowerCase().includes("short term important")) finalCategory = "Short Term Important";
-            else if (text.toLowerCase().includes("long term not necessary")) finalCategory = "Long Term Not Necessary";
+            const lowerText = text.toLowerCase();
+            if (lowerText.includes("long term necessary")) finalCategory = "Long Term Necessary";
+            else if (lowerText.includes("short term important")) finalCategory = "Short Term Important";
+            else if (lowerText.includes("long term not necessary")) finalCategory = "Long Term Not Necessary";
+            else finalCategory = "Short Term Not Necessary";
 
             document.getElementById('desc').innerHTML = `<strong>${finalCategory}</strong><br><small>${text}</small>`;
 
         } catch (e) {
-            finalCategory = /fence|buffalo|farm|school|rent|medical|fee|textbook/i.test(sms.toLowerCase()) 
+            console.log("Gemini failed, using rules");
+            finalCategory = /fence|buffalo|farm|school|college|fee|textbook|medical|rent|emi|loan/i.test(sms.toLowerCase()) 
                 ? "Long Term Necessary" 
                 : "Short Term Not Necessary";
-            document.getElementById('desc').innerText = "Using smart rules";
+            document.getElementById('desc').innerText = "Using smart rules (offline)";
         }
 
         document.getElementById('cat').innerText = finalCategory;
         document.getElementById('saveBtn').innerText = `Confirm & Save ₹${finalAmount}`;
         document.getElementById('saveBtn').disabled = false;
-        document.getElementById('skipBtn').style.display = 'block';
     }
 
-    // Save and go to Dashboard
     window.saveToCloud = async () => {
         const btn = document.getElementById('saveBtn');
         btn.innerText = "Saving...";
@@ -127,7 +150,7 @@
             const { data: { user } } = await _supabase.auth.getUser();
             if (!user) return alert("Please login first");
 
-            const { error } = await _supabase.from('spends').insert([{
+            await _supabase.from('spends').insert([{
                 user_id: user.id,
                 category: finalCategory,
                 description: sms,
@@ -135,27 +158,26 @@
                 created_at: new Date().toISOString()
             }]);
 
-            if (!error) {
-                window.location.href = 'dashboard.html';     // ← New unified page
-            } else {
-                alert("Save error");
-            }
+            alert("Saved successfully!");
+            window.location.href = 'patterns.html';
         } catch (err) {
-            alert("Failed to save");
+            alert("Save failed. Try again.");
         }
-        btn.innerText = `Confirm & Save ₹${finalAmount}`;
-        btn.disabled = false;
     };
 
-    // Skip button
-    document.getElementById('skipBtn').onclick = () => {
-        window.location.href = 'dashboard.html';
-    };
+    // Navigation Helper
+    function goTo(page) {
+        window.location.href = page;
+    }
 
+    document.getElementById('skipBtn').onclick = () => goTo('patterns.html');
+
+    // Start Analysis
     if (sms) {
         runAnalysis();
     } else {
-        document.getElementById('cat').innerText = "No SMS found";
+        document.getElementById('cat').innerText = "No SMS Found";
+        document.getElementById('desc').innerText = "Please go back and select an SMS.";
     }
 </script>
 </body>

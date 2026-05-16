@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>InvestoMicro v2.0</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://jsdelivr.net"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: white; }
+        body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; margin: 0; color: white; padding: 20px; box-sizing: border-box; }
         .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
         input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
         input:focus { border-color: #3b82f6; }
@@ -16,6 +16,15 @@
         
         .btn-login:hover { background: #2563eb; }
         .btn-signup:hover { color: white; border-color: #475569; }
+        
+        /* New Analytics UI Blocks */
+        .analytics-container { margin-top: 24px; border-top: 1px solid #334155; padding-top: 20px; text-align: left; }
+        .analytics-title { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; font-weight: bold; text-align: center; }
+        .metric-card { background: #0f172a; padding: 12px 16px; border-radius: 14px; border: 1px solid #334155; margin-bottom: 10px; }
+        .metric-label { font-size: 0.75rem; color: #64748b; margin-bottom: 4px; }
+        .metric-value { font-size: 1.05rem; font-weight: bold; color: #60a5fa; display: flex; justify-content: space-between; }
+        .metric-sub { font-size: 0.85rem; color: #94a3b8; font-weight: normal; }
+
         .version { font-size: 10px; color: #475569; margin-top: 20px; }
     </style>
 </head>
@@ -28,11 +37,32 @@
         <button class="btn-login" onclick="handleLogin()">Sign In</button>
         <button class="btn-signup" onclick="handleSignUp()">Create New Account</button>
         
-        <div class="version">Update Tag: VER_FIX_REDIRECT</div>
+        <!-- Live Analytics Section -->
+        <div class="analytics-container">
+            <div class="analytics-title">Spend Insights</div>
+            
+            <!-- Block 1: Highest Total Amount Spent -->
+            <div class="metric-card">
+                <div class="metric-label">Highest Total Spending</div>
+                <div class="metric-value" id="top-amount-cat">
+                    Loading...
+                </div>
+            </div>
+
+            <!-- Block 2: Most Frequent Transactions -->
+            <div class="metric-card">
+                <div class="metric-label">Most Frequent Category</div>
+                <div class="metric-value" id="top-count-cat">
+                    Loading...
+                </div>
+            </div>
+        </div>
+
+        <div class="version">Update Tag: VER_FIX_REDIRECT_ANALYTICS</div>
     </div>
 
     <script>
-        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
+        const S_URL = 'https://supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         const _supabase = supabase.createClient(S_URL, S_KEY);
 
@@ -59,8 +89,7 @@
                 email,
                 password,
                 options: {
-                    // Redirects user back into the specific GitHub folder
-                    emailRedirectTo: 'https://mithiladhevendran-blip.github.io/InvestoMicro/input.html'
+                    emailRedirectTo: 'https://github.io'
                 }
             });
 
@@ -70,6 +99,72 @@
                 alert("Account created! Go to your email and click the confirmation link to start.");
             }
         }
+
+        // FETCH AND CALCUALTE METRICS FROM EXPENSES
+        async function loadSpendMetrics() {
+            try {
+                // Fetch all data rows from your 'expenses' table
+                const { data: expenses, error } = await _supabase
+                    .from('expenses')
+                    .select('category, amount');
+
+                if (error) throw error;
+
+                if (!expenses || expenses.length === 0) {
+                    document.getElementById('top-amount-cat').innerHTML = `<span class="metric-sub">No transactions yet</span>`;
+                    document.getElementById('top-count-cat').innerHTML = `<span class="metric-sub">No transactions yet</span>`;
+                    return;
+                }
+
+                const amountMap = {};
+                const countMap = {};
+
+                // Process rows into running sums and tally counts
+                expenses.forEach(item => {
+                    const cat = item.category || 'Uncategorized';
+                    const amt = Number(item.amount) || 0;
+
+                    amountMap[cat] = (amountMap[cat] || 0) + amt;
+                    countMap[cat] = (countMap[cat] || 0) + 1;
+                });
+
+                // Metric 1: Find largest sum pool
+                let maxAmountCat = '';
+                let maxAmountVal = -1;
+                for (const [cat, sum] of Object.entries(amountMap)) {
+                    if (sum > maxAmountVal) {
+                        maxAmountVal = sum;
+                        maxAmountCat = cat;
+                    }
+                }
+
+                // Metric 2: Find highest frequency count
+                let maxCountCat = '';
+                let maxCountVal = -1;
+                for (const [cat, count] of Object.entries(countMap)) {
+                    if (count > maxCountVal) {
+                        maxCountVal = count;
+                        maxCountCat = cat;
+                    }
+                }
+
+                // Push processed results to display blocks
+                document.getElementById('top-amount-cat').innerHTML = `
+                    ${maxAmountCat} <span class="metric-sub">₹${maxAmountVal.toLocaleString()}</span>
+                `;
+                document.getElementById('top-count-cat').innerHTML = `
+                    ${maxCountCat} <span class="metric-sub">${maxCountVal} txs</span>
+                `;
+
+            } catch (err) {
+                console.error("Metrics failed to compile:", err);
+                document.getElementById('top-amount-cat').innerText = "Error loading";
+                document.getElementById('top-count-cat').innerText = "Error loading";
+            }
+        }
+
+        // Automatically compile metrics on screen load
+        window.addEventListener('DOMContentLoaded', loadSpendMetrics);
     </script>
 </body>
 </html>

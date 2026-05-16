@@ -7,29 +7,58 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin:0; padding:20px; }
-        .card { background:#1e293b; padding:20px; border-radius:20px; margin-bottom:20px; border:1px solid #334155; }
-        button { padding:12px; margin:5px; border:none; border-radius:10px; cursor:pointer; }
-        .delete-btn { background:#ef4444; color:white; }
-        .nav { position:fixed; bottom:0; left:0; right:0; background:#1e293b; border-top:1px solid #334155; display:flex; padding:10px; }
-        .nav button { flex:1; margin:0 5px; padding:14px; background:#334155; border-radius:12px; color:white; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin: 0; padding: 20px; padding-bottom: 80px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #334155; }
+        h2, h3, h4 { margin-top: 0; }
+        button { padding: 12px; margin: 5px; border: none; border-radius: 10px; cursor: pointer; }
+        .delete-btn { background: #ef4444; color: white; padding: 8px 12px; font-size: 14px; }
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; padding: 10px; z-index: 1000; }
+        .nav button { flex: 1; margin: 0 5px; padding: 14px; background: #334155; border-radius: 12px; color: white; font-weight: bold; }
+        .nav button.active { background: #3b82f6; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media(max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+        .highlight-text { color: #3b82f6; font-weight: bold; }
+        .metric-box { background: #334155; padding: 15px; border-radius: 12px; margin-top: 10px; }
     </style>
 </head>
 <body>
+
     <h2 style="text-align:center;">Your Spending Patterns</h2>
+
+    <!-- Insight Summary Metrics Card -->
     <div class="card">
-        <canvas id="pieChart" height="200"></canvas>
+        <h3>Core Spending Insights</h3>
+        <div id="insight-summary">Analyzing data...</div>
     </div>
 
+    <!-- Charts Layout Section -->
+    <div class="card">
+        <h3>Category Breakdown</h3>
+        <canvas id="pieChart" style="max-height: 250px;"></canvas>
+    </div>
+
+    <div class="grid-2">
+        <div class="card">
+            <h3>Peak Time of Day</h3>
+            <canvas id="timeChart" style="max-height: 200px;"></canvas>
+        </div>
+        <div class="card">
+            <h3>Peak Day of Week</h3>
+            <canvas id="dayChart" style="max-height: 200px;"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
     <div class="card">
         <h3>Recent Transactions</h3>
-        <div id="transactions"></div>
+        <div id="transactions">Loading transactions...</div>
     </div>
 
+    <!-- Navigation Bar -->
     <div class="nav">
-        <button onclick="location.href='ai.html'">AI Analysis</button>
-        <button onclick="location.href='patterns.html'">Patterns</button>
-        <button onclick="location.href='suggest.html'">Suggestions</button>
+        <button onclick="window.location.href='ai.html'">AI Analysis</button>
+        <button class="active" onclick="window.location.href='patterns.html'">Patterns</button>
+        <button onclick="window.location.href='suggest.html'">Suggestions</button>
     </div>
 
 <script type="module">
@@ -38,70 +67,195 @@
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo'
     );
 
-    let chart;
+    let pieChartInstance;
+    let timeChartInstance;
+    let dayChartInstance;
 
     async function loadData() {
         const { data: { user } } = await _supabase.auth.getUser();
         if (!user) return alert("Please login");
 
-        const { data: spends } = await _supabase
+        const { data: spends, error } = await _supabase
             .from('spends')
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false });
 
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        renderInsights(spends);
         renderTransactions(spends);
-        renderPieChart(spends);
+        renderCharts(spends);
+    }
+
+    function renderInsights(data) {
+        const summaryContainer = document.getElementById('insight-summary');
+        if (!data || data.length === 0) {
+            summaryContainer.innerHTML = "No transaction entries found to analyze.";
+            return;
+        }
+
+        const categories = {};
+        const timeSlots = { Morning: 0, Afternoon: 0, Evening: 0, Night: 0 };
+        const daysOfWeek = { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0, Saturday: 0 };
+        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+        data.forEach(item => {
+            // Category count & volume analytics
+            const cat = item.category || "Other";
+            if (!categories[cat]) categories[cat] = { totalAmount: 0, count: 0 };
+            categories[cat].totalAmount += parseFloat(item.amount || 0);
+            categories[cat].count += 1;
+
+            // Date parsing for Time and Day tracking
+            const date = new Date(item.created_at);
+            if (!isNaN(date)) {
+                // Day tracking
+                const dayName = dayNames[date.getDay()];
+                daysOfWeek[dayName] += parseFloat(item.amount || 0);
+
+                // Hour tracking
+                const hour = date.getHours();
+                if (hour >= 5 && hour < 12) timeSlots.Morning += parseFloat(item.amount || 0);
+                else if (hour >= 12 && hour < 17) timeSlots.Afternoon += parseFloat(item.amount || 0);
+                else if (hour >= 17 && hour < 21) timeSlots.Evening += parseFloat(item.amount || 0);
+                else timeSlots.Night += parseFloat(item.amount || 0);
+            }
+        });
+
+        // Calculate highest values
+        let topCategory = "None", maxCatCost = 0, topCatCount = 0;
+        Object.keys(categories).forEach(cat => {
+            if (categories[cat].totalAmount > maxCatCost) {
+                maxCatCost = categories[cat].totalAmount;
+                topCategory = cat;
+                topCatCount = categories[cat].count;
+            }
+        });
+
+        const peakTime = Object.keys(timeSlots).reduce((a, b) => timeSlots[a] > timeSlots[b] ? a : b);
+        const peakDay = Object.keys(daysOfWeek).reduce((a, b) => daysOfWeek[a] > daysOfWeek[b] ? a : b);
+
+        summaryContainer.innerHTML = `
+            <div class="metric-box">
+                Most money flows into: <span class="highlight-text">${topCategory}</span> (₹${maxCatCost.toFixed(2)})<br>
+                Total Transactions in this category: <span class="highlight-text">${topCatCount} items</span>
+            </div>
+            <div class="metric-box">
+                Highest Spending Window: <span class="highlight-text">${peakTime}</span><br>
+                Heaviest Budget Day: <span class="highlight-text">${peakDay}s</span>
+            </div>
+        `;
     }
 
     function renderTransactions(data) {
         const container = document.getElementById('transactions');
         container.innerHTML = '';
 
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#64748b;">No items recorded yet.</p>';
+            return;
+        }
+
         data.forEach(item => {
             const div = document.createElement('div');
             div.style.cssText = 'background:#334155; padding:15px; margin:10px 0; border-radius:12px; display:flex; justify-content:space-between; align-items:center;';
             div.innerHTML = `
                 <div>
-                    <strong>₹${item.amount}</strong> - ${item.category}<br>
-                    <small>${item.description}</small>
+                    <strong>₹${item.amount}</strong> - ${item.category || 'Other'}<br>
+                    <small style="color:#94a3b8;">${item.description || ''}</small>
                 </div>
-                <button class="delete-btn" onclick="deleteEntry('${item.id}')">Delete</button>
+                <button class="delete-btn" data-id="${item.id}">Delete</button>
             `;
             container.appendChild(div);
         });
+
+        // Dynamic event binding to bypass modern module isolation bugs
+        container.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.getAttribute('data-id');
+                if (confirm("Delete this entry?")) {
+                    await _supabase.from('spends').delete().eq('id', id);
+                    loadData(); 
+                }
+            });
+        });
     }
 
-    async function deleteEntry(id) {
-        if (!confirm("Delete this entry?")) return;
-        await _supabase.from('spends').delete().eq('id', id);
-        loadData();   // Refresh
-    }
-
-    function renderPieChart(data) {
-        const ctx = document.getElementById('pieChart');
+    function renderCharts(data) {
         const categoryTotal = {};
+        const hourlyData = { Morning: 0, Afternoon: 0, Evening: 0, Night: 0 };
+        const dailyData = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+        
+        const dayMapping = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
         data.forEach(item => {
+            // Parse Categories
             const cat = item.category || "Other";
             categoryTotal[cat] = (categoryTotal[cat] || 0) + parseFloat(item.amount || 0);
+
+            // Parse Time & Days
+            const date = new Date(item.created_at);
+            if (!isNaN(date)) {
+                const hour = date.getHours();
+                if (hour >= 5 && hour < 12) hourlyData.Morning += parseFloat(item.amount || 0);
+                else if (hour >= 12 && hour < 17) hourlyData.Afternoon += parseFloat(item.amount || 0);
+                else if (hour >= 17 && hour < 21) hourlyData.Evening += parseFloat(item.amount || 0);
+                else hourlyData.Night += parseFloat(item.amount || 0);
+
+                const dayLabel = dayMapping[date.getDay()];
+                dailyData[dayLabel] += parseFloat(item.amount || 0);
+            }
         });
 
-        if (chart) chart.destroy();
+        const colors = ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#a855f7', '#06b6d4', '#f97316'];
 
-        chart = new Chart(ctx, {
+        // 1. Pie Chart
+        if (pieChartInstance) pieChartInstance.destroy();
+        pieChartInstance = new Chart(document.getElementById('pieChart'), {
             type: 'pie',
             data: {
                 labels: Object.keys(categoryTotal),
-                datasets: [{
-                    data: Object.values(categoryTotal),
-                    backgroundColor: ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#a855f7']
-                }]
+                datasets: [{ data: Object.values(categoryTotal), backgroundColor: colors }]
             },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+        });
+
+        // 2. Time Of Day Chart
+        if (timeChartInstance) timeChartInstance.destroy();
+        timeChartInstance = new Chart(document.getElementById('timeChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(hourlyData),
+                datasets: [{ data: Object.values(hourlyData), backgroundColor: '#3b82f6', label: 'Spent (₹)' }]
+            },
+            options: { 
+                responsive: true, 
+                plugins: { legend: { display: false } },
+                scales: { x: { ticks: { color: '#fff' } }, y: { ticks: { color: '#fff' } } }
+            }
+        });
+
+        // 3. Weekday Chart
+        if (dayChartInstance) dayChartInstance.destroy();
+        dayChartInstance = new Chart(document.getElementById('dayChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(dailyData),
+                datasets: [{ data: Object.values(dailyData), backgroundColor: '#22c55e', label: 'Spent (₹)' }]
+            },
+            options: { 
+                responsive: true, 
+                plugins: { legend: { display: false } },
+                scales: { x: { ticks: { color: '#fff' } }, y: { ticks: { color: '#fff' } } }
+            }
         });
     }
 
+    // Initialize Page
     loadData();
 </script>
 </body>

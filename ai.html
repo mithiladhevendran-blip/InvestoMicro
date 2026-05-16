@@ -2,16 +2,146 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Insights - MicroInvest</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Analysis - MicroInvest</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    </head>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-emerald-hover: #059669;
+            --accent-red: #ef4444;
+        }
+
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background: var(--bg-main); 
+            margin: 0; 
+            color: var(--text-main); 
+            padding-bottom: 100px; 
+            box-sizing: border-box; 
+        }
+
+        /* Top Right Professional Profile Header Badge Area */
+        .header-profile {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .profile-avatar {
+            width: 24px;
+            height: 24px;
+            background: var(--accent-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .box { 
+            background: var(--bg-card); 
+            padding: 2.5rem; 
+            border-radius: 20px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); 
+            width: 440px; 
+            text-align: center; 
+            border: 1px solid var(--border-color); 
+            box-sizing: border-box; 
+        }
+
+        h2 { margin-top: 0; margin-bottom: 0.5rem; font-weight: 700; font-size: 1.5rem; letter-spacing: -0.03em; color: var(--text-muted); text-transform: uppercase; }
+        .status-header { font-size: 2rem; font-weight: 700; color: var(--accent-blue); margin-bottom: 1.5rem; letter-spacing: -0.02em; }
+        
+        .field-group { text-align: left; margin-bottom: 18px; }
+        .field-group label { display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.05em; }
+        
+        select, textarea { 
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border-color); box-sizing: border-box; background: var(--bg-main); color: white; font-size: 0.95rem; outline: none; font-family: inherit;
+        }
+        textarea { height: 75px; resize: none; }
+
+        button.btn-action { 
+            width: 100%; padding: 14px; background: var(--accent-emerald); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; font-size: 0.95rem; margin-bottom: 12px;
+        }
+        button.btn-action:hover { background: var(--accent-emerald-hover); transform: translateY(-1px); }
+
+        .btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .btn-secondary { flex: 1; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; }
+        .btn-secondary:hover { background: #475569; }
+        
+        .btn-suggestion { width: 100%; padding: 14px; background: var(--accent-blue); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 0.95rem; }
+
+        #error-msg { color: var(--accent-red); font-size: 0.85rem; margin: 10px 0; display: none; font-weight: 500; text-align: center; line-height: 1.4; }
+        #success-msg { color: var(--accent-emerald); font-size: 0.85rem; margin: 10px 0; display: none; font-weight: 500; text-align: center; }
+
+        /* Fixed Navigation Menu Dock Bar */
+        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
+        .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+        .nav-dock .active { background: var(--accent-blue); color: white !important; font-weight: 600; }
+    </style>
+</head>
 <body>
 
+    <div class="header-profile">
+        <div class="profile-avatar" id="avatar-initial">U</div>
+        <span id="profile-email">Loading user...</span>
+    </div>
+
     <div class="box">
-        <h2>AI Breakdown</h2>
-        <div id="loading-state">Analyzing financial vectors...</div>
-        <div id="analysis-result" style="display:none;">
-            </div>
+        <h2>AI Intent Classification</h2>
+        <div class="status-header" id="status-text">Classifying...</div>
+        
+        <div class="field-group">
+            <label for="category-select">Your Primary Lifestyle Profile</label>
+            <select id="category-select">
+                <option value="Necessary / Long-term">Necessary / Long-term</option>
+                <option value="Necessary / Short-term">Necessary / Short-term</option>
+                <option value="Unnecessary / Long-term">Unnecessary / Long-term</option>
+                <option value="Unnecessary / Short-term">Unnecessary / Short-term</option>
+            </select>
+        </div>
+
+        <div class="field-group">
+            <label for="finer-notes">Finer Classification Notes</label>
+            <textarea id="finer-notes" placeholder="Loading structural framework indicators..."></textarea>
+        </div>
+        
+        <button class="btn-action" id="write-btn" onclick="commitToDatabase()">Confirm & Write to Database</button>
+        
+        <div id="error-msg"></div>
+        <div id="success-msg"></div>
+
+        <div class="btn-row">
+            <button class="btn-secondary" onclick="location.href='input.html'">← Entry Input</button>
+            <button class="btn-secondary" onclick="location.href='patterns.html'">📄 View Patterns</button>
+        </div>
+        <button class="btn-suggestion" onclick="location.href='suggest.html'">💡 Go to Suggestions →</button>
     </div>
 
     <div class="nav-dock">
@@ -23,17 +153,117 @@
 
     <script src="config.js"></script>
     <script>
-        async function runAnalysis() {
-            // 1. Grab the values stashed by input.html
-            const sms = localStorage.getItem('lastSMS');
-            const amt = localStorage.getItem('lastAmount');
-            const desc = localStorage.getItem('userFinerContext');
+        let globalUserId = null;
 
-            // 2. Fire your AI API processing logic right here...
-            
-            // 3. Render insights onto your dashboard view elements
+        async function initPageFlow() {
+            // Wait for configuration script wrapper validation
+            const user = await checkActiveSession(false);
+            if (user) {
+                globalUserId = user.id;
+                document.getElementById('profile-email').innerText = user.email;
+                document.getElementById('avatar-initial').innerText = user.email.charAt(0).toUpperCase();
+                runLocalAIModelEngine();
+            }
         }
-        runAnalysis();
+        
+        // Execute cleanly after scripts resolve initialization maps
+        window.onload = initPageFlow;
+
+        function runLocalAIModelEngine() {
+            const sms = (localStorage.getItem('lastSMS') || "").toLowerCase();
+            const desc = (localStorage.getItem('userFinerContext') || "").toLowerCase();
+            const amt = localStorage.getItem('lastAmount') || "0";
+
+            document.getElementById('finer-notes').value = localStorage.getItem('userFinerContext') || "";
+
+            const selectEl = document.getElementById('category-select');
+            
+            // PROTECTED SYSTEM GUARDRAIL RULE: Animal, Vet, Medical, and Life checks are strictly locked to 'Necessary'
+            const lifeKeywords = ['vet', 'dog', 'cat', 'pet', 'animal', 'doctor', 'hospital', 'medical', 'medicine', 'vaccine'];
+            const containsLifeKeywords = lifeKeywords.some(keyword => sms.includes(keyword) || desc.includes(keyword));
+
+            if (containsLifeKeywords) {
+                // Determine if tracking index belongs to systemic layout vectors (long vs short term)
+                if (sms.includes('surgery') || desc.includes('annual') || desc.includes('yearly') || desc.includes('operation')) {
+                    selectEl.value = "Necessary / Long-term";
+                } else {
+                    selectEl.value = "Necessary / Short-term";
+                }
+                document.getElementById('status-text').innerText = "Analysis Ready";
+                return;
+            }
+
+            // Standard Matrix Evaluation Routing Logic Loop
+            if (sms.includes('investment') || sms.includes('sip') || desc.includes('asset') || desc.includes('insurance')) {
+                selectEl.value = "Necessary / Long-term";
+            } else if (sms.includes('swiggy') || sms.includes('zomato') || desc.includes('movie') || desc.includes('game')) {
+                selectEl.value = "Unnecessary / Short-term";
+            } else if (desc.includes('rent') || desc.includes('electricity') || sms.includes('bill')) {
+                selectEl.value = "Necessary / Short-term";
+            } else {
+                // Balanced Default fallback baseline state
+                selectEl.value = "Necessary / Short-term";
+            }
+
+            document.getElementById('status-text').innerText = "Analysis Ready";
+        }
+
+        async function commitToDatabase() {
+            const errorDiv = document.getElementById('error-msg');
+            const successDiv = document.getElementById('success-msg');
+            const writeBtn = document.getElementById('write-btn');
+            
+            errorDiv.style.display = "none";
+            successDiv.style.display = "none";
+
+            const selectedCategory = document.getElementById('category-select').value;
+            const finalNotes = document.getElementById('finer-notes').value.trim();
+            const originalSMS = localStorage.getItem('lastSMS') || "Manual Entry";
+            const currentAmount = localStorage.getItem('lastAmount') || "0";
+
+            if (!globalUserId) {
+                errorDiv.innerText = "Error: Authenticated profile reference missing. Please login again.";
+                errorDiv.style.display = "block";
+                return;
+            }
+
+            writeBtn.disabled = true;
+            writeBtn.innerText = "Writing to Matrix...";
+
+            try {
+                // Correctly referencing the global initial client instance created inside config.js
+                const { data, error } = await _supabase
+                    .from('expenses')
+                    .insert([
+                        { 
+                            user_id: globalUserId,
+                            amount: parseFloat(currentAmount),
+                            category: selectedCategory,
+                            description: finalNotes,
+                            raw_statement: originalSMS,
+                            created_at: new Date().toISOString()
+                        }
+                    ]);
+
+                if (error) throw error;
+
+                successDiv.innerText = "Row added successfully to database tracking layers!";
+                successDiv.style.display = "block";
+                
+                // Clear cache strings upon entry completion sequence
+                localStorage.removeItem('lastSMS');
+                localStorage.removeItem('lastAmount');
+                localStorage.removeItem('userFinerContext');
+
+            } catch (err) {
+                errorDiv.innerText = "Error writing row: " + (err.message || err);
+                errorDiv.style.display = "block";
+                console.error(err);
+            } finally {
+                writeBtn.disabled = false;
+                writeBtn.innerText = "Confirm & Write to Database";
+            }
+        }
     </script>
 </body>
 </html>

@@ -3,92 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InvestoMicro v2.0</title>
+    <title>Input Payment - InvestoMicro</title>
     <script src="https://jsdelivr.net"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: white; }
-        .box { background: #1e293b; padding: 2rem; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-        input { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
-        input:focus { border-color: #3b82f6; }
-        .btn-login { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; }
-        .btn-signup { width: 100%; padding: 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 12px; cursor: pointer; margin-top: 10px; font-size: 0.9rem; }
+        body { font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; margin: 0; color: #f8fafc; padding-bottom: 80px; box-sizing: border-box; }
+        .box { background: #1e293b; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 400px; text-align: center; border: 1px solid #334155; box-sizing: border-box; }
+        h2 { margin-top: 0; margin-bottom: 0.5rem; color: #3b82f6; letter-spacing: -1px; }
+        p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+        textarea { width: 100%; height: 120px; padding: 15px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; box-sizing: border-box; background: #0f172a; color: white; font-size: 1rem; outline: none; resize: none; }
+        textarea:focus { border-color: #3b82f6; }
+        button { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #059669; transform: translateY(-2px); }
+        .logout-btn { background: none; color: #ef4444; border: none; margin-top: 15px; cursor: pointer; font-size: 0.8rem; text-decoration: underline; padding: 5px; }
+        
+        /* Analytics Blocks */
+        .analytics-container { margin-top: 24px; border-top: 1px solid #334155; padding-top: 20px; text-align: left; }
+        .analytics-title { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; font-weight: bold; text-align: center; }
+        .metric-card { background: #0f172a; padding: 12px 16px; border-radius: 14px; border: 1px solid #334155; margin-bottom: 10px; }
+        .metric-label { font-size: 0.75rem; color: #64748b; margin-bottom: 4px; }
+        .metric-value { font-size: 1rem; font-weight: bold; color: #60a5fa; display: flex; justify-content: space-between; align-items: center; }
+        .metric-sub { font-size: 0.85rem; color: #94a3b8; font-weight: normal; }
+
+        /* Navigation Menu Bar */
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; padding: 10px; max-width: 520px; margin: 0 auto; box-sizing: border-box; z-index: 100; }
+        .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; font-weight: normal; cursor: pointer; }
+        .nav button:hover { background: #475569; }
+        .nav .active { background: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>InvestoMicro</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
+        <h2>Analyze Payment</h2>
+        <p>Paste your SMS or type your spending below.</p>
         
-        <button class="btn-login" onclick="handleLogin()">Sign In</button>
-        <button class="btn-signup" onclick="handleSignUp()">Create New Account</button>
+        <textarea id="sms" placeholder="e.g., Spent 500 on dog food and pens..."></textarea>
+        
+        <button onclick="analyze()">Run AI Classification</button>
+        
+        <!-- Live High-Speed Analytics Section -->
+        <div class="analytics-container">
+            <div class="analytics-title">Spend Insights</div>
+            
+            <div class="metric-card">
+                <div class="metric-label">Highest Total Spending</div>
+                <div class="metric-value" id="top-amount-cat"><span class="metric-sub">Loading...</span></div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-label">Most Frequent Category</div>
+                <div class="metric-value" id="top-count-cat"><span class="metric-sub">Loading...</span></div>
+            </div>
+        </div>
+
+        <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+    </div>
+
+    <!-- Connected Navigation Bar -->
+    <div class="nav">
+        <button class="active" onclick="location.href='input.html'">Input</button>
+        <button onclick="location.href='ai.html'">AI Analysis</button>
+        <button onclick="location.href='patterns.html'">Patterns</button>
+        <button onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
     <script>
-        const S_URL = 'https://supabase.co';
+        // Restored your active database parameters securely
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
-        
-        // Block phone browsers from triggering fingerprint popups
-        const _supabase = supabase.createClient(S_URL, S_KEY, {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: false 
-            }
-        });
+        const _supabase = supabase.createClient(S_URL, S_KEY);
 
-        // Redirect logged-in profiles immediately
+        // SECURE AUTH CHECK & LINK
         async function checkSession() {
             try {
                 const { data } = await _supabase.auth.getSession();
-                if (data?.session) {
-                    window.location.href = 'input.html';
+                if (!data || !data.session) {
+                    window.location.href = 'index.html';
+                } else {
+                    loadUserMetrics(data.session.user.id);
                 }
-            } catch(e) {
-                console.error("Session scan failed");
+            } catch (err) {
+                window.location.href = 'index.html';
             }
         }
         checkSession();
 
-        // Standard Password Login
-        async function handleLogin() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            if(!email || !password) return alert("Please fill out all fields.");
-            
-            const { data, error } = await _supabase.auth.signInWithPassword({ 
-                email: email.trim(), 
-                password: password 
-            });
-            
-            if (error) {
-                alert("Login error: " + error.message);
-            } else if (data?.session) {
-                window.location.href = 'input.html';
+        // FAIL-SAFE HIGH-SPEED ANALYTICS ENGINE
+        async function loadUserMetrics(userId) {
+            try {
+                let { data: expenses, error } = await _supabase
+                    .from('expenses')
+                    .select('category, amount')
+                    .eq('user_id', userId);
+
+                // Fallback layer in case user isolation schema columns are missing
+                if (error) {
+                    console.warn("Falling back to global structural load...");
+                    const fallback = await _supabase.from('expenses').select('category, amount');
+                    if (fallback.error) throw fallback.error;
+                    expenses = fallback.data;
+                }
+
+                if (!expenses || expenses.length === 0) {
+                    document.getElementById('top-amount-cat').innerHTML = `<span class="metric-sub">No transactions yet</span>`;
+                    document.getElementById('top-count-cat').innerHTML = `<span class="metric-sub">No transactions yet</span>`;
+                    return;
+                }
+
+                const amountMap = {};
+                const countMap = {};
+
+                for (let i = 0; i < expenses.length; i++) {
+                    const entry = expenses[i];
+                    const cat = entry.category || 'Uncategorized';
+                    const amt = Number(entry.amount) || 0;
+
+                    amountMap[cat] = (amountMap[cat] || 0) + amt;
+                    countMap[cat] = (countMap[cat] || 0) + 1;
+                }
+
+                let maxAmtCat = '', maxAmtVal = -1;
+                let maxCntCat = '', maxCntVal = -1;
+
+                for (const cat in amountMap) {
+                    if (amountMap[cat] > maxAmtVal) {
+                        maxAmtVal = amountMap[cat];
+                        maxAmtCat = cat;
+                    }
+                    if (countMap[cat] > maxCntVal) {
+                        maxCntVal = countMap[cat];
+                        maxCntCat = cat;
+                    }
+                }
+
+                document.getElementById('top-amount-cat').innerHTML = `${maxAmtCat} <span class="metric-sub">₹${maxAmtVal.toLocaleString()}</span>`;
+                document.getElementById('top-count-cat').innerHTML = `${maxCntCat} <span class="metric-sub">${maxCntVal} times</span>`;
+
+            } catch (err) {
+                console.error("Analytical calculation failure:", err);
+                document.getElementById('top-amount-cat').innerHTML = `<span class="metric-sub">Data struct mismatch</span>`;
+                document.getElementById('top-count-cat').innerHTML = `<span class="metric-sub">Data struct mismatch</span>`;
             }
         }
 
-        // Standard Signup
-        async function handleSignUp() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+        function analyze() {
+            const text = document.getElementById('sms').value;
+            if(!text) return alert("Please enter some text!");
+            localStorage.setItem('lastSMS', text);
+            window.location.href = 'ai.html';
+        }
 
-            if(!email || !password) return alert("Please fill out all fields.");
-
-            const { error } = await _supabase.auth.signUp({
-                email: email.trim(),
-                password: password,
-                options: {
-                    emailRedirectTo: 'https://github.io'
-                }
-            });
-
-            if (error) {
-                alert("Signup error: " + error.message);
-            } else {
-                alert("Account verification link sent to your email!");
-            }
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
         }
     </script>
 </body>

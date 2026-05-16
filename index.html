@@ -30,7 +30,8 @@
     </div>
 
     <script>
-        const S_URL = 'https://supabase.co';
+        // ⚡ FIXED: Restored your active instance endpoints securely
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         
         const _supabase = supabase.createClient(S_URL, S_KEY, {
@@ -41,6 +42,7 @@
             }
         });
 
+        // Instant redirect bypass if token storage payload exists
         async function checkSession() {
             try {
                 const { data } = await _supabase.auth.getSession();
@@ -53,6 +55,7 @@
         }
         checkSession();
 
+        // Standard Password Sign In
         async function handleLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -71,6 +74,7 @@
             }
         }
 
+        // Standard Signup
         async function handleSignUp() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;

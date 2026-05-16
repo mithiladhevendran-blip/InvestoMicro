@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Database Ledger Purge Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: white; padding: 40px; text-align: center; }
+        .card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; }
+        button { background: #ef4444; color: white; border: none; padding: 12px 24px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+        button:hover { background: #dc2626; }
+        #status { margin-top: 20px; color: #94a3b8; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Ledger Cleanup Utility</h2>
+        <p>Click below to automatically scan your database and completely purge all old legacy labels (like General / Discretionary).</p>
+        <button onclick="purgeLegacyRows()">Run Database Purge</button>
+        <div id="status">Ready...</div>
+    </div>
+
+    <script>
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        async function purgeLegacyRows() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerText = "Connecting to auth session...";
+
+            try {
+                const sessionData = await _supabase.auth.getSession();
+                if (!sessionData.data || !sessionData.data.session) {
+                    statusDiv.innerHTML = "<span style='color:#ef4444'>Error: No active user session found. Please log into your main app first!</span>";
+                    return;
+                }
+
+                const userId = sessionData.data.session.user.id;
+                statusDiv.innerText = "Scanning ledger for legacy tags...";
+
+                // Delete rows containing old formatting
+                const { data, error } = await _supabase
+                    .from('spends')
+                    .delete()
+                    .eq('user_id', userId)
+                    .eq('category', 'General / Discretionary');
+
+                if (error) throw error;
+
+                statusDiv.innerHTML = "<span style='color:#10b981'>✓ Legacy tags successfully cleared! Refresh your patterns page now.</span>";
+
+            } catch (err) {
+                console.error(err);
+                statusDiv.innerHTML = "<span style='color:#ef4444'>Purge failed. Check your Supabase RLS delete policies.</span>";
+            }
+        }
+    </script>
+</body>
+</html>

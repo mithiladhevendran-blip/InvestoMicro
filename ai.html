@@ -8,15 +8,15 @@
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
-            padding: 40px; 
+            padding: 40px 20px; 
             max-width: 520px; 
             margin: auto; 
             text-align: center; 
             background: #0f172a; 
             color: white; 
-            display: flex; 
-            align-items: center; 
             min-height: 100vh; 
+            display: flex; 
+            align-items: center;
         }
         .card { 
             padding: 30px; 
@@ -26,8 +26,8 @@
             width: 100%; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
         }
-        h3 { color: #60a5fa; font-size: 1.55rem; margin: 20px 0; letter-spacing: -0.5px; }
-        .desc { color: #94a3b8; line-height: 1.6; margin-bottom: 25px; min-height: 80px; }
+        h3 { color: #60a5fa; font-size: 1.55rem; margin: 20px 0; }
+        .desc { color: #94a3b8; line-height: 1.6; margin: 20px 0; min-height: 90px; }
         button { 
             padding: 16px; 
             background: #3b82f6; 
@@ -37,11 +37,13 @@
             cursor: pointer; 
             font-weight: bold; 
             width: 100%; 
-            font-size: 1.05rem;
+            margin: 8px 0;
         }
         button:hover:not(:disabled) { background: #2563eb; transform: translateY(-2px); }
-        button:disabled { background: #475569; cursor: not-allowed; }
-        .status { font-size: 0.8rem; color: #64748b; margin-top: 12px; }
+        button:disabled { background: #475569; }
+        .secondary-btn {
+            background: #475569;
+        }
     </style>
 </head>
 <body>
@@ -49,23 +51,22 @@
         <h2 style="color: #94a3b8; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;">AI Spend Analysis</h2>
         <h3 id="cat">Analyzing with Gemini...</h3>
         <p id="desc" class="desc"></p>
-        <button id="saveBtn">Confirm & Save</button>
+        
+        <button id="saveBtn">Confirm & Save ₹0</button>
+        <button id="skipBtn" class="secondary-btn" style="display:none;">Skip & Go to Dashboard</button>
+        
         <p id="saveStatus" class="status"></p>
     </div>
 
 <script type="module">
-    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";   // ←←← PUT YOUR KEY HERE
+    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";   // ←←← PUT YOUR KEY
 
-    const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
-    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
-    
-    const _supabase = supabase.createClient(S_URL, S_KEY);
+    const _supabase = supabase.createClient(
+        'https://funcvigewkhauenqxrbf.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo'
+    );
 
     const sms = (localStorage.getItem('lastSMS') || "").trim();
-    const catElement = document.getElementById('cat');
-    const descElement = document.getElementById('desc');
-    const saveBtn = document.getElementById('saveBtn');
-
     let finalCategory = "Short Term Not Necessary";
     let finalAmount = 0;
 
@@ -82,72 +83,45 @@
     finalAmount = extractAmount(sms);
 
     async function runAnalysis() {
-        saveBtn.disabled = true;
-        catElement.innerText = "Gemini Analyzing...";
+        document.getElementById('saveBtn').disabled = true;
+        document.getElementById('cat').innerText = "Gemini Analyzing...";
 
         try {
-            const prompt = `
-Analyze this expense message and classify it into exactly one category.
-Message: "${sms}"
+            const prompt = `Classify this expense into ONE category only.\nMessage: "${sms}"\nAmount: ₹${finalAmount}\n\nCategories:\n- Long Term Necessary\n- Short Term Important\n- Short Term Not Necessary\n- Long Term Not Necessary\n\nReply in this exact format:\nCategory: [exact category name]\nReason: [short reason]`;
 
-Categories:
-- Long Term Necessary (education, farm assets, house, rent, medical, insurance, etc.)
-- Short Term Important (daily groceries, milk, vegetables, transport, utilities)
-- Short Term Not Necessary (luxury, entertainment, impulse buys)
-- Long Term Not Necessary (big non-essential purchases)
-
-Return only the category name. Also give one short reason.
-`;
-
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
-                })
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             });
 
-            const data = await response.json();
-            const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-            // Extract category
-            if (resultText.toLowerCase().includes("long term necessary")) {
-                finalCategory = "Long Term Necessary";
-            } else if (resultText.toLowerCase().includes("short term important")) {
-                finalCategory = "Short Term Important";
-            } else if (resultText.toLowerCase().includes("long term not necessary")) {
-                finalCategory = "Long Term Not Necessary";
-            } else {
-                finalCategory = "Short Term Not Necessary";
-            }
+            if (text.toLowerCase().includes("long term necessary")) finalCategory = "Long Term Necessary";
+            else if (text.toLowerCase().includes("short term important")) finalCategory = "Short Term Important";
+            else if (text.toLowerCase().includes("long term not necessary")) finalCategory = "Long Term Not Necessary";
 
-            descElement.innerHTML = `<strong>${finalCategory}</strong><br><small>${resultText}</small>`;
+            document.getElementById('desc').innerHTML = `<strong>${finalCategory}</strong><br><small>${text}</small>`;
 
         } catch (e) {
-            console.error(e);
-            descElement.innerText = "Gemini failed. Using fallback rules...";
-            finalCategory = applyFallbackRules(sms);
+            finalCategory = /fence|buffalo|farm|school|rent|medical|fee|textbook/i.test(sms.toLowerCase()) 
+                ? "Long Term Necessary" 
+                : "Short Term Not Necessary";
+            document.getElementById('desc').innerText = "Using smart rules";
         }
 
-        catElement.innerText = finalCategory;
-        saveBtn.innerText = `Confirm & Save ₹${finalAmount}`;
-        saveBtn.disabled = false;
+        document.getElementById('cat').innerText = finalCategory;
+        document.getElementById('saveBtn').innerText = `Confirm & Save ₹${finalAmount}`;
+        document.getElementById('saveBtn').disabled = false;
+        document.getElementById('skipBtn').style.display = 'block';
     }
 
-    function applyFallbackRules(text) {
-        const lower = text.toLowerCase();
-        if (/fence|buffalo|cow|goat|farm|tractor|land|school|college|fee|textbook|medical|rent|emi|loan/i.test(lower)) {
-            return "Long Term Necessary";
-        }
-        if (/milk|grocery|vegetable|gas|internet/i.test(lower)) {
-            return "Short Term Important";
-        }
-        return "Short Term Not Necessary";
-    }
-
+    // Save and go to Dashboard
     window.saveToCloud = async () => {
-        saveBtn.innerText = "Saving...";
-        saveBtn.disabled = true;
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = "Saving...";
+        btn.disabled = true;
 
         try {
             const { data: { user } } = await _supabase.auth.getUser();
@@ -161,19 +135,27 @@ Return only the category name. Also give one short reason.
                 created_at: new Date().toISOString()
             }]);
 
-            if (!error) window.location.href = 'patterns.html';
-            else alert("Save error: " + error.message);
+            if (!error) {
+                window.location.href = 'dashboard.html';     // ← New unified page
+            } else {
+                alert("Save error");
+            }
         } catch (err) {
-            alert("Save failed");
-            saveBtn.innerText = `Confirm & Save ₹${finalAmount}`;
-            saveBtn.disabled = false;
+            alert("Failed to save");
         }
+        btn.innerText = `Confirm & Save ₹${finalAmount}`;
+        btn.disabled = false;
     };
 
-    if (!sms) {
-        catElement.innerText = "No SMS found";
-    } else {
+    // Skip button
+    document.getElementById('skipBtn').onclick = () => {
+        window.location.href = 'dashboard.html';
+    };
+
+    if (sms) {
         runAnalysis();
+    } else {
+        document.getElementById('cat').innerText = "No SMS found";
     }
 </script>
 </body>

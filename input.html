@@ -16,7 +16,6 @@
         button:hover { background: #059669; transform: translateY(-2px); }
         .logout-btn { background: none; color: #ef4444; border: none; margin-top: 15px; cursor: pointer; font-size: 0.8rem; text-decoration: underline; padding: 5px; }
         
-        /* Analytics Style Blocks */
         .analytics-container { margin-top: 24px; border-top: 1px solid #334155; padding-top: 20px; text-align: left; }
         .analytics-title { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; font-weight: bold; text-align: center; }
         .metric-card { background: #0f172a; padding: 12px 16px; border-radius: 14px; border: 1px solid #334155; margin-bottom: 10px; }
@@ -24,7 +23,7 @@
         .metric-value { font-size: 1rem; font-weight: bold; color: #60a5fa; display: flex; justify-content: space-between; align-items: center; }
         .metric-sub { font-size: 0.85rem; color: #94a3b8; font-weight: normal; }
 
-        /* Direct Navigation Menu Bar */
+        /* Shared Navigation Styles */
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; padding: 10px; max-width: 520px; margin: 0 auto; box-sizing: border-box; z-index: 100; }
         .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; font-weight: normal; cursor: pointer; }
         .nav button:hover { background: #475569; }
@@ -40,17 +39,12 @@
         
         <button onclick="analyze()">Run AI Classification</button>
         
-        <!-- Live Analytics Section -->
         <div class="analytics-container">
             <div class="analytics-title">Spend Insights</div>
-            
-            <!-- Block 1: Most Money Received -->
             <div class="metric-card">
                 <div class="metric-label">Highest Total Spending</div>
                 <div class="metric-value" id="top-amount-cat"><span class="metric-sub">Loading...</span></div>
             </div>
-
-            <!-- Block 2: Most Transactions Count -->
             <div class="metric-card">
                 <div class="metric-label">Most Frequent Category</div>
                 <div class="metric-value" id="top-count-cat"><span class="metric-sub">Loading...</span></div>
@@ -60,7 +54,6 @@
         <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
     </div>
 
-    <!-- Linked Navigation Bar -->
     <div class="nav">
         <button class="active" onclick="location.href='input.html'">Input</button>
         <button onclick="location.href='ai.html'">AI Analysis</button>
@@ -73,81 +66,49 @@
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         const _supabase = supabase.createClient(S_URL, S_KEY);
 
-        // SECURE AUTH CHECK & LINK
         async function checkSession() {
-            try {
-                const { data, error } = await _supabase.auth.getSession();
-                if (error || !data || !data.session) {
-                    console.log("No valid session found, redirecting back to login screen.");
-                    window.location.href = 'index.html';
-                } else {
-                    // Session is fully verified; calculate insights safely
-                    loadUserMetrics(data.session.user.id);
-                }
-            } catch (err) {
+            const { data } = await _supabase.auth.getSession();
+            if (!data || !data.session) {
                 window.location.href = 'index.html';
+            } else {
+                loadUserMetrics(data.session.user.id);
             }
         }
         checkSession();
 
-        // FAIL-SAFE ANALYTICS ENGINE
         async function loadUserMetrics(userId) {
             try {
-                // Try querying with user isolation filters
-                let { data: expenses, error } = await _supabase
-                    .from('expenses')
-                    .select('category, amount')
-                    .eq('user_id', userId);
-
-                // FALLBACK: If your database table lacks a 'user_id' column, load general data instead of freezing
+                let { data: expenses, error } = await _supabase.from('expenses').select('category, amount').eq('user_id', userId);
                 if (error) {
-                    console.warn("Table schema structural notice: user_id check skipped. Fetching global data.");
                     const fallback = await _supabase.from('expenses').select('category, amount');
-                    if (fallback.error) throw fallback.error;
                     expenses = fallback.data;
                 }
 
                 if (!expenses || expenses.length === 0) {
-                    document.getElementById('top-amount-cat').innerHTML = `<span class="metric-sub">No transactions yet</span>`;
-                    document.getElementById('top-count-cat').innerHTML = `<span class="metric-sub">No transactions yet</span>`;
+                    document.getElementById('top-amount-cat').innerHTML = `<span class="metric-sub">No transactions</span>`;
+                    document.getElementById('top-count-cat').innerHTML = `<span class="metric-sub">No transactions</span>`;
                     return;
                 }
 
-                const amountMap = {};
-                const countMap = {};
-
-                // Compute arrays
+                const amountMap = {}, countMap = {};
                 for (let i = 0; i < expenses.length; i++) {
                     const entry = expenses[i];
                     const cat = entry.category || 'Uncategorized';
                     const amt = Number(entry.amount) || 0;
-
                     amountMap[cat] = (amountMap[cat] || 0) + amt;
                     countMap[cat] = (countMap[cat] || 0) + 1;
                 }
 
-                let maxAmtCat = '', maxAmtVal = -1;
-                let maxCntCat = '', maxCntVal = -1;
-
+                let maxAmtCat = '', maxAmtVal = -1, maxCntCat = '', maxCntVal = -1;
                 for (const cat in amountMap) {
-                    if (amountMap[cat] > maxAmtVal) {
-                        maxAmtVal = amountMap[cat];
-                        maxAmtCat = cat;
-                    }
-                    if (countMap[cat] > maxCntVal) {
-                        maxCntVal = countMap[cat];
-                        maxCntCat = cat;
-                    }
+                    if (amountMap[cat] > maxAmtVal) { maxAmtVal = amountMap[cat]; maxAmtCat = cat; }
+                    if (countMap[cat] > maxCntVal) { maxCntVal = countMap[cat]; maxCntCat = cat; }
                 }
 
-                // Render metrics into view blocks smoothly
                 document.getElementById('top-amount-cat').innerHTML = `${maxAmtCat} <span class="metric-sub">₹${maxAmtVal.toLocaleString()}</span>`;
                 document.getElementById('top-count-cat').innerHTML = `${maxCntCat} <span class="metric-sub">${maxCntVal} times</span>`;
-
             } catch (err) {
-                console.error("Failed to parse analytical records:", err);
-                document.getElementById('top-amount-cat').innerHTML = `<span class="metric-sub">Data configuration error</span>`;
-                document.getElementById('top-count-cat').innerHTML = `<span class="metric-sub">Data configuration error</span>`;
+                console.error(err);
             }
         }
 

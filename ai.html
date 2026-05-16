@@ -27,7 +27,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
         }
         h3 { color: #60a5fa; font-size: 1.55rem; margin: 20px 0; letter-spacing: -0.5px; }
-        .desc { color: #94a3b8; line-height: 1.6; margin-bottom: 25px; min-height: 70px; }
+        .desc { color: #94a3b8; line-height: 1.6; margin-bottom: 25px; min-height: 80px; }
         button { 
             padding: 16px; 
             background: #3b82f6; 
@@ -41,22 +41,20 @@
         }
         button:hover:not(:disabled) { background: #2563eb; transform: translateY(-2px); }
         button:disabled { background: #475569; cursor: not-allowed; }
-        .status { font-size: 0.75rem; color: #64748b; margin-top: 12px; }
-        .confidence { font-size: 0.82rem; color: #22c55e; margin-top: 6px; }
+        .status { font-size: 0.8rem; color: #64748b; margin-top: 12px; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2 style="color: #94a3b8; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px;">AI Spend Analysis</h2>
-        <h3 id="cat">Analyzing...</h3>
+        <h3 id="cat">Analyzing with Gemini...</h3>
         <p id="desc" class="desc"></p>
         <button id="saveBtn">Confirm & Save</button>
         <p id="saveStatus" class="status"></p>
     </div>
 
 <script type="module">
-    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0';
-    env.allowLocalModels = false;
+    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";   // ←←← PUT YOUR KEY HERE
 
     const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
@@ -68,10 +66,9 @@
     const descElement = document.getElementById('desc');
     const saveBtn = document.getElementById('saveBtn');
 
-    let finalCategory = "Short Term / Not Necessary";
+    let finalCategory = "Short Term Not Necessary";
     let finalAmount = 0;
 
-    // Improved Amount Extraction
     function extractAmount(text) {
         const regex = /(?:₹|Rs\.?|INR)?\s*(\d{1,3}(?:,\d{3})*|\d+)(?:\.\d{1,2})?/gi;
         let match, max = 0;
@@ -84,34 +81,52 @@
 
     finalAmount = extractAmount(sms);
 
-    const labels = [
-        "Long Term Necessary",
-        "Short Term Important",
-        "Short Term Not Necessary",
-        "Long Term Not Necessary"
-    ];
-
     async function runAnalysis() {
         saveBtn.disabled = true;
-        catElement.innerText = "AI Analyzing...";
+        catElement.innerText = "Gemini Analyzing...";
 
         try {
-            const classifier = await pipeline('zero-shot-classification', 
-                'Xenova/distilbert-base-uncased-mnli-all-mini-v2', { quantized: true });
+            const prompt = `
+Analyze this expense message and classify it into exactly one category.
+Message: "${sms}"
 
-            const output = await classifier(sms, labels, {
-                hypothesisTemplate: "This is a {} expense.",
+Categories:
+- Long Term Necessary (education, farm assets, house, rent, medical, insurance, etc.)
+- Short Term Important (daily groceries, milk, vegetables, transport, utilities)
+- Short Term Not Necessary (luxury, entertainment, impulse buys)
+- Long Term Not Necessary (big non-essential purchases)
+
+Return only the category name. Also give one short reason.
+`;
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }]
+                })
             });
 
-            finalCategory = output.labels[0];
-            const confidence = (output.scores[0] * 100).toFixed(1);
+            const data = await response.json();
+            const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-            descElement.innerHTML = `AI classified as <strong>${finalCategory}</strong><br><span class="confidence">Confidence: ${confidence}%</span>`;
+            // Extract category
+            if (resultText.toLowerCase().includes("long term necessary")) {
+                finalCategory = "Long Term Necessary";
+            } else if (resultText.toLowerCase().includes("short term important")) {
+                finalCategory = "Short Term Important";
+            } else if (resultText.toLowerCase().includes("long term not necessary")) {
+                finalCategory = "Long Term Not Necessary";
+            } else {
+                finalCategory = "Short Term Not Necessary";
+            }
+
+            descElement.innerHTML = `<strong>${finalCategory}</strong><br><small>${resultText}</small>`;
 
         } catch (e) {
-            console.log("AI model failed, using advanced rules");
-            descElement.innerText = "Using smart rules (offline mode)";
-            finalCategory = applyAdvancedRules(sms);
+            console.error(e);
+            descElement.innerText = "Gemini failed. Using fallback rules...";
+            finalCategory = applyFallbackRules(sms);
         }
 
         catElement.innerText = finalCategory;
@@ -119,26 +134,15 @@
         saveBtn.disabled = false;
     }
 
-    // === Much Stronger Rules ===
-    function applyAdvancedRules(text) {
+    function applyFallbackRules(text) {
         const lower = text.toLowerCase();
-
-        // === Long Term Necessary ===
-        if (/fence|buffalo|cow|goat|farm|agri|tractor|land|plot|house|rent|emi|loan|insurance|medical|hospital|doctor|school|college|fee|tuition|textbook|book|education/i.test(lower)) {
+        if (/fence|buffalo|cow|goat|farm|tractor|land|school|college|fee|textbook|medical|rent|emi|loan/i.test(lower)) {
             return "Long Term Necessary";
         }
-
-        // === Short Term Important ===
-        if (/milk|grocery|rice|atta|dal|vegetable|gas|electricity|water|internet|bus|auto|petrol/i.test(lower)) {
+        if (/milk|grocery|vegetable|gas|internet/i.test(lower)) {
             return "Short Term Important";
         }
-
-        // === Short Term Not Necessary ===
-        if (/movie|game|hotel|restaurant|party|beer|whisky|shopping|clothes|shoes|mobile|game/i.test(lower)) {
-            return "Short Term Not Necessary";
-        }
-
-        return "Short Term Not Necessary"; // default
+        return "Short Term Not Necessary";
     }
 
     window.saveToCloud = async () => {
@@ -158,17 +162,16 @@
             }]);
 
             if (!error) window.location.href = 'patterns.html';
-            else alert("Error: " + error.message);
+            else alert("Save error: " + error.message);
         } catch (err) {
-            alert("Save failed. Try again.");
+            alert("Save failed");
             saveBtn.innerText = `Confirm & Save ₹${finalAmount}`;
             saveBtn.disabled = false;
         }
     };
 
     if (!sms) {
-        catElement.innerText = "No SMS Detected";
-        descElement.innerText = "Go back and select a message first.";
+        catElement.innerText = "No SMS found";
     } else {
         runAnalysis();
     }

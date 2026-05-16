@@ -6,7 +6,7 @@
     <title>Transaction Patterns - MicroInvest</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -104,8 +104,36 @@
             color: var(--accent-emerald);
         }
 
+        /* Direct Timeline Extra Metric Panel Blocks */
+        .simple-row-grid {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .mini-block {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: left;
+        }
+        .mini-title {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            margin-bottom: 4px;
+        }
+        .mini-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
         .log-container {
-            max-height: 240px;
+            max-height: 200px;
             overflow-y: auto;
             border: 1px solid var(--border-color);
             border-radius: 12px;
@@ -119,196 +147,34 @@
             padding: 10px 12px;
             border-bottom: 1px solid var(--border-color);
             font-size: 0.85rem;
-            transition: background 0.2s ease;
         }
         .log-item:last-child { border-bottom: none; }
         .log-left-block { display: flex; align-items: center; gap: 12px; flex: 1; }
         
-        /* Delete Button Action Design */
         .btn-delete {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.2);
             color: var(--accent-red);
             border-radius: 6px;
-            padding: 6px 8px;
+            padding: 4px 8px;
             cursor: pointer;
             font-size: 0.75rem;
             font-weight: 600;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
         .btn-delete:hover {
             background: var(--accent-red);
             color: white;
-            border-color: var(--accent-red-hover);
         }
 
         .log-details { text-align: left; display: flex; flex-direction: column; gap: 2px; }
         .log-desc { font-weight: 600; color: var(--text-main); }
         .log-cat { font-size: 0.75rem; color: var(--text-muted); }
-        .log-amt { font-weight: 700; color: #f8fafc; white-space: nowrap; }
+        .log-amt { font-weight: 700; color: #f8fafc; }
 
         .btn-direct {
-            width: 100%; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; margin-top: 18px;
+            width: 100%; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; margin-top: 10px;
         }
         .btn-direct:hover { background: #475569; }
 
-        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
-        .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
-        .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
-        .nav-dock .active { background: var(--accent-blue); color: white !important; font-weight: 600; }
-    </style>
-</head>
-<body>
-
-    <div class="header-profile">
-        <div class="profile-avatar" id="avatar-initial">U</div>
-        <span id="profile-email">Loading user profile...</span>
-    </div>
-
-    <div class="box">
-        <h2>📊 Financial Flow Patterns</h2>
-
-        <div class="metric-card">
-            <div class="metric-title">💰 Highest Cumulative Capital Allocation</div>
-            <div class="metric-body" id="peak-capital-destination">
-                <span style="font-weight: 400; font-size: 0.9rem; color: var(--text-muted);">Calculating patterns...</span>
-            </div>
-        </div>
-
-        <div class="metric-card">
-            <div class="metric-title">📈 Transaction Velocity (Volume Frequency)</div>
-            <div class="metric-body" id="peak-velocity-destination">
-                <span style="font-weight: 400; font-size: 0.9rem; color: var(--text-muted);">Analyzing frequencies...</span>
-            </div>
-        </div>
-
-        <div style="text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.05em;">
-            Transaction Stack Logs
-        </div>
-        <div class="log-container" id="history-stack-box">
-            <div style="padding: 16px; color: var(--text-muted); font-size: 0.85rem; text-align: center;">Loading history stream...</div>
-        </div>
-
-        <button class="btn-direct" onclick="location.href='input.html'">← Return to Input Entry</button>
-    </div>
-
-    <div class="nav-dock">
-        <button onclick="location.href='input.html'">Input</button>
-        <button onclick="location.href='ai.html'">AI Analysis</button>
-        <button class="active" onclick="location.href='patterns.html'">Patterns</button>
-        <button onclick="location.href='suggest.html'">Suggestions</button>
-    </div>
-
-    <script src="config.js"></script>
-    <script>
-        let currentActiveUser = null;
-
-        async function fetchMetricsDashboardData() {
-            const user = await checkActiveSession(false);
-            if (!user) return;
-            
-            currentActiveUser = user;
-            document.getElementById('profile-email').innerText = user.email;
-            document.getElementById('avatar-initial').innerText = user.email.charAt(0).toUpperCase();
-
-            await renderLedgerLogs();
-        }
-
-        async function renderLedgerLogs() {
-            try {
-                const { data: spends, error } = await _supabase
-                    .from('spends')
-                    .select('id, category, amount, description, created_at')
-                    .eq('user_id', currentActiveUser.id)
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                const peakCapDiv = document.getElementById('peak-capital-destination');
-                const peakVelDiv = document.getElementById('peak-velocity-destination');
-                const logBox = document.getElementById('history-stack-box');
-
-                if (!spends || spends.length === 0) {
-                    peakCapDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No logs committed yet</span>`;
-                    peakVelDiv.innerHTML = `<span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">No txns recorded yet</span>`;
-                    logBox.innerHTML = `<div style="padding:16px; color:var(--text-muted); text-align:center;">Empty ledger.</div>`;
-                    return;
-                }
-
-                const monetaryMap = {};
-                const frequencyMap = {};
-
-                spends.forEach(item => {
-                    const cat = item.category || "Uncategorized";
-                    const value = Number(item.amount) || 0;
-
-                    monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
-                    frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
-                });
-
-                let topCapCat = "", topCapVal = -1;
-                let topFreqCat = "", topFreqVal = -1;
-
-                for (const cat in monetaryMap) {
-                    if (monetaryMap[cat] > topCapVal) { topCapVal = monetaryMap[cat]; topCapCat = cat; }
-                    if (frequencyMap[cat] > topFreqVal) { topFreqVal = frequencyMap[cat]; topFreqCat = cat; }
-                }
-
-                const formatLabel = (str) => str.replace("And Immediate/Short term", "").replace("And", "&");
-
-                peakCapDiv.innerHTML = `<span>${formatLabel(topCapCat)}</span> <span class="metric-sub">₹${topCapVal.toLocaleString()}</span>`;
-                peakVelDiv.innerHTML = `<span>${formatLabel(topFreqCat)}</span> <span class="metric-sub" style="color:#60a5fa">${topFreqVal} txns</span>`;
-
-                logBox.innerHTML = "";
-                spends.forEach(item => {
-                    const cleanDesc = item.description || "Untitled Transaction";
-                    const cleanAmt = (Number(item.amount) || 0).toLocaleString();
-                    const cleanCat = formatLabel(item.category || "General");
-
-                    const row = document.createElement('div');
-                    row.className = 'log-item';
-                    row.innerHTML = `
-                        <div class="log-left-block">
-                            <button class="btn-delete" onclick="deleteTransactionRow(${item.id})">✕</button>
-                            <div class="log-details">
-                                <span class="log-desc">${cleanDesc}</span>
-                                <span class="log-cat">${cleanCat}</span>
-                            </div>
-                        </div>
-                        <span class="log-amt">₹${cleanAmt}</span>
-                    `;
-                    logBox.appendChild(row);
-                });
-
-            } catch (err) {
-                console.error("Ledger rendering matrix runtime error:", err);
-            }
-        }
-
-        // Direct Row Eviction Handler
-        async function deleteTransactionRow(rowId) {
-            if (!confirm("Are you sure you want to permanently delete this duplicate/extra transaction?")) return;
-
-            try {
-                const { error } = await _supabase
-                    .from('spends')
-                    .delete()
-                    .eq('id', rowId);
-
-                if (error) throw error;
-                
-                // Instantly recalculate aggregates and update layout maps without reloading page
-                await renderLedgerLogs();
-
-            } catch (err) {
-                alert("Could not remove record: " + (err.message || err));
-            }
-        }
-
-        window.onload = fetchMetricsDashboardData;
-    </script>
-</body>
-</html>
+        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(

@@ -6,7 +6,7 @@
     <title>Transaction Patterns - MicroInvest</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -30,36 +30,27 @@
             background: var(--bg-main); 
             margin: 0; 
             color: var(--text-main); 
+            padding-top: 20px;
             padding-bottom: 120px; 
             box-sizing: border-box; 
         }
 
-        .header-profile {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-card);
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: 1px solid var(--border-color);
-            font-size: 0.85rem;
-            font-weight: 500;
+        /* Top Navigation Header Component */
+        .top-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            width: 480px; 
+            background: var(--bg-card); 
+            padding: 12px 18px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 18px; 
+            box-sizing: border-box; 
         }
-        .profile-avatar {
-            width: 24px;
-            height: 24px;
-            background: var(--accent-blue);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
+        .brand { font-weight: bold; color: var(--accent-blue); font-size: 1.1rem; }
+        .profile-badge { background: var(--accent-blue); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        .profile-badge:hover { background: #2563eb; }
 
         .box { 
             background: var(--bg-card); 
@@ -71,22 +62,6 @@
             border: 1px solid var(--border-color); 
             box-sizing: border-box; 
         }
-        /* Top Navigation Header & Profile Anchor Row */
-.top-bar { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    width: 480px; /* Matches your .box container width exactly */
-    background: var(--bg-card); 
-    padding: 12px 18px; 
-    border-radius: 16px; 
-    border: 1px solid var(--border-color); 
-    margin-bottom: 18px; 
-    box-sizing: border-box; 
-}
-.brand { font-weight: bold; color: var(--accent-blue); font-size: 1.1rem; }
-.profile-badge { background: var(--accent-blue); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
-.profile-badge:hover { background: #2563eb; }
 
         h2 { margin-top: 0; margin-bottom: 1.5rem; font-weight: 700; font-size: 1.4rem; letter-spacing: -0.03em; color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 8px; }
         
@@ -199,9 +174,9 @@
 </head>
 <body>
 
-    <div class="header-profile">
-        <div class="profile-avatar" id="avatar-initial">U</div>
-        <span id="profile-email">Loading profile...</span>
+    <div class="top-bar">
+        <div class="brand">InvestoMicro</div>
+        <button class="profile-badge" onclick="location.href='profile.html'">👤 Profile</button>
     </div>
 
     <div class="box">
@@ -274,9 +249,6 @@
                 }
                 
                 currentActiveUser = user;
-                document.getElementById('profile-email').innerText = user.email;
-                document.getElementById('avatar-initial').innerText = user.email.charAt(0).toUpperCase();
-
                 await renderLedgerLogs();
             } catch (err) {
                 console.error("Session crash sequence caught:", err);
@@ -285,6 +257,7 @@
 
         async function renderLedgerLogs() {
             try {
+                // Modified table target to accurately query user logs
                 const { data: spends, error } = await _supabase
                     .from('spends')
                     .select('id, category, amount, description, created_at')

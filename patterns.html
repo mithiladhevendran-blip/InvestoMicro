@@ -2,269 +2,276 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Dynamic Result - InvestoMicro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spend Patterns & Analytics - InvestoMicro</title>
     <!-- Complete dependency module load for Supabase Client operations -->
     <script src="https://jsdelivr.net"></script>
     <style>
-        body { 
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
-            padding: 40px; 
-            max-width: 500px; 
-            margin: auto; 
-            text-align: center; 
-            background: #0f172a; 
-            color: white; 
-            padding-bottom: 90px;
-            box-sizing: border-box;
-        }
-        .card { 
-            padding: 30px; 
-            border-radius: 20px; 
-            background: #1e293b; 
-            border: 1px solid #334155; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        h2 { color: #94a3b8; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 0; }
-        h3 { color: #60a5fa; font-size: 1.6rem; margin: 15px 0 5px 0; }
-        .desc { color: #94a3b8; line-height: 1.5; font-size: 0.95rem; margin-bottom: 25px; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #0f172a; color: white; margin:0; padding:20px; min-height:100vh; display: flex; flex-direction: column; align-items: center; padding-bottom: 90px; box-sizing: border-box; }
+        .container { width: 100%; max-width: 460px; box-sizing: border-box; }
         
-        /* Persona Section Styling */
-        .section-box {
-            border-top: 1px solid #334155;
-            padding-top: 18px;
-            margin-top: 18px;
-            text-align: left;
-        }
-        .section-box label {
-            color: #94a3b8;
-            font-size: 0.8rem;
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        select, textarea {
-            width: 100%;
-            box-sizing: border-box;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 12px;
-            padding: 12px;
-            color: white;
-            font-family: inherit;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        select:focus, textarea:focus {
-            border-color: #3b82f6;
-        }
+        /* Top Navigation Header & Profile Anchor Row */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; background: #1e293b; padding: 12px 18px; border-radius: 16px; border: 1px solid #334155; margin-bottom: 18px; box-sizing: border-box; }
+        .brand { font-weight: bold; color: #3b82f6; font-size: 1.1rem; }
+        .profile-badge { background: #3b82f6; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
+        .profile-badge:hover { background: #2563eb; }
 
-        /* 3-Row Dynamic Routing Buttons Grid */
-        .nav-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 25px;
-        }
-        .row-split {
-            display: flex;
-            gap: 10px;
-        }
-        button { 
-            padding: 14px; 
-            color: white; 
-            border: none; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            font-size: 0.95rem;
-            transition: 0.2s;
-        }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        button:disabled { background: #475569 !important; cursor: not-allowed; transform: none; opacity: 0.6; }
-        
-        .btn-db-save { background: #10b981; width: 100%; font-size: 1rem; }
-        .btn-go-input { background: #334155; flex: 1; }
-        .btn-go-patterns { background: #4b5563; flex: 1; }
-        .btn-go-suggest { background: #3b82f6; width: 100%; }
-        
-        #status-msg { margin-top: 12px; font-size: 0.85rem; display: none; font-weight: 500; }
+        /* Universal Multi-Directional Jump Routing Box */
+        .router-card { background: #1e293b; padding: 1.2rem; border-radius: 20px; border: 1px solid #334155; margin-bottom: 18px; text-align: left; }
+        .router-title { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; letter-spacing: 0.5px; }
+        .router-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .router-links button { padding: 10px 4px; border-radius: 8px; font-size: 0.8rem; font-weight: bold; border: none; cursor: pointer; color: white; }
+        .btn-link-input { background: #10b981; }
+        .btn-link-ai { background: #6366f1; }
+        .btn-link-suggest { background: #3b82f6; }
+        .btn-link-logout { background: #ef4444; grid-column: span 3; margin-top: 4px; }
 
-        /* Navigation Menu Bar */
+        /* Graphic Chart Display Blocks */
+        .chart-card { background: #1e293b; padding: 1.5rem; border-radius: 24px; border: 1px solid #334155; margin-bottom: 18px; text-align: left; }
+        .chart-heading { font-size: 1rem; color: #f8fafc; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 6px; }
+        .bar-row { margin-bottom: 12px; }
+        .bar-labels { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; }
+        .bar-label-name { color: #94a3b8; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 260px; }
+        .bar-label-val { font-weight: bold; color: #f1f5f9; }
+        .bar-track { background: #0f172a; height: 10px; border-radius: 10px; overflow: hidden; border: 1px solid #1e293b; }
+        .bar-fill { height: 100%; border-radius: 10px; width: 0%; transition: width 0.6s ease-in-out; }
+        .fill-amt { background: #10b981; }
+        .fill-cnt { background: #60a5fa; }
+
+        /* Transaction History Ledger Stack */
+        .ledger-box { background: #1e293b; padding: 1.5rem; border-radius: 24px; border: 1px solid #334155; text-align: left; }
+        .ledger-title { color: #3b82f6; font-size: 1.2rem; font-weight: bold; margin-top: 0; margin-bottom: 15px; }
+        .list-item { background: #0f172a; border: 1px solid #334155; padding: 14px; border-radius: 16px; margin-bottom: 12px; position: relative; }
+        .list-cat { font-weight: bold; color: #60a5fa; font-size: 0.88rem; margin-bottom: 2px; }
+        .list-desc { font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; max-width: 320px; word-wrap: break-word; }
+        .list-context { font-size: 0.72rem; color: #10b981; font-style: italic; margin-bottom: 10px; }
+        
+        /* Interactive Row Configuration Management Controls */
+        .item-action-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1e293b; padding-top: 10px; margin-top: 4px; }
+        .amt-display { font-weight: bold; color: #10b981; font-size: 1rem; }
+        .btn-row { display: flex; gap: 8px; }
+        .btn-ctrl { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; border: none; cursor: pointer; font-weight: bold; color: white; }
+        .btn-edit { background: #f59e0b; }
+        .btn-del { background: #b91c1c; }
+
+        /* Persistent Navigation Tray Footer Layout */
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: flex; padding: 10px; max-width: 520px; margin: 0 auto; box-sizing: border-box; z-index: 100; }
-        .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; cursor: pointer; }
+        .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; cursor: pointer; width: auto; font-weight: normal; }
+        .nav button:hover { background: #475569; }
         .nav .active { background: #3b82f6; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>AI Intent Classification</h2>
-        <h3 id="cat">Classifying...</h3>
-        <p id="desc" class="desc"></p>
-        
-        <!-- Live Personality Profile Preferences Switch -->
-        <div class="section-box">
-            <label for="userPersona">Your Primary Lifestyle Profile</label>
-            <select id="userPersona" onchange="evaluatePersonalizedSpend()">
-                <option value="general">Standard (General Urban/Leisure Consumer)</option>
-                <option value="farmer">Agri-Business / Farm Operator</option>
-                <option value="student">Student / Academic Learner</option>
-                <option value="hobbyist">Tech Hobbyist / Maker</option>
-            </select>
+    <div class="container">
+        <!-- Top Anchor Bar Component -->
+        <div class="top-bar">
+            <div class="brand">InvestoMicro</div>
+            <button class="profile-badge" onclick="goToProfilePage()">👤 Profile</button>
         </div>
 
-        <!-- Finer Details Fallback Text Override Box -->
-        <div class="section-box">
-            <label for="contextInput">Finer Classification Notes</label>
-            <textarea id="contextInput" rows="2" placeholder="Clarify context details... (e.g., 'buying a toy present', 'unexpected medical breakdown')" oninput="evaluatePersonalizedSpend()"></textarea>
-        </div>
-
-        <!-- Multi-Directional Action Control Matrix -->
-        <div class="nav-grid">
-            <button class="btn-db-save" id="saveBtn" onclick="updateDatabaseRecord()">Confirm & Write to Database</button>
-            <div id="status-msg"></div>
-            
-            <div class="row-split">
-                <button class="btn-go-input" onclick="location.href='input.html'">← Entry Input</button>
-                <button class="btn-go-patterns" onclick="location.href='patterns.html'">📄 View Patterns</button>
+        <!-- Universal Link Access Module Box -->
+        <div class="router-card">
+            <div class="router-title">Quick Direct Navigation</div>
+            <div class="router-links">
+                <button class="btn-link-input" onclick="location.href='input.html'">← Input Entry</button>
+                <button class="btn-link-ai" onclick="location.href='ai.html'">⚙️ AI Engine</button>
+                <button class="btn-link-suggest" onclick="location.href='suggest.html'">💡 Advice Feed</button>
+                <button class="btn-link-logout" onclick="triggerSignOutBridge()">⚠️ Disconnect Session & Exit (Index)</button>
             </div>
-            <button class="btn-go-suggest" onclick="location.href='suggest.html'">💡 Go to Suggestions →</button>
+        </div>
+
+        <!-- Metric Visualization 1: Capital Weight Value Accumulation -->
+        <div class="chart-card">
+            <div class="chart-heading">💰 Highest Cumulative Capital Allocation</div>
+            <div id="chart-amt-container"><p style="color:#64748b; font-size:0.85rem;">Calculating metrics...</p></div>
+        </div>
+
+        <!-- Metric Visualization 2: Total Occurrence Event Tallies -->
+        <div class="chart-card">
+            <div class="chart-heading">📊 Transaction Velocity (Volume Frequency)</div>
+            <div id="chart-cnt-container"><p style="color:#64748b; font-size:0.85rem;">Calculating metrics...</p></div>
+        </div>
+
+        <!-- Data Log Stream Output Deck Component -->
+        <div class="ledger-box">
+            <div class="ledger-title">Transaction Stack Logs</div>
+            <div id="log-container"><p style="color:#64748b; font-size:0.85rem; text-align:center;">Loading database records...</p></div>
         </div>
     </div>
 
-    <!-- Persistent Bottom App Navigation Menu -->
+    <!-- App System Navigation Tray Component -->
     <div class="nav">
         <button onclick="location.href='input.html'">Input</button>
-        <button class="active" onclick="location.href='ai.html'">AI Analysis</button>
-        <button onclick="location.href='patterns.html'">Patterns</button>
+        <button onclick="location.href='ai.html'">AI Analysis</button>
+        <button class="active" onclick="location.href='patterns.html'">Patterns</button>
         <button onclick="location.href='suggest.html'">Suggestions</button>
     </div>
 
     <script>
-        // Extract parameters safely passed down from the primary entry logs
-        const rawSMS = (localStorage.getItem('lastSMS') || "").toLowerCase();
-        const rawAmount = parseFloat(localStorage.getItem('lastAmount') || "0");
-        const entryContext = (localStorage.getItem('userFinerContext') || "").toLowerCase();
-
-        // Preset user contextual input box with historical data if available
-        if (entryContext) {
-            document.getElementById('contextInput').value = localStorage.getItem('userFinerContext');
-        }
-
-        // Initialize Supabase Client Cluster using your persistent tracking parameters
         const S_URL = 'https://supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         const _supabase = supabase.createClient(S_URL, S_KEY);
 
-        let finalizedCat = "Unnecessary and Long term";
-        let finalizedDesc = "";
+        let activeUserTokenId = null;
 
-        function evaluatePersonalizedSpend() {
-            const persona = document.getElementById('userPersona').value;
-            const liveNotes = document.getElementById('contextInput').value.toLowerCase();
-            
-            // Build absolute text matrix to scan whole keywords smoothly
-            const combinedText = `${rawSMS} ${entryContext} ${liveNotes}`;
-            const hasWord = (word) => new RegExp('\\b' + word + '\\b').test(combinedText);
-
-            // --- PRIORITY RULE 1: ABSOLUTE GIFT/PRESENT INTERCEPT ---
-            if (hasWord('gift') || hasWord('present') || hasWord('birthday') || hasWord('gifting')) {
-                finalizedCat = "Necessary and Immediate/Short term";
-                finalizedDesc = "Priority Match: Items specified or tagged as gifts are mapped as important short-term gestures.";
-            } 
-            // --- PRIORITY RULE 2: PERSONA-BASED PROFILE CLASSIFICATION MATRIX ---
-            else if (hasWord('fence') || hasWord('fencing') || hasWord('buffalo')) {
-                if (persona === 'farmer') {
-                    finalizedCat = "Necessary and Long term";
-                    finalizedDesc = "Persona Match (Farmer): Fencing infrastructure represents a necessary long-term asset protecting property and livestock.";
-                } else {
-                    finalizedCat = "Unnecessary and Long term";
-                    finalizedDesc = "Persona Mismatch (Standard/Hobbyist): Fencing materials or decorative setups are marked as non-essential hardware assets.";
-                }
-            }
-            // --- PRIORITY RULE 3: CORE UTILITY VECTOR SETS ---
-            else if (hasWord('dog') || hasWord('glucose') || hasWord('pen') || hasWord('emergency') || hasWord('medicine') || hasWord('med') || hasWord('food')) {
-                finalizedCat = "Necessary and Immediate/Short term";
-                finalizedDesc = "Survival Need: Urgent medical care, nourishment supplies, or vital short-term functional tools.";
-            } else if (hasWord('movie') || hasWord('snack') || hasWord('chips') || hasWord('burger') || hasWord('craving') || hasWord('pizza')) {
-                finalizedCat = "Unnecessary and Short term";
-                finalizedDesc = "Fleeting Spend: Immediate micro-cravings, impulse snack orders, or temporary entertainment loops.";
-            } else if (hasWord('arduino') || hasWord('book') || hasWord('course')) {
-                if (persona === 'student' || persona === 'hobbyist') {
-                    finalizedCat = "Necessary and Long term";
-                    finalizedDesc = "Persona Match: Essential educational modules, hardware tools, or self-improvement assets.";
-                } else {
-                    finalizedCat = "Unnecessary and Long term";
-                    finalizedDesc = "Leisure Splurge: Non-essential developmental equipment outside your primary operations profile.";
-                }
-            } else if (hasWord('insurance') || hasWord('tax') || hasWord('rent')) {
-                finalizedCat = "Necessary and Long term";
-                finalizedDesc = "Fixed Liability: Core recurring protection systems, legal taxes, or housing utility guarantees.";
-            } else {
-                // System default standard fallback placement
-                finalizedCat = "Unnecessary and Long term";
-                finalizedDesc = "Discretionary Purchase: Uncategorized utility item or specialized leisure asset hardware.";
-            }
-
-            // Bind calculations directly to view labels
-            document.getElementById('cat').innerText = finalizedCat;
-            document.getElementById('desc').innerText = finalizedDesc;
-        }
-
-        // 🔄 Live Supabase Cloud Database Push Implementation
-        async function updateDatabaseRecord() {
-            const saveBtn = document.getElementById('saveBtn');
-            const statusEl = document.getElementById('status-msg');
-            
-            saveBtn.disabled = true;
-            saveBtn.innerText = "Synchronizing Rows...";
-            statusEl.style.display = "none";
-
+        async function verifyAuthenticationState() {
             try {
-                // Confirm user identity token context before compiling payloads
-                const { data: sessionData } = await _supabase.auth.getSession();
-                if (!sessionData || !sessionData.session) {
+                const { data } = await _supabase.auth.getSession();
+                if (!data || !data.session) {
                     window.location.href = 'index.html';
-                    return;
+                } else {
+                    activeUserTokenId = data.session.user.id;
+                    fetchAndRenderWorkspace();
+                }
+            } catch (err) {
+                window.location.href = 'index.html';
+            }
+        }
+        verifyAuthenticationState();
+
+        async function fetchAndRenderWorkspace() {
+            try {
+                let { data: rows, error } = await _supabase
+                    .from('expenses')
+                    .select('*')
+                    .eq('user_id', activeUserTokenId)
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    const fallback = await _supabase.from('expenses').select('*').order('created_at', { ascending: false });
+                    rows = fallback.data;
                 }
 
-                const currentUserId = sessionData.session.user.id;
-                const dynamicNotes = document.getElementById('contextInput').value;
-                const activePersona = document.getElementById('userPersona').value;
+                renderAnalyticsCharts(rows || []);
+                renderLedgerStream(rows || []);
 
-                // Push clean schema match parameters into remote tables
-                const { error } = await _supabase
-                    .from('expenses')
-                    .insert([{
-                        user_id: currentUserId,
-                        category: finalizedCat,
-                        description: rawSMS || "Manual transaction line item entry",
-                        finer_context: dynamicNotes ? `${dynamicNotes} [Profile: ${activePersona}]` : `Profile: ${activePersona}`,
-                        amount: rawAmount,
-                        created_at: new Date().toISOString()
-                    }]);
-
-                if (error) throw error;
-
-                // Flash confirmation indicator states upon completion
-                statusEl.innerText = "✅ Transaction securely written to Supabase cluster!";
-                statusEl.style.color = "#10b981";
-                statusEl.style.display = "block";
-
-            } catch (err) {
-                console.error("Database connection block broken:", err);
-                statusEl.innerText = `❌ Error writing row: ${err.message || 'Check terminal'}`;
-                statusEl.style.color = "#ef4444";
-                statusEl.style.display = "block";
-                saveBtn.disabled = false;
-                saveBtn.innerText = "Confirm & Write to Database";
+            } catch (e) {
+                console.error("Dashboard render blocking structural crash:", e);
             }
         }
 
-        // Boot system loops immediately when loading frame script trees
-        evaluatePersonalizedSpend();
+        // 📊 Render Local Pure-CSS Graph Modules
+        function renderAnalyticsCharts(data) {
+            const amtMap = { "Necessary and Immediate/Short term": 0, "Necessary and Long term": 0, "Unnecessary and Short term": 0, "Unnecessary and Long term": 0 };
+            const cntMap = { "Necessary and Immediate/Short term": 0, "Necessary and Long term": 0, "Unnecessary and Short term": 0, "Unnecessary and Long term": 0 };
+            
+            let totalAmountAllocated = 0;
+            let highestCountVolume = 0;
+
+            data.forEach(r => {
+                const category = r.category || "Unnecessary and Long term";
+                const amount = Number(r.amount) || 0;
+                
+                if (amtMap.hasOwnProperty(category)) {
+                    amtMap[category] += amount;
+                    cntMap[category] += 1;
+                    totalAmountAllocated += amount;
+                }
+            });
+
+            for (const key in cntMap) {
+                if (cntMap[key] > highestCountVolume) highestCountVolume = cntMap[key];
+            }
+
+            const cleanLabel = (str) => str.replace("and ", "").replace("term", "");
+
+            // Construct Cumulative Amount Values Graph Frame
+            document.getElementById('chart-amt-container').innerHTML = Object.keys(amtMap).map(cat => {
+                const val = amtMap[cat];
+                const pct = totalAmountAllocated > 0 ? (val / totalAmountAllocated) * 100 : 0;
+                return `
+                    <div class="bar-row">
+                        <div class="bar-labels">
+                            <div class="bar-label-name">${cleanLabel(cat)}</div>
+                            <div class="bar-label-val">₹${val.toLocaleString()}</div>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill fill-amt" style="width: ${pct}%"></div></div>
+                    </div>`;
+            }).join('');
+
+            // Construct Frequency Event Counts Graph Frame
+            document.getElementById('chart-cnt-container').innerHTML = Object.keys(cntMap).map(cat => {
+                const val = cntMap[cat];
+                const pct = highestCountVolume > 0 ? (val / highestCountVolume) * 100 : 0;
+                return `
+                    <div class="bar-row">
+                        <div class="bar-labels">
+                            <div class="bar-label-name">${cleanLabel(cat)}</div>
+                            <div class="bar-label-val">${val} txns</div>
+                        </div>
+                        <div class="bar-track"><div class="bar-fill fill-cnt" style="width: ${pct}%"></div></div>
+                    </div>`;
+            }).join('');
+        }
+
+        // 📄 Render Interactive Log Items Matrix
+        function renderLedgerStream(rows) {
+            const container = document.getElementById('log-container');
+            if (!rows || rows.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#64748b; font-size:0.85rem; padding: 20px 0;">No active logs processed yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = rows.map(r => {
+                const displayContext = r.finer_context || r.contextGiven || '';
+                return `
+                    <div class="list-item" id="row-${r.id}">
+                        <div class="list-cat">${r.category || 'Expense'}</div>
+                        <div class="list-desc">${r.description || 'Manual Item line'}</div>
+                        ${displayContext ? `<div class="list-context">💡 ${displayContext}</div>` : ''}
+                        
+                        <div class="item-action-row">
+                            <div class="amt-display">₹${(r.amount || 0).toLocaleString()}</div>
+                            <div class="btn-row">
+                                <button class="btn-ctrl btn-edit" onclick="triggerRowReclassification('${r.id}', '${escapeHtml(r.description || '')}', ${r.amount || 0}, '${escapeHtml(displayContext)}')">✏️ Edit</button>
+                                <button class="btn-ctrl btn-del" onclick="deleteRecordRow('${r.id}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        // 🔄 Edit Modification Router Redirecting to AI File Matrix
+        function triggerRowReclassification(id, desc, amt, context) {
+            // Remove old row trace before initializing override sequence mapping
+            localStorage.setItem('lastSMS', desc);
+            localStorage.setItem('lastAmount', amt);
+            localStorage.setItem('userFinerContext', context);
+            
+            // Delete record entry from remote tables so re-saving doesn't create twins
+            deleteRecordRow(id, false); 
+            window.location.href = 'ai.html';
+        }
+
+        // 🗑️ Delete Operational Record Row Command Pipeline
+        async function deleteRecordRow(rowId, triggerRefresh = true) {
+            if (triggerRefresh && !confirm("Are you sure you want to permanently clear this row log?")) return;
+            try {
+                const { error } = await _supabase.from('expenses').delete().eq('id', rowId);
+                if (error) throw error;
+                
+                if (triggerRefresh) {
+                    const targetDOMRow = document.getElementById(`row-${rowId}`);
+                    if (targetDOMRow) targetDOMRow.remove();
+                    fetchAndRenderWorkspace();
+                }
+            } catch(err) {
+                alert(`Operation failure: ${err.message}`);
+            }
+        }
+
+        function goToProfilePage() {
+            window.location.href = 'profile.html';
+        }
+
+        async function triggerSignOutBridge() {
+            await _supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
     </script>
 </body>
 </html>

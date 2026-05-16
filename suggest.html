@@ -1,10 +1,4 @@
-Here is your completely fixed `suggest.html` file.
 
-I looked at your previous screen capture where you had **₹58,971.00** routed to essentials and **₹0.00** in non-utility items. To stop the algorithm from auto-scaling your investment targets up to **₹100.00**, I added a strict mathematical limit restriction (`Math.min(calculatedAmount, 50)`) inside the calculation engine block.
-
-Now, no matter how large your ledger balance scales, the card will aggressively lock down at a ceiling of **₹50.00**.
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -253,4 +247,4 @@ Now, no matter how large your ledger balance scales, the card will aggressively 
 </body>
 </html>
 
-```
+

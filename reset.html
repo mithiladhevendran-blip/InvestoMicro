@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MicroInvest - Choose New Password</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; margin: 0; color: #f8fafc; }
+        .box { background: #1e293b; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); width: 380px; text-align: center; border: 1px solid #334155; box-sizing: border-box; }
+        h2 { margin-top: 0; margin-bottom: 0.5rem; color: #3b82f6; letter-spacing: -1px; font-size: 1.8rem; }
+        p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; margin-top: 0; }
+        .form-group { text-align: left; margin-bottom: 20px; }
+        label { display: block; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; margin-bottom: 6px; }
+        input[type="password"] { width: 100%; padding: 14px; border: 1px solid #334155; border-radius: 12px; box-sizing: border-box; background: #0f172a; color: white; outline: none; font-size: 0.95rem; }
+        input:focus { border-color: #3b82f6; }
+        button { width: 100%; padding: 14px; background: #10b981; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.3s; }
+        button:hover { background: #059669; transform: translateY(-2px); }
+        .back-link { display: inline-block; margin-top: 20px; color: #60a5fa; font-size: 0.85rem; text-decoration: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>Secure Reset</h2>
+        <p>Enter your new password below to update your account access.</p>
+        
+        <div class="form-group">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" placeholder="Minimum 6 characters">
+        </div>
+
+        <button onclick="updatePassword()" id="submitBtn">Update Password</button>
+        <a class="back-link" href="index.html">← Back to Login</a>
+    </div>
+
+    <script src="config.js"></script>
+    
+    <script>
+        // This runs instantly when the page loads to ensure a valid recovery token exists
+        window.onload = function() {
+            const currentUrl = window.location.href;
+            if (!currentUrl.includes("type=recovery") && !window.location.hash.includes("type=recovery")) {
+                alert("Invalid or expired password reset link. Requesting a new one from the login screen.");
+                window.location.href = "index.html";
+            }
+        };
+
+        async function updatePassword() {
+            const passwordField = document.getElementById('new-password').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (!passwordField || passwordField.trim().length < 6) {
+                alert("Password must be at least 6 characters long.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Saving password...";
+
+            try {
+                // Supabase automatically parsed the URL token fragment on landing
+                const { data, error } = await _supabase.auth.updateUser({
+                    password: passwordField.trim()
+                });
+
+                if (error) throw error;
+
+                alert("Success! Your password has been changed. Returning to login page.");
+                window.location.href = "index.html";
+
+            } catch (err) {
+                alert("Error updating password: " + err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Update Password";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -4,11 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Intent Classifier - InvestoMicro</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
+
         :root {
             --bg-main: #0f172a;
             --bg-card: #1e293b;
@@ -20,132 +25,326 @@
             --accent-red: #ef4444;
         }
 
-        body { 
-            font-family: 'Inter', system-ui, sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            background: var(--bg-main); 
-            margin: 0; 
-            color: var(--text-main); 
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--bg-main);
+            margin: 0;
+            color: var(--text-main);
             padding: 20px;
-            padding-bottom: 120px; 
-            box-sizing: border-box; 
+            padding-bottom: 120px;
+            box-sizing: border-box;
         }
 
-        .top-bar { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            width: 480px; 
-            background: var(--bg-card); 
-            padding: 12px 18px; 
-            border-radius: 16px; 
-            border: 1px solid var(--border-color); 
-            margin-bottom: 18px; 
-            box-sizing: border-box; 
-        }
-        .brand { font-weight: bold; color: var(--accent-blue); font-size: 1.1rem; }
-        .profile-badge { background: var(--accent-blue); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
-        .profile-badge:hover { background: #2563eb; }
-
-        .box { 
-            background: var(--bg-card); 
-            padding: 2.2rem; 
-            border-radius: 20px; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); 
-            width: 480px; 
-            text-align: center; 
-            border: 1px solid var(--border-color); 
-            box-sizing: border-box; 
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 480px;
+            background: var(--bg-card);
+            padding: 12px 18px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 18px;
+            box-sizing: border-box;
         }
 
-        h2 { margin-top: 0; margin-bottom: 4px; font-weight: 700; font-size: 1.3rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; }
-        .sub-header { font-size: 1.8rem; font-weight: 700; color: var(--accent-blue); margin-bottom: 24px; }
-        
-        .field-label { text-align: left; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; display: block; }
-        
-        .classification-box { background: rgba(59, 130, 246, 0.1); border: 2px dashed var(--accent-blue); border-radius: 12px; padding: 14px; color: var(--text-main); font-weight: 600; font-size: 1.1rem; margin-bottom: 20px; }
-        
-        .note-input { width: 100%; padding: 14px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 12px; color: white; font-size: 1rem; box-sizing: border-box; margin-bottom: 20px; font-family: inherit; resize: none; }
-        
-        .btn-confirm { width: 100%; padding: 14px; background: var(--accent-emerald); border: none; border-radius: 12px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-bottom: 14px; }
-        .btn-confirm:hover { background: #059669; }
-        .btn-confirm:disabled { background: #334155; color: var(--text-muted); cursor: not-allowed; }
+        .brand {
+            font-weight: bold;
+            color: var(--accent-blue);
+            font-size: 1.1rem;
+        }
 
-        .btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
-        .btn-secondary { flex: 1; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.9rem; cursor: pointer; transition: background 0.2s; }
-        .btn-secondary:hover { background: #475569; }
+        .profile-badge {
+            background: var(--accent-blue);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
 
-        .error-msg { color: var(--accent-red); font-size: 0.85rem; margin-top: 10px; font-weight: 600; display: none; }
+        .box {
+            background: var(--bg-card);
+            padding: 2.2rem;
+            border-radius: 20px;
+            width: 480px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
 
-        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
-        .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
-        .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
-        .nav-dock .active { background: var(--accent-blue); color: white !important; font-weight: 600; }
+        h2 {
+            margin-top: 0;
+            color: var(--text-muted);
+        }
+
+        .sub-header {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 24px;
+        }
+
+        .field-label {
+            text-align: left;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .classification-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px dashed var(--accent-blue);
+            border-radius: 12px;
+            padding: 14px;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .note-input {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            font-family: inherit;
+            resize: none;
+        }
+
+        .btn-confirm {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-emerald);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 14px;
+        }
+
+        .btn-confirm:disabled {
+            background: #334155;
+            cursor: not-allowed;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            background: #334155;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .error-msg {
+            color: var(--accent-red);
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .nav-dock {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border-color);
+            display: flex;
+            padding: 8px;
+            width: 440px;
+            border-radius: 16px;
+        }
+
+        .nav-dock button {
+            flex: 1;
+            margin: 0 4px;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .nav-dock .active {
+            background: var(--accent-blue);
+            color: white !important;
+        }
+
     </style>
 </head>
+
 <body>
 
     <div class="top-bar">
         <div class="brand">InvestoMicro</div>
-        <button class="profile-badge" onclick="location.href='profile.html'">👤 Profile</button>
+
+        <button
+            class="profile-badge"
+            onclick="location.href='profile.html'"
+        >
+            👤 Profile
+        </button>
     </div>
 
     <div class="box">
+
         <h2>AI Intent Classification</h2>
-        <div class="sub-header" id="engine-status">Thinking...</div>
 
-        <span class="field-label">AI Classification Label</span>
-        <div class="classification-box" id="ai-label-display">🤖 Querying Neural Network...</div>
+        <div
+            class="sub-header"
+            id="engine-status"
+        >
+            Thinking...
+        </div>
 
-        <span class="field-label">Passed Item Description</span>
-        <textarea id="ai-desc-display" class="note-input" rows="2" readonly></textarea>
+        <span class="field-label">
+            AI Classification Label
+        </span>
 
-        <button class="btn-confirm" id="btn-submit-ledger" onclick="commitRowToSupabase()" disabled>Confirm & Write to Database</button>
-        <div class="error-msg" id="db-error"></div>
+        <div
+            class="classification-box"
+            id="ai-label-display"
+        >
+            🤖 Querying Neural Network...
+        </div>
+
+        <span class="field-label">
+            Passed Item Description
+        </span>
+
+        <textarea
+            id="ai-desc-display"
+            class="note-input"
+            rows="2"
+            readonly
+        ></textarea>
+
+        <button
+            class="btn-confirm"
+            id="btn-submit-ledger"
+            onclick="commitRowToSupabase()"
+            disabled
+        >
+            Confirm & Write to Database
+        </button>
+
+        <div
+            class="error-msg"
+            id="db-error"
+        ></div>
 
         <div class="btn-row">
-            <button class="btn-secondary" onclick="location.href='input.html'">← Entry Input</button>
-            <button class="btn-secondary" onclick="location.href='patterns.html'">📄 View Patterns</button>
+
+            <button
+                class="btn-secondary"
+                onclick="location.href='input.html'"
+            >
+                ← Entry Input
+            </button>
+
+            <button
+                class="btn-secondary"
+                onclick="location.href='patterns.html'"
+            >
+                📄 View Patterns
+            </button>
+
         </div>
+
     </div>
 
     <div class="nav-dock">
-        <button onclick="location.href='input.html'">Input</button>
-        <button class="active" onclick="location.href='ai.html'">AI Analysis</button>
-        <button onclick="location.href='patterns.html'">Patterns</button>
-        <button onclick="location.href='suggest.html'">Suggestions</button>
+
+        <button onclick="location.href='input.html'">
+            Input
+        </button>
+
+        <button
+            class="active"
+            onclick="location.href='ai.html'"
+        >
+            AI Analysis
+        </button>
+
+        <button onclick="location.href='patterns.html'">
+            Patterns
+        </button>
+
+        <button onclick="location.href='suggest.html'">
+            Suggestions
+        </button>
+
     </div>
 
     <script>
-        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
-        const _supabase = supabase.createClient(S_URL, S_KEY);
 
-        let localAmount = localStorage.getItem('pending_amt') || 0;
-        let localDesc = localStorage.getItem('pending_desc') || "";
+        const S_URL =
+            'https://funcvigewkhauenqxrbf.supabase.co';
 
-        // The four absolute classifications constraints requested
+        const S_KEY =
+            'YOUR_SUPABASE_ANON_KEY';
+
+        const _supabase =
+            supabase.createClient(
+                S_URL,
+                S_KEY
+            );
+
+        let localAmount =
+            localStorage.getItem('pending_amt') || 0;
+
+        let localDesc =
+            localStorage.getItem('pending_desc') || "";
+
         const targetCategories = [
+
             "Necessary / Long-term",
+
             "Unnecessary / Long-term",
+
             "Necessary / Short-term",
+
             "Short Term / Unnecessary"
         ];
 
-        // Deep semantic classification utilizing Hugging Face advanced transformers pipeline
-       async function runCloudIntentClassifier(text) {
+        async function runCloudIntentClassifier(text) {
 
-    if (!text || text.trim() === "") {
-        return "Short Term / Unnecessary";
-    }
+            if (!text || text.trim() === "") {
 
-    try {
+                return "Short Term / Unnecessary";
+            }
 
-        const enrichedPrompt = `
+            try {
+
+                const enrichedPrompt = `
+
 Classify this spending item into ONE category only.
 
 Categories:
@@ -154,12 +353,14 @@ Categories:
 - education
 - work equipment
 - durable footwear
+- work boots
+- gym
 - medical treatment
 - insurance
 - rent
+- laptop
 - essential maintenance
-- gym membership
-- health investments
+- health investment
 
 2. Unnecessary / Long-term
 - speculative investing
@@ -175,11 +376,11 @@ Categories:
 - doctor visit
 - vet visit
 - emergency purchases
-- daily utilities
+- utilities
+- pet medicine
 
 4. Short Term / Unnecessary
 - junk food
-- entertainment impulse buys
 - random shopping
 - gaming cosmetics
 - unnecessary subscriptions
@@ -188,111 +389,221 @@ Categories:
 Spending item:
 "${text}"
 
-Return ONLY the best category label.
+Return ONLY the category label.
 `;
 
-        const response = await fetch(
-            "https://api-inference.huggingface.co/models/facebook/bart-large-mnli",
-            {
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                const response = await fetch(
 
-                method: "POST",
+                    "https://api-inference.huggingface.co/models/facebook/bart-large-mnli",
 
-                body: JSON.stringify({
+                    {
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
 
-                    inputs: enrichedPrompt,
+                        method: "POST",
 
-                    parameters: {
+                        body: JSON.stringify({
 
-                        candidate_labels: [
-                            "Necessary / Long-term",
-                            "Unnecessary / Long-term",
-                            "Necessary / Short-term",
-                            "Short Term / Unnecessary"
-                        ],
+                            inputs: enrichedPrompt,
 
-                        multi_label: false
+                            parameters: {
+
+                                candidate_labels:
+                                    targetCategories,
+
+                                multi_label: false
+                            }
+                        })
                     }
-                })
+                );
+
+                const result =
+                    await response.json();
+
+                console.log(result);
+
+                if (
+                    result &&
+                    result.labels &&
+                    result.labels.length > 0
+                ) {
+
+                    return result.labels[0];
+                }
+
+            } catch (err) {
+
+                console.error(
+                    "Classifier failed:",
+                    err
+                );
             }
-        );
 
-        const result = await response.json();
-
-        if (
-            result &&
-            result.labels &&
-            result.labels.length > 0
-        ) {
-
-            return result.labels[0];
+            return localClassifierFallback(text);
         }
 
-    } catch (err) {
-
-        console.error(
-            "AI classifier failed:",
-            err
-        );
-    }
-
-    return localClassifierFallback(text);
-}        // Local semantic backup pattern
         function localClassifierFallback(text) {
-            const parsed = text.toLowerCase();
-            if (parsed.includes('book') || parsed.includes('rent') || parsed.includes('fee')) return "Necessary / Long-term";
-            if (parsed.includes('crypto') || parsed.includes('stock') || parsed.includes('gold')) return "Unnecessary / Long-term";
-            if (parsed.includes('doctor') || parsed.includes('med') || parsed.includes('food')) return "Necessary / Short-term";
+
+            const parsed =
+                text.toLowerCase();
+
+            // Necessary Long-Term
+            if (
+
+                parsed.includes('course') ||
+                parsed.includes('tuition') ||
+                parsed.includes('laptop') ||
+                parsed.includes('boots') ||
+                parsed.includes('shoe') ||
+                parsed.includes('gym') ||
+                parsed.includes('insurance') ||
+                parsed.includes('repair') ||
+                parsed.includes('education')
+
+            ) {
+
+                return "Necessary / Long-term";
+            }
+
+            // Necessary Short-Term
+            if (
+
+                parsed.includes('doctor') ||
+                parsed.includes('vet') ||
+                parsed.includes('medicine') ||
+                parsed.includes('med') ||
+                parsed.includes('food') ||
+                parsed.includes('fuel') ||
+                parsed.includes('bus') ||
+                parsed.includes('taxi') ||
+                parsed.includes('groceries')
+
+            ) {
+
+                return "Necessary / Short-term";
+            }
+
+            // Unnecessary Long-Term
+            if (
+
+                parsed.includes('crypto') ||
+                parsed.includes('stock') ||
+                parsed.includes('gold') ||
+                parsed.includes('luxury')
+
+            ) {
+
+                return "Unnecessary / Long-term";
+            }
+
             return "Short Term / Unnecessary";
         }
 
-        window.onload = async function() {
-            document.getElementById('ai-desc-display').value = localDesc;
-            
-            // Execute the neural model prediction
-            const derivedLabel = await runCloudIntentClassifier(localDesc);
-            
-            document.getElementById('ai-label-display').innerText = `🤖 ${derivedLabel}`;
-            document.getElementById('engine-status').innerText = "Analysis Ready";
-            document.getElementById('btn-submit-ledger').disabled = false;
+        window.onload = async function () {
+
+            document.getElementById(
+                'ai-desc-display'
+            ).value = localDesc;
+
+            const derivedLabel =
+                await runCloudIntentClassifier(
+                    localDesc
+                );
+
+            document.getElementById(
+                'ai-label-display'
+            ).innerText =
+                `🤖 ${derivedLabel}`;
+
+            document.getElementById(
+                'engine-status'
+            ).innerText =
+                "Analysis Ready";
+
+            document.getElementById(
+                'btn-submit-ledger'
+            ).disabled = false;
         };
 
         async function commitRowToSupabase() {
-            const errBox = document.getElementById('db-error');
+
+            const errBox =
+                document.getElementById(
+                    'db-error'
+                );
+
             errBox.style.display = "none";
 
-            const sessionData = await _supabase.auth.getSession();
-            if (!sessionData.data || !sessionData.data.session) {
-                errBox.innerText = "Error: Session expired. Please log back in.";
+            const sessionData =
+                await _supabase.auth.getSession();
+
+            if (
+                !sessionData.data ||
+                !sessionData.data.session
+            ) {
+
+                errBox.innerText =
+                    "Session expired. Please log back in.";
+
                 errBox.style.display = "block";
+
                 return;
             }
 
-            const activeUser = sessionData.data.session.user;
-            const computedCategory = document.getElementById('ai-label-display').innerText.replace('🤖 ', '');
+            const activeUser =
+                sessionData.data.session.user;
 
-            const { error } = await _supabase
-                .from('spends')
-                .insert([
-                    { 
-                        amount: parseFloat(localAmount), 
-                        description: localDesc, 
-                        category: computedCategory,
-                        user_id: activeUser.id
-                    }
-                ]);
+            const computedCategory =
+                document.getElementById(
+                    'ai-label-display'
+                )
+                .innerText
+                .replace('🤖 ', '');
+
+            const { error } =
+                await _supabase
+                    .from('spends')
+                    .insert([
+                        {
+                            amount:
+                                parseFloat(localAmount),
+
+                            description:
+                                localDesc,
+
+                            category:
+                                computedCategory,
+
+                            user_id:
+                                activeUser.id
+                        }
+                    ]);
 
             if (error) {
-                errBox.innerText = `Error writing row: ${error.message}`;
-                errBox.style.display = "block";
+
+                errBox.innerText =
+                    `Database Error: ${error.message}`;
+
+                errBox.style.display =
+                    "block";
+
             } else {
-                localStorage.removeItem('pending_amt');
-                localStorage.removeItem('pending_desc');
-                window.location.href = 'patterns.html';
+
+                localStorage.removeItem(
+                    'pending_amt'
+                );
+
+                localStorage.removeItem(
+                    'pending_desc'
+                );
+
+                window.location.href =
+                    'patterns.html';
             }
         }
+
     </script>
+
 </body>
 </html>

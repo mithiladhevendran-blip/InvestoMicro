@@ -15,6 +15,7 @@
         input[type="email"], input[type="password"] { width: 100%; padding: 14px; border: 1px solid #334155; border-radius: 12px; box-sizing: border-box; background: #0f172a; color: white; outline: none; font-size: 0.95rem; }
         input:focus { border-color: #3b82f6; }
         
+        /* Custom Age Checkbox Styling */
         .checkbox-group { display: none; align-items: center; text-align: left; margin: 15px 0; background: #0f172a; padding: 12px; border-radius: 12px; border: 1px solid #334155; }
         .checkbox-group input { width: 18px; height: 18px; margin-right: 12px; cursor: pointer; }
         .checkbox-group label { text-transform: none; font-size: 0.85rem; color: #cbd5e1; font-weight: normal; margin-bottom: 0; cursor: pointer; }
@@ -73,36 +74,36 @@
         async function checkPasswordRecoverySession() {
             const currentUrl = window.location.href;
             
-            // Check if URL hash parameters contains the recovery context
+            // Check if the landing URL payload contains Supabase identity recovery arguments
             if (currentUrl.includes("type=recovery") || window.location.hash.includes("type=recovery")) {
-                console.log("Recovery flow triggered. Capturing active session tokens...");
+                console.log("Password reset traffic confirmed. Suspending view systems...");
                 
-                // Give Supabase client a moment to automatically process the hash fragments
+                // Pause to give Supabase client instance a hot second to digest the hash token access codes
                 setTimeout(async () => {
                     const newPassword = prompt("Please enter your new secure password:");
                     
                     if (!newPassword || newPassword.trim().length < 6) {
-                        alert("Password update cancelled or too weak (must be at least 6 characters).");
+                        alert("Password update cancelled or too short (must be at least 6 characters).");
                         return;
                     }
 
-                    // Push password update payload over the active instance session
+                    // Push the fresh password structural rewrite data payload down to the user instance
                     const { data, error } = await _supabase.auth.updateUser({
                         password: newPassword.trim()
                     });
 
                     if (error) {
-                        alert("Reset failed: " + error.message);
+                        alert("Reset routine failed: " + error.message);
                     } else {
-                        alert("Your password has been reset successfully! Logging you into your session.");
-                        // Take them straight to the application workspace input
+                        alert("Success! Your password has been updated. Accessing your main input panel...");
+                        // Route user automatically inside the working application sandbox
                         window.location.href = "input.html";
                     }
                 }, 800);
             }
         }
 
-        // Run the token parse immediately on script load execution loop
+        // Initialize execution instantly on interface load mount
         checkPasswordRecoverySession();
     </script>
 </body>

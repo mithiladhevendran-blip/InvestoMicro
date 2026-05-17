@@ -255,134 +255,161 @@
                 console.error("Dashboard engine startup error:", err);
             }
         }
-
         async function renderLedgerLogs() {
+    try {
+        // 🔥 FORCE LOADING STATE (important fix)
+        document.getElementById('peak-capital-destination').innerHTML =
+            `<span style="color:var(--text-muted)">Refreshing...</span>`;
+        document.getElementById('peak-velocity-destination').innerHTML =
+            `<span style="color:var(--text-muted)">Refreshing...</span>`;
+        document.getElementById('stat-peak-time').innerText = "Refreshing...";
+        document.getElementById('stat-peak-day').innerText = "Refreshing...";
+        document.getElementById('history-stack-box').innerHTML =
+            `<div style="padding:16px; color:var(--text-muted); text-align:center;">Refreshing ledger...</div>`;
+
+        const { data: spends, error } = await _supabase
+            .from('spends')
+            .select('id, category, amount, description, created_at')
+            .eq('user_id', currentActiveUser.id)
+            .order('created_at', { ascending: false })
+            .limit(1000);
+
+        if (error) throw error;
+
+        const peakCapDiv = document.getElementById('peak-capital-destination');
+        const peakVelDiv = document.getElementById('peak-velocity-destination');
+        const timeDiv = document.getElementById('stat-peak-time');
+        const dayDiv = document.getElementById('stat-peak-day');
+        const logBox = document.getElementById('history-stack-box');
+
+        if (!spends || spends.length === 0) {
+            peakCapDiv.innerHTML = `<span>No logs found</span>`;
+            peakVelDiv.innerHTML = `<span>No logs found</span>`;
+            timeDiv.innerText = "No data";
+            dayDiv.innerText = "No data";
+            logBox.innerHTML = `<div style="padding:16px; color:var(--text-muted); text-align:center;">Ledger completely empty.</div>`;
+            return;
+        }
+
+        const monetaryMap = {};
+        const frequencyMap = {};
+        const hourMap = { Morning: 0, Afternoon: 0, Evening: 0, Night: 0 };
+        const dayNameMap = { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0, Saturday: 0 };
+        const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+        spends.forEach(item => {
             try {
-                const { data: spends, error } = await _supabase
-                    .from('spends')
-                    .select('id, category, amount, description, created_at')
-                    .eq('user_id', currentActiveUser.id)
-                    .order('created_at', { ascending: false });
+                let cat = item.category || "Short Term / Unnecessary";
+                let lowerCat = cat.toLowerCase();
 
-                if (error) throw error;
-
-                const peakCapDiv = document.getElementById('peak-capital-destination');
-                const peakVelDiv = document.getElementById('peak-velocity-destination');
-                const timeDiv = document.getElementById('stat-peak-time');
-                const dayDiv = document.getElementById('stat-peak-day');
-                const logBox = document.getElementById('history-stack-box');
-
-                if (!spends || spends.length === 0) {
-                    peakCapDiv.innerHTML = `<span>No logs found</span>`;
-                    peakVelDiv.innerHTML = `<span>No logs found</span>`;
-                    timeDiv.innerText = "No data";
-                    dayDiv.innerText = "No data";
-                    logBox.innerHTML = `<div style="padding:16px; color:var(--text-muted); text-align:center;">Ledger completely empty.</div>`;
-                    return;
-                }
-
-                const monetaryMap = {};
-                const frequencyMap = {};
-                const hourMap = { Morning: 0, Afternoon: 0, Evening: 0, Night: 0 };
-                const dayNameMap = { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0, Saturday: 0 };
-                const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-                spends.forEach(item => {
-                    try {
-                        let cat = item.category || "Short Term / Unnecessary";
-                        let lowerCat = cat.toLowerCase();
-                        
-                        // Strict data sanitization: maps both "Not Necessary", old structural tags, and legacy variants seamlessly
-                        if (lowerCat.includes("short term") || lowerCat.includes("short-term")) {
-                            if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary") || lowerCat.includes("discretionary") || lowerCat.includes("general")) {
-                                cat = "Short Term / Unnecessary";
-                            } else if (lowerCat.includes("necessary")) {
-                                cat = "Necessary / Short-term";
-                            }
-                        } else if (lowerCat.includes("long term") || lowerCat.includes("long-term")) {
-                            if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary")) {
-                                cat = "Unnecessary / Long-term";
-                            } else if (lowerCat.includes("necessary")) {
-                                cat = "Necessary / Long-term";
-                            }
-                        } else if (lowerCat.includes("discretionary") || lowerCat.includes("general")) {
-                            cat = "Short Term / Unnecessary";
-                        }
-
-                        const value = Number(item.amount) || 0;
-                        monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
-                        frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
-
-                        if (item.created_at) {
-                            const d = new Date(item.created_at);
-                            if (!isNaN(d.getTime())) {
-                                const hour = d.getHours();
-                                const dayName = daysOfWeek[d.getDay()];
-
-                                if (hour >= 5 && hour < 12) hourMap.Morning++;
-                                else if (hour >= 12 && hour < 17) hourMap.Afternoon++;
-                                else if (hour >= 17 && hour < 21) hourMap.Evening++;
-                                else hourMap.Night++;
-
-                                if (dayName) dayNameMap[dayName]++;
-                            }
-                        }
-                    } catch (rowErr) {
-                        console.error("Skipped row anomaly safely:", rowErr);
+                if (lowerCat.includes("short term") || lowerCat.includes("short-term")) {
+                    if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary") || lowerCat.includes("discretionary") || lowerCat.includes("general")) {
+                        cat = "Short Term / Unnecessary";
+                    } else if (lowerCat.includes("necessary")) {
+                        cat = "Necessary / Short-term";
                     }
-                });
-
-                let topCapCat = "None", topCapVal = 0;
-                for (const cat in monetaryMap) {
-                    if (monetaryMap[cat] > topCapVal) { topCapVal = monetaryMap[cat]; topCapCat = cat; }
+                } else if (lowerCat.includes("long term") || lowerCat.includes("long-term")) {
+                    if (lowerCat.includes("unnecessary") || lowerCat.includes("not necessary")) {
+                        cat = "Unnecessary / Long-term";
+                    } else if (lowerCat.includes("necessary")) {
+                        cat = "Necessary / Long-term";
+                    }
+                } else if (lowerCat.includes("discretionary") || lowerCat.includes("general")) {
+                    cat = "Short Term / Unnecessary";
                 }
 
-                let topFreqCat = "None", topFreqVal = 0;
-                for (const cat in frequencyMap) {
-                    if (frequencyMap[cat] > topFreqVal) { topFreqVal = frequencyMap[cat]; topFreqCat = cat; }
+                const value = Number(item.amount) || 0;
+                monetaryMap[cat] = (monetaryMap[cat] || 0) + value;
+                frequencyMap[cat] = (frequencyMap[cat] || 0) + 1;
+
+                if (item.created_at) {
+                    const d = new Date(item.created_at);
+                    if (!isNaN(d.getTime())) {
+                        const hour = d.getHours();
+                        const dayName = daysOfWeek[d.getDay()];
+
+                        if (hour >= 5 && hour < 12) hourMap.Morning++;
+                        else if (hour >= 12 && hour < 17) hourMap.Afternoon++;
+                        else if (hour >= 17 && hour < 21) hourMap.Evening++;
+                        else hourMap.Night++;
+
+                        if (dayName) dayNameMap[dayName]++;
+                    }
                 }
+            } catch (rowErr) {
+                console.error("Skipped row anomaly safely:", rowErr);
+            }
+        });
 
-                let maxHourCount = -1, peakTimeChunk = "No data";
-                for (const chunk in hourMap) {
-                    if (hourMap[chunk] > maxHourCount && hourMap[chunk] > 0) { maxHourCount = hourMap[chunk]; peakTimeChunk = chunk; }
-                }
-
-                let maxDayCount = -1, peakDayName = "No data";
-                for (const day in dayNameMap) {
-                    if (dayNameMap[day] > maxDayCount && dayNameMap[day] > 0) { maxDayCount = dayNameMap[day]; peakDayName = day; }
-                }
-
-                peakCapDiv.innerHTML = `<span>${formatLabel(topCapCat)}</span> <span class="metric-sub">₹${topCapVal.toLocaleString()}</span>`;
-                peakVelDiv.innerHTML = `<span>${formatLabel(topFreqCat)}</span> <span class="metric-sub" style="color:#60a5fa">${topFreqVal} txns</span>`;
-                
-                timeDiv.innerText = peakTimeChunk;
-                dayDiv.innerText = peakDayName;
-
-                logBox.innerHTML = "";
-                spends.forEach(item => {
-                    const cleanDesc = item.description || "Untitled Transaction";
-                    const cleanAmt = (Number(item.amount) || 0).toLocaleString();
-                    const cleanCat = formatLabel(item.category || "Short Term / Unnecessary");
-
-                    const row = document.createElement('div');
-                    row.className = 'log-item';
-                    row.innerHTML = `
-                        <div class="log-left-block">
-                            <button class="btn-delete" onclick="deleteTransactionRow(${item.id})">✕</button>
-                            <div class="log-details">
-                                <span class="log-desc">${cleanDesc}</span>
-                                <span class="log-cat">${cleanCat}</span>
-                            </div>
-                        </div>
-                        <span class="log-amt">₹${cleanAmt}</span>
-                    `;
-                    logBox.appendChild(row);
-                });
-
-            } catch (err) {
-                console.error("Critical Render loop failed:", err);
+        let topCapCat = "None", topCapVal = 0;
+        for (const cat in monetaryMap) {
+            if (monetaryMap[cat] > topCapVal) {
+                topCapVal = monetaryMap[cat];
+                topCapCat = cat;
             }
         }
+
+        let topFreqCat = "None", topFreqVal = 0;
+        for (const cat in frequencyMap) {
+            if (frequencyMap[cat] > topFreqVal) {
+                topFreqVal = frequencyMap[cat];
+                topFreqCat = cat;
+            }
+        }
+
+        let maxHourCount = -1, peakTimeChunk = "No data";
+        for (const chunk in hourMap) {
+            if (hourMap[chunk] > maxHourCount && hourMap[chunk] > 0) {
+                maxHourCount = hourMap[chunk];
+                peakTimeChunk = chunk;
+            }
+        }
+
+        let maxDayCount = -1, peakDayName = "No data";
+        for (const day in dayNameMap) {
+            if (dayNameMap[day] > maxDayCount && dayNameMap[day] > 0) {
+                maxDayCount = dayNameMap[day];
+                peakDayName = day;
+            }
+        }
+
+        peakCapDiv.innerHTML =
+            `<span>${formatLabel(topCapCat)}</span> <span class="metric-sub">₹${topCapVal.toLocaleString()}</span>`;
+
+        peakVelDiv.innerHTML =
+            `<span>${formatLabel(topFreqCat)}</span> <span class="metric-sub" style="color:#60a5fa">${topFreqVal} txns</span>`;
+
+        timeDiv.innerText = peakTimeChunk;
+        dayDiv.innerText = peakDayName;
+
+        logBox.innerHTML = "";
+
+        spends.forEach(item => {
+            const cleanDesc = item.description || "Untitled Transaction";
+            const cleanAmt = (Number(item.amount) || 0).toLocaleString();
+            const cleanCat = formatLabel(item.category || "Short Term / Unnecessary");
+
+            const row = document.createElement('div');
+            row.className = 'log-item';
+
+            row.innerHTML = `
+                <div class="log-left-block">
+                    <button class="btn-delete" onclick="deleteTransactionRow(${item.id})">✕</button>
+                    <div class="log-details">
+                        <span class="log-desc">${cleanDesc}</span>
+                        <span class="log-cat">${cleanCat}</span>
+                    </div>
+                </div>
+                <span class="log-amt">₹${cleanAmt}</span>
+            `;
+
+            logBox.appendChild(row);
+        });
+
+    } catch (err) {
+        console.error("Critical Render loop failed:", err);
+    }
+}
 
         async function deleteTransactionRow(rowId) {
             if (!confirm("Delete this transaction row item permanently?")) return;

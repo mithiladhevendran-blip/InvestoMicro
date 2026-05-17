@@ -1,9 +1,7 @@
 // auth.js - View States and Authentication Handlers
 let currentMode = 'login';
 
-// FIX #1: checkActiveSession is now called safely after config.js has fully
-// loaded (script order in HTML is config.js → auth.js). This call is
-// legitimate here because _supabase is guaranteed to exist by this point.
+// checkActiveSession is called safely after config.js has fully loaded
 checkActiveSession(true);
 
 function switchViewState(targetMode) {
@@ -50,15 +48,13 @@ function switchViewState(targetMode) {
 
 async function handleAuthAction() {
     const email    = document.getElementById('email').value.trim();
-    // FIX #4: Do NOT trim passwords — trimming silently breaks passwords that
-    // intentionally start or end with a space.
     const password   = document.getElementById('password').value;
     const ageChecked = document.getElementById('ageCheck').checked;
     const mainBtn    = document.getElementById('mainBtn');
 
     clearStatusMessages();
 
-    // FIX #6: Validate email format, not just presence.
+    // Validate email layout formatting structure parameters
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
         showMsg('error', 'Please enter your email address.');
@@ -79,11 +75,7 @@ async function handleAuthAction() {
         return;
     }
 
-    // FIX #3: Capture the mode BEFORE any async work so the finally block
-    // always restores the correct button label, even if switchViewState()
-    // changes currentMode mid-flight (e.g. after a successful signup).
     const modeAtStart = currentMode;
-
     mainBtn.disabled  = true;
     mainBtn.innerText = "Processing...";
 
@@ -109,8 +101,8 @@ async function handleAuthAction() {
             switchViewState('login');
         }
         else if (currentMode === 'forgot') {
-            // CRITICAL GITHUB PAGES ROUTING REWRITE:
-            // Explicitly force the absolute pathway structure layout to use index.html inside InvestoMicro/
+            // FIXED GITHUB PAGES SPA ROUTING CEILING TARGET:
+            // Explicitly locks redirection routing straight through the target deployment path structure folder
             const { data, error } = await _supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: 'https://mithiladhevendran-blip.github.io/InvestoMicro/index.html',
             });
@@ -121,8 +113,6 @@ async function handleAuthAction() {
         showMsg('error', err.message || 'An unexpected operation error occurred.');
     } finally {
         mainBtn.disabled = false;
-        // FIX #3: Use the mode that was active when the button was clicked,
-        // not whatever currentMode happens to be now.
         if (modeAtStart === 'login')  mainBtn.innerText = "Sign In";
         else if (modeAtStart === 'signup') mainBtn.innerText = "Sign Up";
         else if (modeAtStart === 'forgot') mainBtn.innerText = "Send Reset Link";

@@ -47,7 +47,7 @@
             <input type="password" id="password" placeholder="••••••••">
         </div>
 
-        <!-- NEW: Age verification check container block -->
+        <!-- Age verification check container block -->
         <div class="checkbox-group" id="age-group">
             <input type="checkbox" id="ageCheck">
             <label for="ageCheck">I confirm that I am 15 years of age or older.</label>
@@ -68,7 +68,11 @@
         </div>
     </div>
 
-    <!-- Load scripts in logical progression order -->
+    <!--
+        FIX #1: config.js MUST load before auth.js.
+        auth.js calls checkActiveSession() immediately on load, which needs
+        _supabase from config.js. Wrong order = crash on every page load.
+    -->
     <script src="config.js"></script>
     <script src="auth.js"></script>
 </body>

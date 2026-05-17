@@ -137,40 +137,109 @@
         ];
 
         // Deep semantic classification utilizing Hugging Face advanced transformers pipeline
-        async function runCloudIntentClassifier(text) {
-            if (!text || text.trim() === "") {
-                return "Short Term / Unnecessary";
-            }
+       async function runCloudIntentClassifier(text) {
 
-            try {
-                // Public endpoint model execution (Zero-Shot Text Classification)
-                const response = await fetch(
-                    "https://api-inference.huggingface.co/models/facebook/bart-large-mnli",
-                    {
-                        headers: { "Content-Type": "application/json" },
-                        method: "POST",
-                        body: JSON.stringify({
-                            inputs: text,
-                            parameters: { candidate_labels: targetCategories }
-                        }),
+    if (!text || text.trim() === "") {
+        return "Short Term / Unnecessary";
+    }
+
+    try {
+
+        const enrichedPrompt = `
+Classify this spending item into ONE category only.
+
+Categories:
+
+1. Necessary / Long-term
+- education
+- work equipment
+- durable footwear
+- medical treatment
+- insurance
+- rent
+- essential maintenance
+- gym membership
+- health investments
+
+2. Unnecessary / Long-term
+- speculative investing
+- luxury collectibles
+- expensive status items
+- impulsive large purchases
+
+3. Necessary / Short-term
+- groceries
+- medicine
+- fuel
+- transport
+- doctor visit
+- vet visit
+- emergency purchases
+- daily utilities
+
+4. Short Term / Unnecessary
+- junk food
+- entertainment impulse buys
+- random shopping
+- gaming cosmetics
+- unnecessary subscriptions
+- luxury snacks
+
+Spending item:
+"${text}"
+
+Return ONLY the best category label.
+`;
+
+        const response = await fetch(
+            "https://api-inference.huggingface.co/models/facebook/bart-large-mnli",
+            {
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                method: "POST",
+
+                body: JSON.stringify({
+
+                    inputs: enrichedPrompt,
+
+                    parameters: {
+
+                        candidate_labels: [
+                            "Necessary / Long-term",
+                            "Unnecessary / Long-term",
+                            "Necessary / Short-term",
+                            "Short Term / Unnecessary"
+                        ],
+
+                        multi_label: false
                     }
-                );
-
-                const result = await response.json();
-                
-                // Return highest scoring categorical match string
-                if (result && result.labels && result.labels.length > 0) {
-                    return result.labels[0];
-                }
-            } catch (err) {
-                console.error("AI API Pipeline dropped. Running fallback analyzer logic.", err);
+                })
             }
-            
-            // Local safety heuristic fallback if external model fails
-            return localClassifierFallback(text);
+        );
+
+        const result = await response.json();
+
+        if (
+            result &&
+            result.labels &&
+            result.labels.length > 0
+        ) {
+
+            return result.labels[0];
         }
 
-        // Local semantic backup pattern
+    } catch (err) {
+
+        console.error(
+            "AI classifier failed:",
+            err
+        );
+    }
+
+    return localClassifierFallback(text);
+}        // Local semantic backup pattern
         function localClassifierFallback(text) {
             const parsed = text.toLowerCase();
             if (parsed.includes('book') || parsed.includes('rent') || parsed.includes('fee')) return "Necessary / Long-term";

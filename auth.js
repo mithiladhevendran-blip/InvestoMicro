@@ -109,8 +109,10 @@ async function handleAuthAction() {
             switchViewState('login');
         }
         else if (currentMode === 'forgot') {
+            // CRITICAL GITHUB PAGES ROUTING REWRITE:
+            // Explicitly force the absolute pathway structure layout to use index.html inside InvestoMicro/
             const { data, error } = await _supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + '/input.html',
+                redirectTo: 'https://mithiladhevendran-blip.github.io/InvestoMicro/index.html',
             });
             if (error) throw error;
             showMsg('success', 'Recovery link sent! Please check your inbox.');

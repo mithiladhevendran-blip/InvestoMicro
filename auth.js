@@ -54,7 +54,6 @@ async function handleAuthAction() {
 
     clearStatusMessages();
 
-    // Validate email layout formatting structure parameters
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
         showMsg('error', 'Please enter your email address.');
@@ -69,7 +68,6 @@ async function handleAuthAction() {
         return;
     }
 
-    // AGE GATE ENFORCEMENT LAYER
     if (currentMode === 'signup' && !ageChecked) {
         showMsg('error', 'You must be at least 15 years old to create an account.');
         return;
@@ -101,8 +99,7 @@ async function handleAuthAction() {
             switchViewState('login');
         }
         else if (currentMode === 'forgot') {
-            // FIXED GITHUB PAGES SPA ROUTING CEILING TARGET:
-            // Explicitly locks redirection routing straight through the target deployment path structure folder
+            // Force redirection exclusively back onto the login index panel URL layout structure
             const { data, error } = await _supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: 'https://mithiladhevendran-blip.github.io/InvestoMicro/index.html',
             });

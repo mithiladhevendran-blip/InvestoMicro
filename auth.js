@@ -98,14 +98,18 @@ async function handleAuthAction() {
             showMsg('success', 'Sign up complete! Check your email for confirmation links.');
             switchViewState('login');
         }
+        
+        // --- THIS IS THE FORGOT BLOCK ---
         else if (currentMode === 'forgot') {
-            // Force redirection exclusively back onto the login index panel URL layout structure
+            // Changed redirection target from index.html to the custom reset.html file
             const { data, error } = await _supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: 'https://mithiladhevendran-blip.github.io/InvestoMicro/index.html',
+                redirectTo: 'https://mithiladhevendran-blip.github.io/InvestoMicro/reset.html',
             });
             if (error) throw error;
             showMsg('success', 'Recovery link sent! Please check your inbox.');
         }
+        // ---------------------------------
+        
     } catch (err) {
         showMsg('error', err.message || 'An unexpected operation error occurred.');
     } finally {

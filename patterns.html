@@ -421,7 +421,8 @@
                     .eq('id', Number(rowId));
 
                 if (error) throw error;
-                await renderLedgerLogs();
+                await new Promise(r => setTimeout(r, 150));
+await renderLedgerLogs();
 
             } catch (err) {
                 alert("Database deletion failed. Double check your Supabase Table RLS permissions.");

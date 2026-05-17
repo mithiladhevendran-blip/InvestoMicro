@@ -15,7 +15,6 @@
         input[type="email"], input[type="password"] { width: 100%; padding: 14px; border: 1px solid #334155; border-radius: 12px; box-sizing: border-box; background: #0f172a; color: white; outline: none; font-size: 0.95rem; }
         input:focus { border-color: #3b82f6; }
         
-        /* Custom Age Checkbox Styling */
         .checkbox-group { display: none; align-items: center; text-align: left; margin: 15px 0; background: #0f172a; padding: 12px; border-radius: 12px; border: 1px solid #334155; }
         .checkbox-group input { width: 18px; height: 18px; margin-right: 12px; cursor: pointer; }
         .checkbox-group label { text-transform: none; font-size: 0.85rem; color: #cbd5e1; font-weight: normal; margin-bottom: 0; cursor: pointer; }
@@ -47,7 +46,6 @@
             <input type="password" id="password" placeholder="••••••••">
         </div>
 
-        <!-- Age verification check container block -->
         <div class="checkbox-group" id="age-group">
             <input type="checkbox" id="ageCheck">
             <label for="ageCheck">I confirm that I am 15 years of age or older.</label>
@@ -68,49 +66,44 @@
         </div>
     </div>
 
-    <!--
-        FIX #1: config.js MUST load before auth.js.
-        auth.js calls checkActiveSession() immediately on load, which needs
-        _supabase from config.js. Wrong order = crash on every page load.
-    -->
     <script src="config.js"></script>
     <script src="auth.js"></script>
-    // Place this right after you initialize your supabase client in index.html
-async function checkPasswordRecoverySession() {
-    try {
-        const currentUrl = window.location.href;
-        
-        // Detects if the user arrived here by clicking the Supabase recovery link
-        if (currentUrl.includes("type=recovery") || window.location.hash.includes("type=recovery")) {
+
+    <script>
+        async function checkPasswordRecoverySession() {
+            const currentUrl = window.location.href;
             
-            // Prompt the user to type their new password immediately
-            const newPassword = prompt("Please enter your new secure password:");
-            
-            if (!newPassword || newPassword.trim().length < 6) {
-                alert("Password update cancelled or too weak (must be at least 6 characters).");
-                return;
+            // Check if URL hash parameters contains the recovery context
+            if (currentUrl.includes("type=recovery") || window.location.hash.includes("type=recovery")) {
+                console.log("Recovery flow triggered. Capturing active session tokens...");
+                
+                // Give Supabase client a moment to automatically process the hash fragments
+                setTimeout(async () => {
+                    const newPassword = prompt("Please enter your new secure password:");
+                    
+                    if (!newPassword || newPassword.trim().length < 6) {
+                        alert("Password update cancelled or too weak (must be at least 6 characters).");
+                        return;
+                    }
+
+                    // Push password update payload over the active instance session
+                    const { data, error } = await _supabase.auth.updateUser({
+                        password: newPassword.trim()
+                    });
+
+                    if (error) {
+                        alert("Reset failed: " + error.message);
+                    } else {
+                        alert("Your password has been reset successfully! Logging you into your session.");
+                        // Take them straight to the application workspace input
+                        window.location.href = "input.html";
+                    }
+                }, 800);
             }
-
-            // Update the user's password securely in your Supabase authentication database
-            const { data, error } = await _supabase.auth.updateUser({
-                password: newPassword.trim()
-            });
-
-            if (error) throw error;
-
-            alert("Your password has been reset successfully! You can now log in with your new password.");
-            
-            // Clean up the URL address bar so the prompt doesn't pop up again on refresh
-            window.location.hash = "";
-            window.location.search = "";
         }
-    } catch (err) {
-        console.error("Password reset processing failure:", err);
-        alert("Could not update your password: " + err.message);
-    }
-}
 
-// Run the inspector automatically on startup
-window.addEventListener('DOMContentLoaded', checkPasswordRecoverySession);
+        // Run the token parse immediately on script load execution loop
+        checkPasswordRecoverySession();
+    </script>
 </body>
 </html>

@@ -74,11 +74,11 @@
         async function checkPasswordRecoverySession() {
             const currentUrl = window.location.href;
             
-            // Check if the landing URL payload contains Supabase identity recovery arguments
+            // Check if the landing URL contains Supabase identity recovery parameters
             if (currentUrl.includes("type=recovery") || window.location.hash.includes("type=recovery")) {
-                console.log("Password reset traffic confirmed. Suspending view systems...");
+                console.log("Password reset traffic confirmed. Triggering prompt layer...");
                 
-                // Pause to give Supabase client instance a hot second to digest the hash token access codes
+                // Brief pause to allow the Supabase client instance to catch and mount the hash token
                 setTimeout(async () => {
                     const newPassword = prompt("Please enter your new secure password:");
                     
@@ -87,7 +87,7 @@
                         return;
                     }
 
-                    // Push the fresh password structural rewrite data payload down to the user instance
+                    // Push the fresh password rewrite data payload down to the user instance
                     const { data, error } = await _supabase.auth.updateUser({
                         password: newPassword.trim()
                     });
@@ -95,15 +95,20 @@
                     if (error) {
                         alert("Reset routine failed: " + error.message);
                     } else {
-                        alert("Success! Your password has been updated. Accessing your main input panel...");
-                        // Route user automatically inside the working application sandbox
-                        window.location.href = "input.html";
+                        alert("Success! Your password has been updated. Please log in with your new password.");
+                        
+                        // Clear hash tags from the browser address bar so the prompt doesn't loop
+                        window.location.hash = "";
+                        window.location.search = "";
+                        
+                        // FIX: Refresh back to the clean home login state instead of bypassing to input.html
+                        window.location.href = "index.html";
                     }
                 }, 800);
             }
         }
 
-        // Initialize execution instantly on interface load mount
+        // Initialize execution instantly on interface mount
         checkPasswordRecoverySession();
     </script>
 </body>

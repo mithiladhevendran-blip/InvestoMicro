@@ -1,7 +1,6 @@
 // auth.js - View States and Authentication Handlers
 let currentMode = 'login';
 
-// checkActiveSession is called safely after config.js has fully loaded
 checkActiveSession(true);
 
 function switchViewState(targetMode) {
@@ -98,18 +97,14 @@ async function handleAuthAction() {
             showMsg('success', 'Sign up complete! Check your email for confirmation links.');
             switchViewState('login');
         }
-        
-        // --- THIS IS THE FORGOT BLOCK ---
         else if (currentMode === 'forgot') {
-            // Changed redirection target from index.html to the custom reset.html file
+            // This explicitly points to your reset.html page
             const { data, error } = await _supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: 'https://mithiladhevendran-blip.github.io/InvestoMicro/reset.html',
             });
             if (error) throw error;
             showMsg('success', 'Recovery link sent! Please check your inbox.');
         }
-        // ---------------------------------
-        
     } catch (err) {
         showMsg('error', err.message || 'An unexpected operation error occurred.');
     } finally {

@@ -75,5 +75,42 @@
     -->
     <script src="config.js"></script>
     <script src="auth.js"></script>
+    // Place this right after you initialize your supabase client in index.html
+async function checkPasswordRecoverySession() {
+    try {
+        const currentUrl = window.location.href;
+        
+        // Detects if the user arrived here by clicking the Supabase recovery link
+        if (currentUrl.includes("type=recovery") || window.location.hash.includes("type=recovery")) {
+            
+            // Prompt the user to type their new password immediately
+            const newPassword = prompt("Please enter your new secure password:");
+            
+            if (!newPassword || newPassword.trim().length < 6) {
+                alert("Password update cancelled or too weak (must be at least 6 characters).");
+                return;
+            }
+
+            // Update the user's password securely in your Supabase authentication database
+            const { data, error } = await _supabase.auth.updateUser({
+                password: newPassword.trim()
+            });
+
+            if (error) throw error;
+
+            alert("Your password has been reset successfully! You can now log in with your new password.");
+            
+            // Clean up the URL address bar so the prompt doesn't pop up again on refresh
+            window.location.hash = "";
+            window.location.search = "";
+        }
+    } catch (err) {
+        console.error("Password reset processing failure:", err);
+        alert("Could not update your password: " + err.message);
+    }
+}
+
+// Run the inspector automatically on startup
+window.addEventListener('DOMContentLoaded', checkPasswordRecoverySession);
 </body>
 </html>

@@ -1,19 +1,16 @@
-// config.js - Centralized Supabase Configuration
+// config.js
 
 const S_URL =
 'https://funcvigewkhauenqxrbf.supabase.co';
 
 const S_KEY =
-'YOUR_ANON_KEY_HERE';
+'PASTE_YOUR_REAL_ANON_KEY_HERE';
 
-// Initialize Supabase globally
 const _supabase =
     supabase.createClient(S_URL, S_KEY);
 
-// Prevent redirect loops
 let isRedirecting = false;
 
-// Shared auth/session checker
 async function checkActiveSession(
     redirectOnSuccess = false
 ) {
@@ -33,11 +30,10 @@ async function checkActiveSession(
             return null;
         }
 
-        // User HAS session
+        // User has session
         if (data && data.session) {
 
-            // Redirect logged-in users
-            // away from login page
+            // Never redirect reset page
             if (
                 redirectOnSuccess &&
                 !currentPage.includes("reset.html")

@@ -27,7 +27,7 @@
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            padding-bottom: 90px; 
+            padding-bottom: 120px; 
             box-sizing: border-box; 
         }
         
@@ -65,7 +65,7 @@
             align-items: center;
             justify-content: center;
             border: 3px solid var(--accent-blue);
-            object-fit: cover;
+            overflow: hidden;
         }
         .file-input-label {
             position: absolute;
@@ -94,6 +94,7 @@
             font-size: 0.75rem;
             color: var(--text-muted);
             font-family: monospace;
+            margin-bottom: 12px;
         }
 
         /* Settings Rows */
@@ -105,12 +106,34 @@
             border-bottom: 1px solid var(--border-color);
         }
         .settings-row:last-child { border-bottom: none; }
-        .settings-info { display: flex; flex-direction: column; gap: 2px; }
+        .settings-info { display: flex; flex-direction: column; gap: 2px; flex: 1; padding-right: 12px; }
         .settings-title { font-size: 0.9rem; font-weight: 500; }
         .settings-desc { font-size: 0.75rem; color: var(--text-muted); }
 
+        /* Inputs & Custom elements inside rows */
+        .custom-input {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            width: 100px;
+            text-align: right;
+            box-sizing: border-box;
+        }
+        .custom-select {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
         /* Toggle Switch styling */
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .3s; border-radius: 24px; }
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; }
@@ -121,12 +144,23 @@
             width: 100%; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; margin-top: 6px;
         }
         .btn-action:hover { background: #475569; }
+        .btn-mini-danger {
+            background: rgba(239, 68, 68, 0.1); color: var(--accent-red); font-size: 0.75rem; border: 1px solid rgba(239, 68, 68, 0.2); padding: 4px 10px; border-radius: 6px; cursor: pointer; margin-top: 2px; transition: 0.2s;
+        }
+        .btn-mini-danger:hover { background: var(--accent-red); color: white; }
+        
+        .btn-sync {
+            background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); font-size: 0.8rem; border: 1px solid rgba(59, 130, 246, 0.3); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;
+        }
+        .btn-sync:hover { background: var(--accent-blue); color: white; }
+
         .btn-logout { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.2); }
         .btn-logout:hover { background: var(--accent-red); color: white; }
 
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; padding: 10px; max-width: 520px; margin: 0 auto; box-sizing: border-box; z-index: 100; }
         .nav button { flex: 1; margin: 0 4px; padding: 14px; background: #334155; border: none; border-radius: 12px; color: white; font-size: 0.95rem; cursor: pointer; font-weight: normal; }
         .nav button:hover { background: #475569; }
+        .nav .active { background: var(--accent-blue); font-weight: 600; }
     </style>
 </head>
 <body>
@@ -140,10 +174,11 @@
             </div>
             <div class="user-email" id="profile-email">Loading account...</div>
             <div class="user-id" id="profile-id">ID: ---------</div>
+            <button class="btn-mini-danger" onclick="clearProfilePicture()">Remove Photo</button>
         </div>
 
         <div class="box-card align-left">
-            <h2>⚙️ Core Settings</h2>
+            <h2>⚙️ Core Privileges & Control</h2>
             
             <div class="settings-row">
                 <div class="settings-info">
@@ -155,6 +190,26 @@
 
             <div class="settings-row">
                 <div class="settings-info">
+                    <span class="settings-title">Monthly Expense Ceiling</span>
+                    <span class="settings-desc">Trigger alert state thresholds</span>
+                </div>
+                <input type="number" class="custom-input" id="budget-ceiling" placeholder="₹50,000" onchange="saveCeilingLimit(this.value)">
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-info">
+                    <span class="settings-title">Risk Tolerance Target</span>
+                    <span class="settings-desc">Adjust systemic automated engine goals</span>
+                </div>
+                <select class="custom-select" id="risk-select" onchange="saveRiskProfile(this.value)">
+                    <option value="conservative">Conservative</option>
+                    <option value="balanced">Balanced</option>
+                    <option value="aggressive">Aggressive</option>
+                </select>
+            </div>
+
+            <div class="settings-row">
+                <div class="settings-info">
                     <span class="settings-title">Biometric Lock simulation</span>
                     <span class="settings-desc">Require session token checks on load</span>
                 </div>
@@ -162,6 +217,17 @@
                     <input type="checkbox" checked disabled>
                     <span class="slider"></span>
                 </label>
+            </div>
+        </div>
+
+        <div class="box-card align-left">
+            <h2>🔗 Hardware Sync Pipeline</h2>
+            <div class="settings-row">
+                <div class="settings-info">
+                    <span class="settings-title" id="sync-status-label">Device Connectivity Link</span>
+                    <span class="settings-desc" id="sync-desc-label">No external hardware synced yet</span>
+                </div>
+                <button class="btn-sync" id="sync-trigger-btn" onclick="triggerDeviceHandshake()">Connect</button>
             </div>
         </div>
 
@@ -183,6 +249,8 @@
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         const _supabase = supabase.createClient(S_URL, S_KEY);
 
+        let activeUserInstanceId = null;
+
         async function verifyAuthenticationState() {
             try {
                 const { data } = await _supabase.auth.getSession();
@@ -190,18 +258,23 @@
                     window.location.href = 'index.html';
                 } else {
                     const user = data.session.user;
+                    activeUserInstanceId = user.id;
+                    
                     document.getElementById('profile-email').innerText = user.email;
                     document.getElementById('profile-id').innerText = `ID: ${user.id.substring(0, 15)}...`;
                     
-                    const initial = user.email.charAt(0).toUpperCase();
-                    const avatarBox = document.getElementById('avatar-display');
-                    
-                    // Check local storage placeholder memory for profile picture mock setup
-                    const savedAvatar = localStorage.getItem(`avatar_${user.id}`);
-                    if (savedAvatar) {
-                        avatarBox.innerHTML = `<img src="${savedAvatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
-                    } else {
-                        avatarBox.innerText = initial;
+                    // Render Avatar
+                    refreshAvatarDisplay(user.email, user.id);
+
+                    // Load persistent settings privileges from local Cache store
+                    if (localStorage.getItem(`ceiling_${user.id}`)) {
+                        document.getElementById('budget-ceiling').value = localStorage.getItem(`ceiling_${user.id}`);
+                    }
+                    if (localStorage.getItem(`risk_${user.id}`)) {
+                        document.getElementById('risk-select').value = localStorage.getItem(`risk_${user.id}`);
+                    }
+                    if (localStorage.getItem(`device_synced_${user.id}`) === 'true') {
+                        setDeviceSyncUIConnected();
                     }
                 }
             } catch (err) {
@@ -210,12 +283,24 @@
         }
         window.onload = verifyAuthenticationState;
 
+        function refreshAvatarDisplay(email, uid) {
+            const initial = email.charAt(0).toUpperCase();
+            const avatarBox = document.getElementById('avatar-display');
+            const savedAvatar = localStorage.getItem(`avatar_${uid}`);
+            
+            if (savedAvatar) {
+                avatarBox.innerHTML = `<img src="${savedAvatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            } else {
+                avatarBox.innerHTML = "";
+                avatarBox.innerText = initial;
+            }
+        }
+
         // Image Selection handler logic
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            // Enforcing profile pic parameters: limit file sizes to avoid local storage memory bloat
             if (file.size > 1024 * 1024) { 
                 alert("Please select a profile image under 1MB to optimize rendering speeds.");
                 return;
@@ -224,13 +309,64 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const base64Image = e.target.result;
-                const { data } = await _supabase.auth.getSession();
-                if (data && data.session) {
-                    localStorage.setItem(`avatar_${data.session.user.id}`, base64Image);
+                if (activeUserInstanceId) {
+                    localStorage.setItem(`avatar_${activeUserInstanceId}`, base64Image);
                     document.getElementById('avatar-display').innerHTML = `<img src="${base64Image}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
                 }
             };
             reader.readAsDataURL(file);
+        }
+
+        // Feature: Clear / Take out Profile image function
+        function clearProfilePicture() {
+            if (!activeUserInstanceId) return;
+            if (localStorage.getItem(`avatar_${activeUserInstanceId}`)) {
+                localStorage.removeItem(`avatar_${activeUserInstanceId}`);
+                const fallbackEmail = document.getElementById('profile-email').innerText || "U";
+                refreshAvatarDisplay(fallbackEmail, activeUserInstanceId);
+            }
+        }
+
+        // Local cache save primitives for new configurations
+        function saveCeilingLimit(val) {
+            if (activeUserInstanceId) localStorage.setItem(`ceiling_${activeUserInstanceId}`, val);
+        }
+
+        function saveRiskProfile(val) {
+            if (activeUserInstanceId) localStorage.setItem(`risk_${activeUserInstanceId}`, val);
+        }
+
+        // Feature: Device pairing Simulator state machine
+        function triggerDeviceHandshake() {
+            if (!activeUserInstanceId) return;
+            
+            const btn = document.getElementById('sync-trigger-btn');
+            if (localStorage.getItem(`device_synced_${activeUserInstanceId}`) === 'true') {
+                // Disconnect option
+                localStorage.removeItem(`device_synced_${activeUserInstanceId}`);
+                btn.innerText = "Connect";
+                btn.style.background = "rgba(59, 130, 246, 0.15)";
+                btn.style.color = "var(--accent-blue)";
+                document.getElementById('sync-status-label').innerText = "Device Connectivity Link";
+                document.getElementById('sync-desc-label').innerText = "No external hardware synced yet";
+                return;
+            }
+
+            btn.innerText = "Pairing...";
+            setTimeout(() => {
+                localStorage.setItem(`device_synced_${activeUserInstanceId}`, 'true');
+                setDeviceSyncUIConnected();
+                alert("Secure encrypted simulator verification token linked successfully!");
+            }, 1200);
+        }
+
+        function setDeviceSyncUIConnected() {
+            const btn = document.getElementById('sync-trigger-btn');
+            btn.innerText = "Disconnect";
+            btn.style.background = "rgba(16, 185, 129, 0.15)";
+            btn.style.color = "var(--accent-emerald)";
+            document.getElementById('sync-status-label').innerText = "🟢 Synced Protocol Active";
+            document.getElementById('sync-desc-label').innerText = "Mock Secure Core Node Connected";
         }
 
         async function triggerSignOutBridge() {

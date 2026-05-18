@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prone Day - MicroInvest</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js CDN for graphical visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+        }
+
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background: var(--bg-main); 
+            margin: 0; 
+            color: var(--text-main); 
+            padding: 20px 0 120px 0;
+            box-sizing: border-box; 
+        }
+
+        .box { 
+            background: var(--bg-card); 
+            padding: 2.2rem; 
+            border-radius: 20px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); 
+            width: 480px; 
+            text-align: center; 
+            border: 1px solid var(--border-color); 
+            box-sizing: border-box; 
+        }
+
+        h2 { margin-top: 0; margin-bottom: 0.5rem; font-weight: 700; font-size: 1.4rem; color: var(--text-main); }
+        .subtitle { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        .chart-container {
+            position: relative;
+            margin: 0 auto 20px auto;
+            height: 260px;
+            width: 100%;
+        }
+
+        .btn-back {
+            width: 100%; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; margin-top: 10px;
+        }
+        .btn-back:hover { background: #475569; }
+
+        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
+        .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+        .nav-dock .active { background: var(--accent-blue); color: white !important; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>📅 Prone Day of Week</h2>
+        <div class="subtitle">Transaction Frequency over the Past 7 Days</div>
+
+        <div class="chart-container">
+            <canvas id="dayChart"></canvas>
+        </div>
+
+        <button class="btn-back" onclick="location.href='patterns.html'">← Return to Patterns</button>
+    </div>
+
+    <div class="nav-dock">
+        <button onclick="location.href='input.html'">Input</button>
+        <button onclick="location.href='ai.html'">AI Analysis</button>
+        <button class="active" onclick="location.href='patterns.html'">Patterns</button>
+        <button onclick="location.href='suggest.html'">Suggestions</button>
+    </div>
+
+    <script>
+        const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
+        const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        async function initDayAnalysis() {
+            try {
+                const sessionData = await _supabase.auth.getSession();
+                if (!sessionData.data || !sessionData.data.session) return;
+                const user = sessionData.data.session.user;
+
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+                const { data: spends, error } = await _supabase
+                    .from('spends')
+                    .select('created_at')
+                    .eq('user_id', user.id)
+                    .gte('created_at', sevenDaysAgo.toISOString());
+
+                if (error) throw error;
+
+                const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Sun, Mon, Tue, Wed, Thu, Fri, Sat
+
+                if (spends) {
+                    spends.forEach(item => {
+                        if (item.created_at) {
+                            const d = new Date(item.created_at);
+                            if (!isNaN(d.getTime())) {
+                                dayCounts[d.getDay()]++;
+                            }
+                        }
+                    });
+                }
+
+                renderChart(dayCounts);
+            } catch (err) {
+                console.error("Failed to compile calendar metrics:", err);
+            }
+        }
+
+        function renderChart(dataValues) {
+            const ctx = document.getElementById('dayChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    datasets: [{
+                        label: 'Total Volume',
+                        data: dataValues,
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderColor: '#10b981',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8', stepSize: 1 }
+                        },
+                        x: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = initDayAnalysis;
+    </script>
+</body>
+</html>

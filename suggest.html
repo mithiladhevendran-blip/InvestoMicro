@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,6 +18,7 @@
             --accent-blue: #3b82f6;
             --accent-emerald: #10b981;
             --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
         }
 
         body { 
@@ -119,12 +119,140 @@
         }
 
         .btn-direct {
-            width: 100%; padding: 12px; background: #334155; border: none; border-radius: 12px; color: white; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background 0.2s; margin-top: 10px;
+            width: 100%; 
+            padding: 12px; 
+            background: #334155; 
+            border: none; 
+            border-radius: 12px; 
+            color: white; 
+            cursor: pointer; 
+            font-size: 0.9rem; 
+            font-weight: 500; 
+            transition: background 0.2s; 
+            margin-top: 10px;
         }
         .btn-direct:hover { background: #475569; }
 
-        .nav-dock { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid var(--border-color); display: flex; padding: 8px; width: 440px; border-radius: 16px; box-sizing: border-box; z-index: 100; }
-        .nav-dock button { flex: 1; margin: 0 4px; padding: 12px; background: transparent; border: none; border-radius: 10px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .btn-ai-advisor {
+            width: 100%; 
+            padding: 14px; 
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); 
+            border: none; 
+            border-radius: 12px; 
+            color: white; 
+            cursor: pointer; 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            transition: all 0.3s; 
+            margin-top: 12px; 
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        .btn-ai-advisor:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); }
+        .btn-ai-advisor:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .ai-advisor-panel {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid var(--accent-blue);
+            border-radius: 14px;
+            padding: 20px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .ai-advisor-panel.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ai-advisor-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-advisor-content {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: var(--text-main);
+            text-align: left;
+        }
+
+        .ai-advisor-section {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .ai-advisor-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .ai-advisor-label {
+            color: var(--accent-blue);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .ai-advisor-value {
+            color: var(--text-main);
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-top: 2px solid var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .nav-dock { 
+            position: fixed; 
+            bottom: 24px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: rgba(30, 41, 59, 0.8); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid var(--border-color); 
+            display: flex; 
+            padding: 8px; 
+            width: 440px; 
+            border-radius: 16px; 
+            box-sizing: border-box; 
+            z-index: 100; 
+        }
+        .nav-dock button { 
+            flex: 1; 
+            margin: 0 4px; 
+            padding: 12px; 
+            background: transparent; 
+            border: none; 
+            border-radius: 10px; 
+            color: var(--text-muted); 
+            font-size: 0.85rem; 
+            font-weight: 500; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+        }
         .nav-dock button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
         .nav-dock .active { background: var(--accent-blue); color: white !important; font-weight: 600; }
     </style>
@@ -157,6 +285,22 @@
             </div>
         </div>
 
+        <!-- NEW: Agentic AI Advisor Button -->
+        <button class="btn-ai-advisor" id="btn-ai-advisor" onclick="activateAIAdvisor()">
+            🤖 Get AI Investment Advisor (Agentic Reasoning)
+        </button>
+
+        <!-- NEW: Agentic AI Advisor Panel -->
+        <div class="ai-advisor-panel" id="ai-advisor-panel">
+            <div class="ai-advisor-title">
+                <span class="loading-spinner" id="advisor-spinner"></span>
+                AI Advisor Analysis
+            </div>
+            <div class="ai-advisor-content" id="advisor-content">
+                Analyzing your financial patterns with agentic reasoning...
+            </div>
+        </div>
+
         <button class="btn-direct" onclick="location.href='patterns.html'">← View Historical Patterns</button>
     </div>
 
@@ -171,6 +315,9 @@
         const S_URL = 'https://funcvigewkhauenqxrbf.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ1bmN2aWdld2toYXVlbnF4cmJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NTM1MzQsImV4cCI6MjA5NDEyOTUzNH0.INR7nkrv-CV80i97SyaHwdZd3chlQjaVgNsQY39Nqxo';
         const _supabase = supabase.createClient(S_URL, S_KEY);
+
+        // Store spending data globally for AI analysis
+        let currentSpendingData = null;
 
         async function processInvestmentSuggestions() {
             try {
@@ -198,7 +345,6 @@
                         const amt = Number(item.amount) || 0;
                         const cat = (item.category || "").toLowerCase();
 
-                        // Route based on absolute intent classification tags
                         if (cat.includes("necessary")) {
                             essentialSum += amt;
                         } else {
@@ -207,29 +353,31 @@
                     });
                 }
 
-                // Dynamic target math calculations
+                // Store data for AI advisor
+                currentSpendingData = {
+                    essential: essentialSum,
+                    nonEssential: nonUtilitySum,
+                    total: essentialSum + nonUtilitySum,
+                    ratio: essentialSum > 0 ? ((essentialSum / (essentialSum + nonUtilitySum)) * 100).toFixed(1) : 0,
+                    recordCount: spends ? spends.length : 0
+                };
+
                 let calculationTarget = 0;
                 if (essentialSum > 0) {
-                    // Base baseline projection scale factor
                     calculationTarget = Math.round((essentialSum * 0.002) + (nonUtilitySum * 0.01));
                     if (calculationTarget < 10) calculationTarget = 10;
                 }
 
-                // CRITICAL FIX: Explicit limit boundary constraint checks
-                // Forcefully clamps the daily recommended target to never exceed ₹50.00
                 let safeFinalAllocation = Math.min(calculationTarget, 50);
                 if (essentialSum === 0 && nonUtilitySum === 0) {
                     safeFinalAllocation = 0;
                 }
 
-                // Dynamic UI rendering modifications
                 document.getElementById('safe-investment-display').innerText = `₹${safeFinalAllocation.toFixed(2)}`;
                 
-                // Animate progress bar (50 rs represents 100% cap value capacity)
                 const percentageFill = Math.min((safeFinalAllocation / 50) * 100, 100);
                 document.getElementById('investment-progress-bar').style.width = `${percentageFill}%`;
 
-                // Update structural layout report text cards
                 document.getElementById('summary-analytics-text').innerHTML = `
                     Your structural layout shows <b style="color: var(--accent-blue)">₹${essentialSum.toLocaleString()}</b> routed to essential commitments, 
                     and <b style="color: var(--text-main)">₹${nonUtilitySum.toLocaleString()}</b> tied to non-utility items. 
@@ -242,9 +390,101 @@
             }
         }
 
+        /**
+         * AGENTIC AI ADVISOR - Uses reasoning to analyze investment patterns
+         */
+        async function activateAIAdvisor() {
+            const panel = document.getElementById('ai-advisor-panel');
+            const button = document.getElementById('btn-ai-advisor');
+            const content = document.getElementById('advisor-content');
+
+            // Toggle panel visibility
+            if (panel.classList.contains('active')) {
+                panel.classList.remove('active');
+                return;
+            }
+
+            if (!currentSpendingData) {
+                content.innerHTML = '<span style="color: var(--accent-red);">No spending data available. Please add some transactions first.</span>';
+                panel.classList.add('active');
+                return;
+            }
+
+            // Show loading state
+            panel.classList.add('active');
+            button.disabled = true;
+            content.innerHTML = '<div class="loading-spinner"></div> Analyzing your financial patterns with agentic reasoning...';
+
+            try {
+                // Since we can't directly call OpenRouter from frontend without keys,
+                // we'll implement local agentic reasoning as a placeholder
+                // In production, this would call your backend which calls OpenRouter
+                
+                const analysis = generateAgenticAnalysis(currentSpendingData);
+                
+                // Simulate thinking time for better UX
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                content.innerHTML = `
+                    <div class="ai-advisor-section">
+                        <div class="ai-advisor-label">📊 Analysis</div>
+                        <div class="ai-advisor-value">${analysis.analysis}</div>
+                    </div>
+                    <div class="ai-advisor-section">
+                        <div class="ai-advisor-label">🧠 Reasoning</div>
+                        <div class="ai-advisor-value">${analysis.reasoning}</div>
+                    </div>
+                    <div class="ai-advisor-section">
+                        <div class="ai-advisor-label">💡 Recommendation</div>
+                        <div class="ai-advisor-value"><b style="color: var(--accent-emerald);">${analysis.recommendation}</b></div>
+                    </div>
+                    <div class="ai-advisor-section">
+                        <div class="ai-advisor-label">📈 Expected Outcome</div>
+                        <div class="ai-advisor-value">${analysis.outcome}</div>
+                    </div>
+                `;
+
+            } catch (err) {
+                console.error("AI Advisor error:", err);
+                content.innerHTML = '<span style="color: var(--accent-red);">AI Advisor temporarily unavailable. Please try again.</span>';
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        /**
+         * Agentic Reasoning for Investment Analysis
+         * This mimics how an AI would reason through the spending data
+         */
+        function generateAgenticAnalysis(data) {
+            const { essential, nonEssential, total, ratio, recordCount } = data;
+            const investmentTarget = Math.min(Math.round((essential * 0.002) + (nonEssential * 0.01)), 50);
+
+            // Reasoning chain
+            let analysis, reasoning, recommendation, outcome;
+
+            // Step 1: Analyze the ratio
+            if (ratio > 75) {
+                analysis = `Strong financial discipline detected. Your ${ratio}% essential spending ratio indicates you're prioritizing necessities well.`;
+                reasoning = `You've spent ₹${total} across ${recordCount} transactions. Of this, ₹${essential} (${ratio}%) goes to essentials and ₹${nonEssential} to non-essentials. This is a healthy ratio.`;
+                recommendation = `Increase daily micro-investment from ₹${investmentTarget} to ₹${Math.min(investmentTarget + 5, 50)}. Consider diversifying into: 1) SIPs (Systematic Investment Plans), 2) Index funds, 3) Short-term bonds`;
+                outcome = `If you invest ₹${Math.min(investmentTarget + 5, 50)}/day for 1 year: ₹${(Math.min(investmentTarget + 5, 50) * 365).toLocaleString()} invested. At 8% returns: ₹${Math.round(Math.min(investmentTarget + 5, 50) * 365 * 1.08).toLocaleString()} potential value`;
+            } else if (ratio > 60) {
+                analysis = `Balanced spending pattern. Your ${ratio}% ratio shows reasonable control with room for optimization.`;
+                reasoning = `Your ₹${essential} essential spending and ₹${nonEssential} non-essential spending are relatively balanced. To improve, focus on the non-essential category.`;
+                recommendation = `Reduce non-essential spending by 10% (save ₹${Math.round(nonEssential * 0.1)}). This allows daily investment of ₹${investmentTarget}. Focus on: 1) Eliminating impulse purchases, 2) Canceling unused subscriptions`;
+                outcome = `Cutting 10% non-essential spending + investing ₹${investmentTarget}/day for 1 year: ₹${(investmentTarget * 365).toLocaleString()} invested. Potential 8% return: ₹${Math.round(investmentTarget * 365 * 1.08).toLocaleString()}. Plus ₹${Math.round(nonEssential * 0.1 * 12).toLocaleString()} annual savings.`;
+            } else {
+                analysis = `Opportunity for improvement. Your ${ratio}% ratio suggests higher non-essential spending that could be redirected.`;
+                reasoning = `You're spending ₹${nonEssential} on non-essentials (${100-ratio}% of total). This category has the most optimization potential without affecting quality of life.`;
+                recommendation = `Action plan: 1) Audit subscriptions and memberships, 2) Set a daily non-essential budget limit of ₹50, 3) Automate ₹${investmentTarget}/day transfers. This maintains essentials while investing.`;
+                outcome = `By reducing non-essential by 20% + investing ₹${investmentTarget}/day: Save ₹${Math.round(nonEssential * 0.2 * 12).toLocaleString()} annually. Invest ₹${(investmentTarget * 365).toLocaleString()} yearly. At 8% returns: Portfolio grows to ₹${Math.round(investmentTarget * 365 * 1.08).toLocaleString()}`;
+            }
+
+            return { analysis, reasoning, recommendation, outcome };
+        }
+
         window.onload = processInvestmentSuggestions;
     </script>
 </body>
 </html>
-
-

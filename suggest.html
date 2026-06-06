@@ -132,6 +132,60 @@
             margin-top: 10px;
         }
         .btn-direct:hover { background: #475569; }
+        .btn-ai-advisor {
+    width: 100%; 
+    padding: 14px; 
+    background: linear-gradient(135deg, var(--accent-blue), #8b5cf6); 
+    border: none; 
+    border-radius: 12px; 
+    color: white; 
+    cursor: pointer; 
+    font-size: 0.95rem; 
+    font-weight: 600; 
+    transition: all 0.3s; 
+    margin-top: 12px;
+}
+.btn-ai-advisor:hover { transform: translateY(-2px); }
+.btn-ai-advisor:disabled { opacity: 0.6; }
+
+.ai-advisor-panel {
+    background: rgba(59, 130, 246, 0.1);
+    border: 2px solid var(--accent-blue);
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 16px;
+    display: none;
+}
+
+.ai-advisor-panel.active {
+    display: block;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-advisor-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+    margin-bottom: 12px;
+}
+
+.ai-advisor-section {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.ai-advisor-label {
+    color: var(--accent-blue);
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+ 
 
         .btn-ai-advisor {
             width: 100%; 
@@ -302,6 +356,17 @@
         </div>
 
         <button class="btn-direct" onclick="location.href='patterns.html'">← View Historical Patterns</button>
+        <button class="btn-ai-advisor" id="btn-ai-advisor" onclick="activateAIAdvisor()">
+    🤖 Get AI Investment Advisor (Agentic Reasoning)
+</button>
+
+<div class="ai-advisor-panel" id="ai-advisor-panel">
+    <div class="ai-advisor-title">🤖 AI Advisor Analysis</div>
+    <div class="ai-advisor-content" id="advisor-content">
+        Analyzing your financial patterns...
+    </div>
+</div>
+
     </div>
 
     <div class="nav-dock">
@@ -350,6 +415,14 @@
                         } else {
                             nonUtilitySum += amt;
                         }
+                        currentSpendingData = {
+    essential: essentialSum,
+    nonEssential: nonUtilitySum,
+    total: essentialSum + nonUtilitySum,
+    ratio: essentialSum > 0 ? ((essentialSum / (essentialSum + nonUtilitySum)) * 100).toFixed(1) : 0,
+    investmentTarget: Math.min(Math.round((essentialSum * 0.002) + (nonUtilitySum * 0.01)), 50)
+};
+
                     });
                 }
 
@@ -484,6 +557,55 @@
             return { analysis, reasoning, recommendation, outcome };
         }
 
+    
+    let currentSpendingData = null;
+
+async function activateAIAdvisor() {
+    const panel = document.getElementById('ai-advisor-panel');
+    const button = document.getElementById('btn-ai-advisor');
+    
+    if (panel.classList.contains('active')) {
+        panel.classList.remove('active');
+        return;
+    }
+
+    if (!currentSpendingData) {
+        document.getElementById('advisor-content').innerHTML = 'No data yet. Add transactions first.';
+        panel.classList.add('active');
+        return;
+    }
+
+    panel.classList.add('active');
+    button.disabled = true;
+    document.getElementById('advisor-content').innerHTML = 'Analyzing...';
+
+    setTimeout(() => {
+        const data = currentSpendingData;
+        const ratio = data.ratio;
+        
+        let analysis, recommendation;
+        if (ratio > 75) {
+            analysis = `Strong discipline! Your ${ratio}% essential ratio is excellent.`;
+            recommendation = `Increase investment from ₹25 to ₹30/day. In 1 year: ₹10,950 invested, potential ₹11,826 at 8% returns.`;
+        } else {
+            analysis = `Balanced spending. ${ratio}% essential is good but has room to optimize.`;
+            recommendation = `Reduce non-essential by 10%, invest ₹${data.investmentTarget}/day. Annual savings: ₹${Math.round(data.nonEssential * 0.1 * 12)}.`;
+        }
+
+        document.getElementById('advisor-content').innerHTML = `
+            <div class="ai-advisor-section">
+                <div class="ai-advisor-label">📊 Analysis</div>
+                <div style="margin-top: 6px; color: white;">${analysis}</div>
+            </div>
+            <div class="ai-advisor-section">
+                <div class="ai-advisor-label">💡 Recommendation</div>
+                <div style="margin-top: 6px; color: #10b981; font-weight: 600;">${recommendation}</div>
+            </div>
+        `;
+        button.disabled = false;
+    }, 1500);
+}
+    
         window.onload = processInvestmentSuggestions;
     </script>
 </body>

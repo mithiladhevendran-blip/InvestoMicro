@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRouter API Bridge - InvestoMicro</title>
+</head>
+<body>
+    <!-- This file serves as a bridge to communicate with OpenRouter API -->
+    <!-- The actual OpenRouter calls happen through a backend service -->
+    
+    <script>
+        /**
+         * AGENTIC AI BRIDGE - InvestoMicro
+         * This script provides functions to call OpenRouter API safely
+         * The API key is stored securely on the backend, not exposed in frontend
+         */
+
+        const OPENROUTER_BRIDGE = {
+            // Using a free backend service (you can replace with your own backend)
+            // For now, we'll use Vercel Edge Functions pattern
+            apiEndpoint: "https://api.openrouter.io/api/v1/chat/completions",
+            
+            /**
+             * Agentic AI Reasoning for Investment Analysis
+             * Takes spending data and generates reasoning-based investment recommendations
+             */
+            async analyzeInvestmentPattern(spendingData) {
+                try {
+                    const systemPrompt = `You are an expert financial advisor AI agent for micro-investing.
+Your role is to:
+1. ANALYZE the user's spending patterns
+2. REASON through their financial situation step-by-step
+3. GENERATE actionable investment recommendations
+4. EXPLAIN your reasoning clearly
+
+Be concise but thorough. Format your response as:
+ANALYSIS: [What you found]
+REASONING: [Step-by-step thinking]
+RECOMMENDATION: [Specific action]
+EXPECTED_OUTCOME: [What will happen if they follow this]`;
+
+                    const userPrompt = `Analyze this spending data and provide investment advice:
+${JSON.stringify(spendingData, null, 2)}
+
+Think through this like an investment advisor would:
+1. What's their essential vs non-essential ratio?
+2. Are there spending patterns or anomalies?
+3. What's a realistic daily micro-investment target?
+4. What specific investment types would suit them?
+5. How can they optimize their spending to invest more?`;
+
+                    // In production, this would call your backend
+                    // For now, returning a structured prompt for OpenRouter
+                    return {
+                        systemPrompt,
+                        userPrompt,
+                        model: "claude-3.5-sonnet"
+                    };
+                } catch (error) {
+                    console.error("Analysis error:", error);
+                    return null;
+                }
+            },
+
+            /**
+             * Smart Spending Classification using Agentic AI
+             * Replaces simple keyword matching with reasoning
+             */
+            async classifySpending(description, amount) {
+                try {
+                    const systemPrompt = `You are a financial classification AI agent.
+Your job is to classify spending items into investment categories with reasoning.
+
+Categories:
+1. Necessary / Long-term (Education, work equipment, health, insurance, rent)
+2. Unnecessary / Long-term (Speculative, luxury items, collectibles)
+3. Necessary / Short-term (Groceries, medicine, transport, utilities)
+4. Short Term / Unnecessary (Junk food, impulse shopping, unneeded subscriptions)
+
+Respond with ONLY the category name, nothing else.`;
+
+                    const userPrompt = `Classify this spending:
+Item: "${description}"
+Amount: ₹${amount}`;
+
+                    return {
+                        systemPrompt,
+                        userPrompt,
+                        model: "claude-3.5-sonnet"
+                    };
+                } catch (error) {
+                    console.error("Classification error:", error);
+                    return null;
+                }
+            }
+        };
+
+        // Make it globally available
+        window.OPENROUTER_BRIDGE = OPENROUTER_BRIDGE;
+    </script>
+</body>
+</html>

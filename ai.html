@@ -117,12 +117,12 @@
             background: rgba(139, 92, 246, 0.1);
             border: 1px solid var(--accent-purple);
             border-radius: 10px;
-            padding: 12px;
+            padding: 14px;
             color: var(--text-main);
             font-size: 0.8rem;
             margin-bottom: 16px;
             text-align: left;
-            line-height: 1.5;
+            line-height: 1.6;
             display: none;
         }
 
@@ -134,6 +134,18 @@
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
+        }
+
+        .reasoning-label {
+            color: var(--accent-purple);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .reasoning-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
         }
 
         .note-input {
@@ -221,21 +233,6 @@
             color: white !important;
         }
 
-        .loading-spinner {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border: 2px solid rgba(59, 130, 246, 0.3);
-            border-top: 2px solid var(--accent-blue);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-right: 6px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
     </style>
 </head>
 
@@ -274,13 +271,13 @@
             🤖 Querying Neural Network...
         </div>
 
-        <!-- NEW: Agentic Reasoning Display -->
+        <!-- AGENTIC AI: Reasoning Display -->
         <div
             class="ai-reasoning-box"
             id="ai-reasoning-display"
         >
-            <strong style="color: var(--accent-purple);">AI Reasoning:</strong>
-            <div id="reasoning-text" style="margin-top: 8px;"></div>
+            <div class="reasoning-label">🧠 AI Reasoning:</div>
+            <div class="reasoning-text" id="reasoning-text"></div>
         </div>
 
         <span class="field-label">
@@ -372,141 +369,53 @@
             localStorage.getItem('pending_desc') || "";
 
         const targetCategories = [
-
             "Necessary / Long-term",
-
             "Unnecessary / Long-term",
-
             "Necessary / Short-term",
-
             "Short Term / Unnecessary"
         ];
 
         /**
-         * AGENTIC AI CLASSIFICATION
-         * Uses reasoning to classify spending with explanation
+         * AGENTIC AI CLASSIFICATION WITH REASONING
+         * Analyzes spending and explains the logic
          */
-        async function runAgenticClassifier(text, amount) {
-
-            if (!text || text.trim() === "") {
-                return {
-                    category: "Short Term / Unnecessary",
-                    reasoning: "No description provided. Defaulting to conservative classification."
-                };
-            }
-
-            try {
-                // Simulate agentic reasoning - in production this would call OpenRouter
-                const reasoning = generateClassificationReasoning(text, amount);
-                return reasoning;
-
-            } catch (err) {
-
-                console.error("Classifier failed:", err);
-            }
-
-            return localClassifierFallback(text);
-        }
-
-        /**
-         * Generate reasoning for classification
-         * This mimics how an AI would think through the categorization
-         */
-        function generateClassificationReasoning(description, amount) {
+        function generateAgenticClassification(description, amount) {
             const lowerDesc = description.toLowerCase();
             const amountNum = parseFloat(amount) || 0;
             
-            // Agentic reasoning chain
             let category, reasoning;
 
-            // Long-term indicators
-            const longTermKeywords = ['course', 'tuition', 'laptop', 'education', 'boots', 'shoe', 'gym', 'insurance', 'repair', 'medical', 'health', 'investment'];
-            const necessaryLongTerm = ['education', 'work equipment', 'medical', 'insurance', 'rent', 'health', 'laptop', 'boot', 'course'];
-            const unnecessaryLongTerm = ['crypto', 'stock', 'gold', 'luxury', 'collection', 'antique'];
+            const necessaryLongTerm = ['education', 'course', 'tuition', 'laptop', 'work', 'boots', 'shoe', 'gym', 'insurance', 'repair', 'health', 'medical', 'doctor', 'treatment'];
+            const unnecessaryLongTerm = ['crypto', 'stock', 'gold', 'luxury', 'collectible', 'speculation', 'investment'];
+            const necessaryShortTerm = ['doctor', 'vet', 'medicine', 'med', 'food', 'fuel', 'bus', 'taxi', 'groceries', 'transport', 'utility', 'bills'];
+            const unnecessaryShortTerm = ['snack', 'junk', 'gaming', 'cosmetic', 'impulse', 'subscription', 'random', 'unnecessary'];
 
-            // Short-term indicators
-            const necessaryShortTerm = ['doctor', 'vet', 'medicine', 'med', 'food', 'fuel', 'bus', 'taxi', 'groceries', 'transport', 'utility'];
-            const unnecessaryShortTerm = ['snack', 'junk', 'gaming', 'cosmetic', 'impulse', 'subscription'];
-
-            // Multi-step reasoning
             if (necessaryLongTerm.some(kw => lowerDesc.includes(kw))) {
                 category = "Necessary / Long-term";
-                reasoning = `AI reasoning: "${description}" matches long-term necessity criteria. This is an investment in your future (education/health/work). Amount ₹${amountNum} is justified for quality.`;
-            } else if (necessaryShortTerm.some(kw => lowerDesc.includes(kw))) {
+                reasoning = `Your "${description}" is classified as a long-term essential investment. This benefits your future (education, health, work). Amount ₹${amountNum} is justified as an investment in yourself.`;
+            } 
+            else if (necessaryShortTerm.some(kw => lowerDesc.includes(kw))) {
                 category = "Necessary / Short-term";
-                reasoning = `AI reasoning: "${description}" is a short-term essential. This is required for daily living (food/transport/medical). Amount ₹${amountNum} is reasonable.`;
-            } else if (unnecessaryLongTerm.some(kw => lowerDesc.includes(kw))) {
+                reasoning = `Your "${description}" is a short-term essential required for daily living. Amount ₹${amountNum} is reasonable for maintaining your lifestyle.`;
+            } 
+            else if (unnecessaryLongTerm.some(kw => lowerDesc.includes(kw))) {
                 category = "Unnecessary / Long-term";
-                reasoning = `AI reasoning: "${description}" appears to be speculative or luxury spending with long-term implications. Consider if this aligns with your investment goals.`;
-            } else if (amountNum > 500) {
+                reasoning = `Your "${description}" appears to be speculative or luxury spending. Consider if this aligns with your investment goals.`;
+            } 
+            else if (amountNum > 500) {
                 category = "Unnecessary / Long-term";
-                reasoning = `AI reasoning: High-value item (₹${amountNum}) with unclear necessity classification. Treating as potentially speculative until verified as essential.`;
-            } else if (unnecessaryShortTerm.some(kw => lowerDesc.includes(kw))) {
+                reasoning = `High-value item (₹${amountNum}) couldn't be matched to essentials. Treating as potentially speculative until verified as essential.`;
+            } 
+            else if (unnecessaryShortTerm.some(kw => lowerDesc.includes(kw))) {
                 category = "Short Term / Unnecessary";
-                reasoning = `AI reasoning: "${description}" matches impulse/leisure spending patterns. This is discretionary spending, not essential.`;
-            } else {
+                reasoning = `Your "${description}" matches impulse or leisure spending. This is discretionary spending you can optimize by reducing or redirecting.`;
+            } 
+            else {
                 category = "Short Term / Unnecessary";
-                reasoning = `AI reasoning: "${description}" couldn't be matched to essential categories. Classified as discretionary spending. Amount: ₹${amountNum}.`;
+                reasoning = `Your "${description}" is classified as discretionary spending (Amount: ₹${amountNum}). Consider if this aligns with your financial goals.`;
             }
 
             return { category, reasoning };
-        }
-
-        function localClassifierFallback(text) {
-
-            const parsed =
-                text.toLowerCase();
-
-            // Necessary Long-Term
-            if (
-
-                parsed.includes('course') ||
-                parsed.includes('tuition') ||
-                parsed.includes('laptop') ||
-                parsed.includes('boots') ||
-                parsed.includes('shoe') ||
-                parsed.includes('gym') ||
-                parsed.includes('insurance') ||
-                parsed.includes('repair') ||
-                parsed.includes('education')
-
-            ) {
-
-                return { category: "Necessary / Long-term", reasoning: "Matched to long-term necessity keywords." };
-            }
-
-            // Necessary Short-Term
-            if (
-
-                parsed.includes('doctor') ||
-                parsed.includes('vet') ||
-                parsed.includes('medicine') ||
-                parsed.includes('med') ||
-                parsed.includes('food') ||
-                parsed.includes('fuel') ||
-                parsed.includes('bus') ||
-                parsed.includes('taxi') ||
-                parsed.includes('groceries')
-
-            ) {
-
-                return { category: "Necessary / Short-term", reasoning: "Matched to short-term necessity keywords." };
-            }
-
-            // Unnecessary Long-Term
-            if (
-
-                parsed.includes('crypto') ||
-                parsed.includes('stock') ||
-                parsed.includes('gold') ||
-                parsed.includes('luxury')
-
-            ) {
-
-                return { category: "Unnecessary / Long-term", reasoning: "Matched to speculative/luxury keywords." };
-            }
-
-            return { category: "Short Term / Unnecessary", reasoning: "Default classification for unmatched items." };
         }
 
         window.onload = async function () {
@@ -515,21 +424,15 @@
                 'ai-desc-display'
             ).value = localDesc;
 
-            const result =
-                await runAgenticClassifier(
-                    localDesc,
-                    localAmount
-                );
-
-            const category = result.category || "Short Term / Unnecessary";
-            const reasoning = result.reasoning || "Classification complete.";
+            const result = generateAgenticClassification(localDesc, localAmount);
+            const category = result.category;
+            const reasoning = result.reasoning;
 
             document.getElementById(
                 'ai-label-display'
             ).innerText =
                 `🤖 ${category}`;
 
-            // Display reasoning
             document.getElementById('reasoning-text').innerText = reasoning;
             document.getElementById('ai-reasoning-display').classList.add('active');
 
@@ -624,3 +527,4 @@
 
 </body>
 </html>
+

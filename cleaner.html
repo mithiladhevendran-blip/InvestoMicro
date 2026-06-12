@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <title>Database Ledger Purge Tool</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Vercel Speed Insights -->
+    <script type="module">
+        import { injectSpeedInsights } from 'https://cdn.jsdelivr.net/npm/@vercel/speed-insights@2/dist/index.mjs';
+        injectSpeedInsights();
+    </script>
+
     <style>
         body { font-family: system-ui, sans-serif; background: #0f172a; color: white; padding: 40px; text-align: center; }
         .card { background: #1e293b; border: 1px solid #334155; padding: 30px; border-radius: 12px; max-width: 500px; margin: 0 auto; }

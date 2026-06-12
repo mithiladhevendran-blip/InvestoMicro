@@ -2,190 +2,115 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password</title>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
-
-        body{
-            font-family:Arial,sans-serif;
-            background:#0f172a;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-            margin:0;
-            color:white;
+        :root {
+            --bg-main: rgb(67, 48, 40);
+            --bg-card: rgb(84, 66, 55);
+            --text-main: rgb(255, 0, 255);
+            --accent-emerald: rgb(41, 210, 154);
         }
 
-        .box{
-            background:#1e293b;
-            padding:30px;
-            border-radius:20px;
-            width:350px;
+        body {
+            font-family: Arial, sans-serif;
+            background: var(--bg-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: var(--text-main);
         }
 
-        input{
-            width:100%;
-            padding:12px;
-            margin-top:10px;
-            border-radius:10px;
-            border:none;
-            background:#0f172a;
-            color:white;
-            box-sizing:border-box;
+        .box {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 20px;
+            width: 350px;
+            text-align: center;
         }
 
-        button{
-            width:100%;
-            padding:12px;
-            margin-top:20px;
-            border:none;
-            border-radius:10px;
-            background:#10b981;
-            color:white;
-            font-weight:bold;
-            cursor:pointer;
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--text-main);
+            background: var(--bg-main);
+            color: white;
+            box-sizing: border-box;
         }
 
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 10px;
+            background: var(--accent-emerald);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
-
 </head>
 
 <body>
+    <div class="box">
+        <h2>New Password</h2>
+        <input type="password" id="new-password" placeholder="Minimum 6 characters">
+        <button onclick="updatePassword()" id="submitBtn">Update Password</button>
+    </div>
 
-<div class="box">
+    <script src="config.js"></script>
+    <script>
+        window.addEventListener('load', async () => {
+            const hash = window.location.hash;
+            if (hash && hash.includes('access_token')) {
+                const params = new URLSearchParams(hash.substring(1));
+                const access_token = params.get('access_token');
+                const refresh_token = params.get('refresh_token');
 
-    <h2>New Password</h2>
-
-    <input
-        type="password"
-        id="new-password"
-        placeholder="Minimum 6 characters"
-    >
-
-    <button
-        onclick="updatePassword()"
-        id="submitBtn"
-    >
-        Update Password
-    </button>
-
-</div>
-
-<script src="config.js"></script>
-
-<script>
-
-window.addEventListener(
-    'load',
-    async () => {
-
-        const hash =
-            window.location.hash;
-
-        if (
-            hash &&
-            hash.includes('access_token')
-        ) {
-
-            const params =
-                new URLSearchParams(
-                    hash.substring(1)
-                );
-
-            const access_token =
-                params.get('access_token');
-
-            const refresh_token =
-                params.get('refresh_token');
-
-            if (
-                access_token &&
-                refresh_token
-            ) {
-
-                const { error } =
-                    await _supabase.auth.setSession({
-                        access_token,
-                        refresh_token
-                    });
-
-                if (error) {
-
-                    alert(
-                        "Recovery link expired."
-                    );
-
-                    window.location.href =
-                        "index.html";
+                if (access_token && refresh_token) {
+                    const { error } = await _supabase.auth.setSession({ access_token, refresh_token });
+                    if (error) {
+                        alert("Recovery link expired.");
+                        window.location.href = "index.html";
+                    }
                 }
             }
+        });
+
+        async function updatePassword() {
+            const password = document.getElementById('new-password').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (password.length < 6) {
+                alert("Password must be at least 6 characters.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Updating...";
+
+            try {
+                const { error } = await _supabase.auth.updateUser({ password });
+                if (error) throw error;
+                alert("Password updated successfully!");
+                window.location.href = "index.html";
+            } catch (err) {
+                alert(err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Update Password";
+            }
         }
-    }
-);
-
-async function updatePassword() {
-
-    const password =
-        document
-        .getElementById(
-            'new-password'
-        )
-        .value
-        .trim();
-
-    const submitBtn =
-        document.getElementById(
-            'submitBtn'
-        );
-
-    if (password.length < 6) {
-
-        alert(
-            "Password must be at least 6 characters."
-        );
-
-        return;
-    }
-
-    submitBtn.disabled = true;
-
-    submitBtn.innerText =
-        "Updating...";
-
-    try {
-
-        const { error } =
-            await _supabase.auth.updateUser({
-                password
-            });
-
-        if (error) throw error;
-
-        alert(
-            "Password updated successfully!"
-        );
-
-        window.location.href =
-            "index.html";
-
-    } catch (err) {
-
-        alert(err.message);
-
-        submitBtn.disabled = false;
-
-        submitBtn.innerText =
-            "Update Password";
-    }
-}
-
-</script>
-
+    </script>
 </body>
 </html>

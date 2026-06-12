@@ -340,9 +340,9 @@
         </div>
 
         <!-- NEW: Agentic AI Advisor Button -->
-        <button class="btn-ai-advisor" onclick="window.location.href='chat.html'">
-     Chat with AI Investment Advisor
-</button>
+        <button class="btn-ai-advisor" id="btn-ai-advisor" onclick="activateAIAdvisor()">
+            🤖 Get AI Investment Advisor (Agentic Reasoning)
+        </button>
 
         <!-- NEW: Agentic AI Advisor Panel -->
         <div class="ai-advisor-panel" id="ai-advisor-panel">
@@ -356,12 +356,12 @@
         </div>
 
         <button class="btn-direct" onclick="location.href='patterns.html'">← View Historical Patterns</button>
-       <button class="btn-ai-advisor" onclick="window.location.href='chat.html'">
-    Chat with AI Investment Advisor
+        <button class="btn-ai-advisor" onclick="window.location.href='chat.html'">
+    🤖 Chat with AI Investment Advisor
 </button>
 
 <div class="ai-advisor-panel" id="ai-advisor-panel">
-    <div class="ai-advisor-title"> AI Advisor Analysis</div>
+    <div class="ai-advisor-title">🤖 AI Advisor Analysis</div>
     <div class="ai-advisor-content" id="advisor-content">
         Analyzing your financial patterns...
     </div>
@@ -609,4 +609,3 @@ async function activateAIAdvisor() {
         window.onload = processInvestmentSuggestions;
     </script>
 </body>
-

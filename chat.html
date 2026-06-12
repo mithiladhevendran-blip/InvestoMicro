@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Financial Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: rgb(67, 48, 40); color: white; font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .chat-box { width: 100%; max-width: 500px; background: rgb(84, 66, 55); padding: 20px; border-radius: 20px; }
+        #messages { height: 400px; overflow-y: auto; margin-bottom: 20px; border-bottom: 1px solid #475569; }
+        .msg { margin-bottom: 15px; padding: 10px; border-radius: 10px; }
+        .user { background: #3b82f6; text-align: right; }
+        .ai { background: #475569; }
+    </style>
+</head>
+<body>
+
+<div class="chat-box">
+    <h2>InvestoMicro AI</h2>
+    <div id="messages"></div>
+    <input type="text" id="input" placeholder="Ask about your finances..." style="width: 80%; padding: 10px;">
+    <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+    const _supabase = supabase.createClient('YOUR_URL', 'YOUR_KEY');
+    let userStats = {};
+
+    async function initChat() {
+        // Fetch the same data you used on the previous page
+        const { data: { user } } = await _supabase.auth.getUser();
+        const { data: spends } = await _supabase.from('spends').select('amount, category').eq('user_id', user.id);
+        
+        // Calculate stats same as before
+        let essential = 0, nonEssential = 0;
+        spends.forEach(s => s.category.includes('necessary') ? essential += s.amount : nonEssential += s.amount);
+        userStats = { essential, nonEssential, ratio: (essential / (essential + nonEssential) * 100).toFixed(1) };
+        
+        addMessage("AI", "I've analyzed your ledger. How can I help you optimize your savings today?");
+    }
+
+    function addMessage(sender, text) {
+        document.getElementById('messages').innerHTML += `<div class="msg ${sender.toLowerCase()}"><b>${sender}:</b> ${text}</div>`;
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('input');
+        const text = input.value;
+        addMessage("User", text);
+        
+        // Simple Agentic Logic
+        setTimeout(() => {
+            let response = "I'm still learning! Try asking about your spending ratio or investment tips.";
+            if (text.toLowerCase().includes('ratio')) response = `Your essential spending ratio is currently ${userStats.ratio}%.`;
+            if (text.toLowerCase().includes('invest')) response = `Based on your ${userStats.ratio}% ratio, I suggest setting aside a small portion of your non-essentials daily.`;
+            
+            addMessage("AI", response);
+            input.value = '';
+        }, 1000);
+    }
+
+    initChat();
+</script>
+</body>
+</html>
